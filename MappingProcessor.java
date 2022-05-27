@@ -13,11 +13,12 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
-@SupportedAnnotationTypes("com.github.mapresultset.Table")
+@SupportedAnnotationTypes({"com.github.mapresultset.Table", "com.github.mapresultset.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private Set<Element> annotatedElements = new HashSet<>();
@@ -57,12 +58,22 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println("Annotated Elements: " + annotatedElements);
 			this.annotatedElements.addAll(annotatedElements);
 			for (var e : annotatedElements) {
-				System.out.println("Element: " + e);
+				System.out.println("Element: " + e + " and it's type is " + e.getKind());
 				Element enclosingElement = e.getEnclosingElement();
 				String name = e.getSimpleName().toString();
 				System.out.println("element name: " + name);
 				System.out.println("element enclosingElement: " + enclosingElement);
 				System.out.println("element enclosedElements: " + e.getEnclosedElements());
+
+				for (var enclosed : e.getEnclosedElements()) {
+					System.out.println(enclosed + " type is " + enclosed.getKind());
+				}
+
+
+				if (e instanceof VariableElement ve) {
+				// if (e.getKind() == ElementKind.FIELD || e.getKind() == ElementKind.LOCAL_VARIABLE) {
+					System.out.println(ve.getConstantValue());
+				}
 
 				/*
 				Class<?> clazz;
@@ -124,5 +135,6 @@ References:
 
 https://www.baeldung.com/java-annotation-processing-builder
 
+https://www.zdnet.com/article/writing-and-processing-custom-annotations-part-3/
 
 */
