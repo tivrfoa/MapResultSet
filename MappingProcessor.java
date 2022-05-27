@@ -41,7 +41,7 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			System.out.println("Last round! Fight!");
-			// processElements();
+			// TODO do I need to do anything here?!
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -71,60 +71,12 @@ public class MappingProcessor extends AbstractProcessor {
 
 
 				if (e instanceof VariableElement ve) {
-				// if (e.getKind() == ElementKind.FIELD || e.getKind() == ElementKind.LOCAL_VARIABLE) {
-					System.out.println(ve.getConstantValue());
+					String query = ve.getConstantValue();
+					System.out.println(query);
+					// TODO save query in a list then generate the code
+					//   that does the mapping ...
 				}
-
-				/*
-				Class<?> clazz;
-				try {
-					if (enclosingElement.getKind() == ElementKind.CLASS) {
-						clazz = Class.forName(enclosingElement + "$" + name);
-					} else {
-						clazz = Class.forName(e.toString());
-					}
-				} catch (ClassNotFoundException ex) {
-					ex.printStackTrace();
-					throw new RuntimeException(ex);
-				}
-				System.out.println("Class: " + clazz);
-				System.out.println("Class fields: ");
-				for (var f : clazz.getFields())
-					System.out.println(f.getName());
-				System.out.println("Class methods: ");
-				for (var m : clazz.getMethods())
-					System.out.println(m.getName());
-				*/
 			}
-		}
-	}
-
-	private void processElements() {
-		for (var e : this.annotatedElements) {
-			System.out.println("Element: " + e);
-			Element enclosingElement = e.getEnclosingElement();
-			String name = e.getSimpleName().toString();
-			System.out.println("element name: " + name);
-			System.out.println("element enclosingElement: " + enclosingElement);
-
-			Class<?> clazz;
-			try {
-				if (enclosingElement.getKind() == ElementKind.CLASS) {
-					clazz = Class.forName(enclosingElement + "$" + name);
-				} else {
-					clazz = Class.forName(e.toString());
-				}
-			} catch (ClassNotFoundException ex) {
-				ex.printStackTrace();
-				throw new RuntimeException(ex);
-			}
-			System.out.println("Class: " + clazz);
-			System.out.println("Class fields: ");
-			for (var f : clazz.getFields())
-				System.out.println(f.getName());
-			System.out.println("Class methods: ");
-			for (var m : clazz.getMethods())
-				System.out.println(m.getName());
 		}
 	}
 }
