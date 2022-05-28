@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class MappingProcessor extends AbstractProcessor {
 
 	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
 	private List<Element> tables = new ArrayList<>();
-	private List<String> queries = new ArrayList<>();
+	private List<Element> queries = new ArrayList<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -42,11 +43,55 @@ public class MappingProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
+			/*
+				Last round ... we already collected all tables and queries
+			*/
 			System.out.println(">>>>>>>>>>>> Last round! Fight! <<<<<<<<<<<<");
 			System.out.println("tables.: " + tables);
 			System.out.println("queries: " + queries);
-			// TODO do I need to do anything here?!
-			//   hmmm ... it seems it's here that I need to write the file
+
+
+			// Map Table name -> to Class (including package)
+			Map<String, String> tableMap = new HashMap<>();
+			for (var te : tables) {
+				final String packageAndClass = te.toString();
+				int ld = packageAndClass.lastIndexOf(".");
+				String tableName;
+				if (ld == -1) {
+					tableName = packageAndClass;
+				} else {
+					tableName = packageAndClass.substring(ld + 1);
+				}
+				
+				for (var am : te.getAnnotationMirrors()) {
+					for (var entry : am.getElementValues().entrySet()) {
+						// TODO maybe there is a better way instead of using toString
+						if (entry.getKey().toString().equals("name()")) {
+							tableName = entry.getValue().getValue().toString();
+						}
+					}
+				}
+
+				if (tableMap.get(tableName) != null) {
+					throw new RuntimeException("It can't map " + packageAndClass + " to " + tableName +
+							", because class '" + tableMap.get(tableName) +
+							"' is already mapped to that table.");
+				}
+				tableMap.put(tableName, packageAndClass);
+			}
+
+			System.out.println("------ map: Table -> Class -------");
+			System.out.println(tableMap);
+			
+			// Parse all queries
+			for (var qe : queries) {
+				String query = (String) ((VariableElement) qe).getConstantValue();
+				System.out.println("-->> Parsing query: " + query);
+				var p = new ParseQuery(query);
+				p.parse();
+				System.out.println("# Columns: " + p.getColumns());
+				System.out.println("# Tables.: " + p.getTables());
+			}
 
 			// Create map file
 				try {
@@ -108,10 +153,7 @@ public class MappingProcessor extends AbstractProcessor {
 					if (query == null) {
 						throw new RuntimeException("Variable annotated with @Query must be final and not null");
 					}
-					System.out.println(query);
-					// TODO save query in a list then generate the code
-					//   that does the mapping ...
-					queries.add(query);
+					queries.add(e);
 				} else {
 					tables.add(e);
 				}

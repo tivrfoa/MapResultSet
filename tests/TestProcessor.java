@@ -1,4 +1,4 @@
-package somepackage;
+package tests;
 
 import org.acme.Notebook;
 import com.github.mapresultset.Query;
