@@ -11,12 +11,14 @@ public class TestProcessor {
 	}
 
 	@Query
+	final String listPhones = "select id from phone";
+	// TODO create a test making sure that the two lines
+	//   below throw exception
 	// String sql = "select id from phone";
 	// final String sql = null;
-	final String sql = "select id from phone";
 
 	// TODO it needs to create a method like:
-	// List<Phone>
+	// List<Phone> phones = MapResultSet.listPhones(rs);
 
 
 	@Table(name = "phone")

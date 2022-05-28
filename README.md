@@ -4,13 +4,11 @@ MapResultSet has some restrictions regarding your queries.
 These restrictions could be handled, but I think they make
 your query more readable too. xD
 
-1. Must start with a SELECT;
-2. Must contain FROM (only the first FROM matters for MapResultSet);
-3. Join must be done using JOIN, not in WHERE clause;
-4. Values returned from SELECT that are not a simple column must
+1. Join must be done using JOIN, not in WHERE clause;
+2. Values returned from SELECT that are not a simple column must
    have an alias and be preceded with `AS`, eg: select 1 as one; select age + 18 as something;
-5. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
-6. The variable annotated with `@Query` must be final, eg:
+3. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
+4. The variable annotated with `@Query` must be final, eg:
 ```java
 @Query
 final String listPeople;

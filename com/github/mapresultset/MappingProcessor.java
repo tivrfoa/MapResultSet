@@ -1,3 +1,4 @@
+package com.github.mapresultset;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -26,10 +27,6 @@ public class MappingProcessor extends AbstractProcessor {
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init( processingEnv );
-
-		System.out.println(processingEnv.getElementUtils());
-		System.out.println(processingEnv.getTypeUtils());
-		System.out.println(processingEnv.getMessager());
     }
 
     @Override
