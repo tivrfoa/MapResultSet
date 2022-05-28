@@ -42,7 +42,9 @@ public class MappingProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
-			System.out.println("Last round! Fight!");
+			System.out.println(">>>>>>>>>>>> Last round! Fight! <<<<<<<<<<<<");
+			System.out.println("tables.: " + tables);
+			System.out.println("queries: " + queries);
 			// TODO do I need to do anything here?!
 			//   hmmm ... it seems it's here that I need to write the file
 
