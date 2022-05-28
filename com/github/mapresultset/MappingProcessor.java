@@ -3,7 +3,9 @@ package com.github.mapresultset;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -23,7 +25,9 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes({"com.github.mapresultset.Table", "com.github.mapresultset.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
-	private Set<Element> annotatedElements = new HashSet<>();
+	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
+	private List<Element> tables = new ArrayList<>();
+	private List<String> queries = new ArrayList<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -40,6 +44,25 @@ public class MappingProcessor extends AbstractProcessor {
 		if ( roundEnvironment.processingOver() ) {
 			System.out.println("Last round! Fight!");
 			// TODO do I need to do anything here?!
+			//   hmmm ... it seems it's here that I need to write the file
+
+			// Create map file
+				try {
+					final String method1 = """
+						public static List<String> listPhones(ResultSet rs) {
+							// TODO instead of List<String> must be the class, eg Phone
+							//   so I also need to pass to writeBuilderFile the imports
+							return null;
+						}
+					""";
+
+					// TODO
+					//   - how many classes create? Just one MapResultSet?
+					//   - create in which package?
+					writeBuilderFile("org.acme.MapResultSet", List.of(method1));
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -80,19 +103,15 @@ public class MappingProcessor extends AbstractProcessor {
 					System.out.println(query);
 					// TODO save query in a list then generate the code
 					//   that does the mapping ...
-				}
-
-				// Create map file
-				try {
-					writeBuilderFile(e.toString() + "MapResultSet", Map.of("setId", "int"));
-				} catch (IOException ex) {
-					ex.printStackTrace();
+					queries.add(query);
+				} else {
+					tables.add(e);
 				}
 			}
 		}
 	}
 
-	private void writeBuilderFile(String className, Map<String, String> setterMap) 
+	private void writeBuilderFile(final String className, List<String> methods)
 			throws IOException {
 
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
@@ -104,12 +123,12 @@ public class MappingProcessor extends AbstractProcessor {
 	    }
 
 	    String simpleClassName = className.substring(lastDot + 1);
-	    String builderClassName = className + "Builder";
-	    String builderSimpleClassName = builderClassName
-	      .substring(lastDot + 1);
+	    // String mapClassName = simpleClassName + "MapResultSet";
+	    String mapClassName = simpleClassName;
 
+	    System.out.println("filer options: " + processingEnv.getOptions());
 	    JavaFileObject builderFile = processingEnv.getFiler()
-	      .createSourceFile(builderClassName);
+	      .createSourceFile(className);
 	    
 	    try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
 
@@ -120,48 +139,20 @@ public class MappingProcessor extends AbstractProcessor {
 	            out.println();
 	        }
 
+	        out.println("import java.sql.ResultSet;");
+	        out.println("import java.util.ArrayList;");
+	        out.println("import java.util.List;");
+
 	        out.print("public class ");
-	        out.print(builderSimpleClassName);
+	        out.print(mapClassName);
 	        out.println(" {");
 	        out.println();
 
-	        out.print("    private ");
-	        out.print(simpleClassName);
-	        out.print(" object = new ");
-	        out.print(simpleClassName);
-	        out.println("();");
-	        out.println();
-
-	        out.print("    public ");
-	        out.print(simpleClassName);
-	        out.println(" build() {");
-	        out.println("        return object;");
-	        out.println("    }");
-	        out.println();
-
-	        setterMap.entrySet().forEach(setter -> {
-	            String methodName = setter.getKey();
-	            String argumentType = setter.getValue();
-
-	            out.print("    public ");
-	            out.print(builderSimpleClassName);
-	            out.print(" ");
-	            out.print(methodName);
-
-	            out.print("(");
-
-	            out.print(argumentType);
-	            out.println(" value) {");
-	            out.print("        object.");
-	            out.print(methodName);
-	            out.println("(value);");
-	            out.println("        return this;");
-	            out.println("    }");
-	            out.println();
-	        });
+	        for (var m : methods) {
+	        	out.println(m + "\n");
+	        }
 
 	        out.println("}");
-	        out.flush();
 	    }
 	}
 }
