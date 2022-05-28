@@ -3,8 +3,9 @@ package com.github.mapresultset;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -80,8 +81,88 @@ public class MappingProcessor extends AbstractProcessor {
 					// TODO save query in a list then generate the code
 					//   that does the mapping ...
 				}
+
+				// Create map file
+				try {
+					writeBuilderFile(e.toString() + "MapResultSet", Map.of("setId", "int"));
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
+	}
+
+	private void writeBuilderFile(String className, Map<String, String> setterMap) 
+			throws IOException {
+
+		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+				"Creating map file ... className = " + className);
+	    String packageName = null;
+	    int lastDot = className.lastIndexOf('.');
+	    if (lastDot > 0) {
+	        packageName = className.substring(0, lastDot);
+	    }
+
+	    String simpleClassName = className.substring(lastDot + 1);
+	    String builderClassName = className + "Builder";
+	    String builderSimpleClassName = builderClassName
+	      .substring(lastDot + 1);
+
+	    JavaFileObject builderFile = processingEnv.getFiler()
+	      .createSourceFile(builderClassName);
+	    
+	    try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
+
+	        if (packageName != null) {
+	            out.print("package ");
+	            out.print(packageName);
+	            out.println(";");
+	            out.println();
+	        }
+
+	        out.print("public class ");
+	        out.print(builderSimpleClassName);
+	        out.println(" {");
+	        out.println();
+
+	        out.print("    private ");
+	        out.print(simpleClassName);
+	        out.print(" object = new ");
+	        out.print(simpleClassName);
+	        out.println("();");
+	        out.println();
+
+	        out.print("    public ");
+	        out.print(simpleClassName);
+	        out.println(" build() {");
+	        out.println("        return object;");
+	        out.println("    }");
+	        out.println();
+
+	        setterMap.entrySet().forEach(setter -> {
+	            String methodName = setter.getKey();
+	            String argumentType = setter.getValue();
+
+	            out.print("    public ");
+	            out.print(builderSimpleClassName);
+	            out.print(" ");
+	            out.print(methodName);
+
+	            out.print("(");
+
+	            out.print(argumentType);
+	            out.println(" value) {");
+	            out.print("        object.");
+	            out.print(methodName);
+	            out.println("(value);");
+	            out.println("        return this;");
+	            out.println("    }");
+	            out.println();
+	        });
+
+	        out.println("}");
+	        out.flush();
+	    }
 	}
 }
 
