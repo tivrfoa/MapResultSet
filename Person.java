@@ -19,6 +19,7 @@ class TestPerson {
 				"person", Person.class
 				);
 
+		@Query
 		String sql = """
 			select id, name
 			from person as person

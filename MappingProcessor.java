@@ -71,7 +71,7 @@ public class MappingProcessor extends AbstractProcessor {
 
 
 				if (e instanceof VariableElement ve) {
-					String query = ve.getConstantValue();
+					String query = (String) ve.getConstantValue();
 					if (query == null) {
 						throw new RuntimeException("Variable annotated with @Query must be final and not null");
 					}

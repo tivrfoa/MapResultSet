@@ -11,6 +11,8 @@ public class TestProcessor {
 	}
 
 	@Query
+	// String sql = "select id from person";
+	// final String sql = null;
 	final String sql = "select id from person";
 
 	@Table

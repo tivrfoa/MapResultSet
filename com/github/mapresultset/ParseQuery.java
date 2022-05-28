@@ -1,3 +1,5 @@
+package com.github.mapresultset;
+
 import java.util.*;
 
 /**
@@ -21,7 +23,7 @@ Current *known* limitations (ps: please open an issue if you find others =))
  - it doesn't handle 'USING' in joins. MySQL only?
 *
 */
-class ParseQuery {
+public class ParseQuery {
 
 	private String query;
 	private String cleanedQuery; // for easier parsing. Maybe choose a better name =)
