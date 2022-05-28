@@ -3,6 +3,7 @@ package org.acme;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+
 public class MapResultSet {
 
 	public static List<String> listPhones(ResultSet rs) {
@@ -11,5 +12,8 @@ public class MapResultSet {
 		return null;
 	}
 
+	public static List<String> listPerson(ResultSet rs) {
+		return null;
+	}
 
 }

@@ -56,10 +56,16 @@ public class MappingProcessor extends AbstractProcessor {
 						}
 					""";
 
+					final String method2 = """
+						public static List<String> listPerson(ResultSet rs) {
+							return null;
+						}
+					""";
+
 					// TODO
 					//   - how many classes create? Just one MapResultSet?
 					//   - create in which package?
-					writeBuilderFile("org.acme.MapResultSet", List.of(method1));
+					writeBuilderFile("org.acme.MapResultSet", List.of(method1, method2));
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -139,17 +145,16 @@ public class MappingProcessor extends AbstractProcessor {
 	            out.println();
 	        }
 
+	        // imports
 	        out.println("import java.sql.ResultSet;");
 	        out.println("import java.util.ArrayList;");
 	        out.println("import java.util.List;");
-
-	        out.print("public class ");
-	        out.print(mapClassName);
-	        out.println(" {");
 	        out.println();
 
+	        out.println("public class " + mapClassName + " {\n");
+
 	        for (var m : methods) {
-	        	out.println(m + "\n");
+	        	out.println(m);
 	        }
 
 	        out.println("}");
