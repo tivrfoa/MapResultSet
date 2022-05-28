@@ -5,17 +5,20 @@ import java.util.*;
 * These restrictions could be handled, but I think they make
 * your query more readable too. xD
 *
-* 1. Must start with a SELECT
-* 2. Must contain FROM (only the first FROM matters for MapResultSet)
-* 3. Join must be done using JOIN
+* 1. Must start with a SELECT;
+* 2. Must contain FROM (only the first FROM matters for MapResultSet);
+* 3. Join must be done using JOIN, not in WHERE clause;
 * 4. Values returned from SELECT that are not a simple column must
-*    have an alias, eg: select 1 as one; select age + 18 as something
+*    have an alias and be preceded with `AS`, eg: select 1 as one; select age + 18 as something;
+* 5. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
+* 6. The variable annotated with `@Query` must be final, eg:
+* ```java
+* @Query
+* final String listPeople;
+* ```
 
-* Current *known* limitations (ps: please open an issue if you find others =))
-*  - it doesn't handle 'USING' in joins. MySQL only?
-*  - joins must use 'on' with a join column, eg: from a join b on a.id = b.id
-*  - you must use 'as' when using alias.
-*  - The clauses must be in this order: select, from, [where], [group by], [having], [order by]
+Current *known* limitations (ps: please open an issue if you find others =))
+ - it doesn't handle 'USING' in joins. MySQL only?
 *
 */
 class ParseQuery {
@@ -38,19 +41,19 @@ class ParseQuery {
 		'"', '"',
 		'\'', '\''
 	);
-	
+
 	public String getFromContent() {
 		return fromContent;
 	}
-	
+
 	public List<String> getColumns() {
 		return columns;
 	}
-	
+
 	public List<String> getTables() {
 		return tables;
 	}
-	
+
 	ParseQuery(String query) {
 		if (query == null || query.length() < MINIMUM_QUERY_SIZE)
 			throw new RuntimeException("Invalid query: " + query);
@@ -64,7 +67,7 @@ class ParseQuery {
 		if (fromIndex == -1)
 			throw new RuntimeException("Query must contain ' from ' clause.");
 	}
-	
+
 	static int getClosingCharIndex(final String str, final int startIndex, final char openChar, final char closeChar) {
 		final int len = str.length();
 		int i = startIndex;
@@ -75,24 +78,24 @@ class ParseQuery {
 			if (str.charAt(i) == closeChar) --qt;
 			else if (str.charAt(i) == openChar) ++qt;
 		}
-		
+
 		return i;
 	}
-	
+
 	void parse() {
 		parseColumns();
 		parseTables();
 	}
-	
+
 	void parseColumns() {
 		final String sc = cleanedQuery.substring(INDEX_AFTER_SELECT, fromIndex);
 		// dbg("Select content: " + sc);
 		final int len = sc.length();
-		
+
 		// It just need to find a ',' that is not inside: "", '' and ()
 		// If it finds one of the chars below, then it needs to have an alias:
 		//   ", ', (, +, -
-		
+
 		boolean mustHaveAlias = false;
 		for (int i = 0; i < len; i++) {
 			if (MATCHING_CHARS.containsKey(sc.charAt(i))) {
@@ -107,23 +110,23 @@ class ParseQuery {
 				// do nothing
 			}
 		}
-		
+
 		// add last column
 		columns.add(getColumnBeforeIdx(sc, len, mustHaveAlias));
-		
+
 		dbg("columns: " + columns);
 	}
-	
+
 	static String getColumnBeforeIdx(final String str, final int idx, final boolean mustHaveAlias) {
 		int left = idx - 1;
 		while (left - 1 >= 0 && str.charAt(left - 1) != ' ' && str.charAt(left - 1) != ',') --left;
-		
+
 		if (mustHaveAlias && (left - 4 < 0 || !str.substring(left - 4, left).equals(" AS ")))
 			throw new RuntimeException("Column must declare alias using ' AS '");
-		
+
 		return str.substring(left, idx);
 	}
-	
+
 	void parseTables() {
 		parseFromContent();
 		final int len = fromContent.length();
@@ -136,7 +139,7 @@ class ParseQuery {
 				// other possible values before 'join': inner, outer, full, left, right, cross
 				// as none of the them contains 'j', it makes our life easier xD
 				while (fromContent.charAt(i) != 'j' && fromContent.charAt(i) != 'J') ++i;
-				
+
 				i += 5; // Skip 'oin '
 
 				// It might be joining with a temporary table
@@ -154,7 +157,7 @@ class ParseQuery {
 				}
 				// dbg("joinTable: " + joinTable);
 				tables.add(joinTable);
-				
+
 				// skip join columns
 				while (true) {
 					// find '='
@@ -163,13 +166,13 @@ class ParseQuery {
 						throw new RuntimeException("'=' not found in join. Joins must use 'on' with a join column, eg: from a join b on a.id = b.id");
 					++i; // skip space after '='
 					while (i < len && fromContent.charAt(i++) != ' ');
-					
+
 					// check if it's joining with more than one column
 					if (i + 4 >= len || !fromContent.substring(i, i + 4).equals("AND ")) break;
 					i += 4;
 					// dbg("'and' found. Substring: " + fromContent.substring(i));
 				}
-				
+
 				--i; // to avoid double increment in the 'for' loop
 			} else if (fromContent.charAt(i) == '(') {
 				if (!currTable.isEmpty()) throw new RuntimeException("Invalid query? " + query);
@@ -201,10 +204,10 @@ class ParseQuery {
 			}
 		}
 		if (!currTable.isEmpty()) tables.add(currTable);
-		
+
 		dbg("tables.: " + tables);
 	}
-	
+
 	/**
 	* It stops at the first match of: WHERE | GROUP BY | ORDER BY | LIMIT | FETCH
 	*
@@ -219,7 +222,7 @@ class ParseQuery {
 				i = getClosingCharIndex(cleanedQuery, i, '(', ')');
 				continue;
 			}
-			
+
 			// FIXME LIMIT and FETCH might be valid column names? ... =(
 			for (var oc : OPTIONAL_CLAUSES) {
 				if (i + oc.length() <= len && cleanedQuery.substring(i, i + oc.length()).equals(oc)) {
@@ -231,7 +234,7 @@ class ParseQuery {
 		// dbg("lastIndexExclusive = " + lastIndexExclusive);
 		this.fromContent = cleanedQuery.substring(startIndex, lastIndexExclusive).trim();	
 	}
-	
+
 	/**
 		1. Remove line breaks
 		2. Trim
@@ -250,20 +253,20 @@ class ParseQuery {
 				.replaceFirst(" (?i)from ", " FROM ")
 				.replaceAll(" (?i)as ", " AS ")
 				.replaceAll(" (?i)and ", " AND ");
-		
+
 		for (var oc : OPTIONAL_CLAUSES)
 			query = query.replaceAll("(?i)" + oc, oc);
-		
+
 		return query;
 	}
-	
+
 	static void pl(Object o) {
 		System.out.println(o);
 	}
-	
+
 	public static void main(String[] args) {
 		checkAssertionEnabled();
-		
+
 		testCleanQuery();
 		testNullQuery();
 		testBelowMinimumQuerySize();
@@ -285,21 +288,21 @@ class ParseQuery {
 		testJoin4Tables();
 		testColumnParsingNoAliasThrows();
 		testColumnParsing1();
-		
+
 		pl("============== ALL TESTS PASSED!!!!! =D ==============");
 	}
-	
+
 	static void checkAssertionEnabled() {
 		boolean[] isEnabled = {false};
 		assert enableAssertion(isEnabled);
 		if (!isEnabled[0]) throw new RuntimeException("You need to enable assertions to run the tests: java -ea ParseQuery");
 	}
-	
+
 	static boolean enableAssertion(boolean[] isEnabled) {
 		isEnabled[0] = true;
 		return true;
 	}
-	
+
 	static void testCleanQuery() {
 		String sql = """
 		
@@ -308,7 +311,7 @@ class ParseQuery {
 		  
 		""";
 		assertEq(ParseQuery.cleanQuery(sql), "SELECT * FROM client");
-		
+
 		sql = """
 		select *
 		FRoM client aS c
@@ -317,7 +320,7 @@ class ParseQuery {
 		""";
 		assertEq(ParseQuery.cleanQuery(sql), "SELECT * FROM client AS c WHERE id > 10 ORDER BY name");
 	}
-	
+
 	static void testGetFromContent() {
 		String sql = """
 		
@@ -325,7 +328,7 @@ class ParseQuery {
 		  from   client
 		  
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parseFromContent();
 		assertEq(p.getFromContent(), "client");
@@ -336,7 +339,7 @@ class ParseQuery {
 			select id, name
 			from person as Person
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertEq(p.getFromContent(), "Person");
@@ -349,19 +352,19 @@ class ParseQuery {
 		  from   client
 		  
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertEq(p.getFromContent(), "client");
 	}
-	
+
 	static void testNullQuery() {
 		assertThrows(() -> new ParseQuery(null).parse(),
 				RuntimeException.class,
 				"Invalid query: null"
 		);
 	}
-	
+
 	static void testBelowMinimumQuerySize() {
 		String sql = " from xyz";
 		assertThrows(() -> new ParseQuery(sql).parse(),
@@ -369,7 +372,7 @@ class ParseQuery {
 				"Invalid query: " + sql
 		);
 	}
-	
+
 	static void testNoSelect() {
 		String sql = " from xyz where xxxxxxxxxxx";
 		assertThrows(() -> new ParseQuery(sql).parse(),
@@ -384,7 +387,7 @@ class ParseQuery {
 				"Query must contain ' from ' clause."
 		);
 	}
-		
+
 	static void testNoTable() {
 		String sql = "select xyz from where a > 2";
 		assertThrows(() -> new ParseQuery(sql).parse(),
@@ -392,7 +395,7 @@ class ParseQuery {
 				"Query does not contain any table."
 		);
 	}
-	
+
 	static void testInvalidJoin() {
 		String sql = """
 		
@@ -405,7 +408,7 @@ class ParseQuery {
 				"'=' not found in join. Joins must use 'on' with a join column, eg: from a join b on a.id = b.id"
 		);
 	}
-	
+
 	static void testTwoTables() {
 		String sql = """
 		
@@ -413,10 +416,10 @@ class ParseQuery {
 		  from   client join address on client.id = address.client_id
 		  
 		""";
-		
+
 		new ParseQuery(sql).parse();
 	}
-	
+
 	static void testThreeTables() {
 		String sql = """
 		  SELECT client.name
@@ -426,12 +429,12 @@ class ParseQuery {
 			       client.club_id = club.id
 		  WHERE club.pool_temperature = 'is warm'
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertEq(p.getFromContent(), "client join address on client.id = address.client_id join club on client.club_id = club.id");
 	}
-	
+
 	static void testWithWhereClause() {
 		String sql = """
 		  SELECT *
@@ -441,7 +444,7 @@ class ParseQuery {
 		
 		new ParseQuery(sql).parse();
 	}
-	
+
 	static void testTableFromSelect() {
 		String sql = """
 		  SELECT A.id, age + 2000 as other_age, (id as does_matter_here) as new_id
@@ -451,12 +454,12 @@ class ParseQuery {
 			group by city) as A
 		  WHERE it does matter here
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertEq(p.getFromContent(), "( select city, count(*) from club GROUP BY city) AS A");
 	}
-	
+
 	static void testJoinTemporaryTable() {
 		String sql = """
 		  SELECT id, A.city
@@ -469,13 +472,13 @@ class ParseQuery {
 			
 		  order by id
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("A", "club"));
 		assertEq(p.getFromContent(), "( select city, count(*) from club GROUP BY city ) AS A join club on a.city = club.city");
 	}
-	
+
 	static void testJoinTemporaryTableUsingAS() {
 		String sql = """
 		  SELECT id, A.city
@@ -488,13 +491,13 @@ class ParseQuery {
 			
 		  order by id
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("A", "c2"));
 		assertEq(p.getFromContent(), "( select city, count(*) from club GROUP BY city ) AS A lefT join club AS c2 on a.city = c2.city");
 	}
-	
+
 	static void testJoinTwoTemporaryTables() {
 		String sql = """
 		  SELECT id, A.city
@@ -510,13 +513,13 @@ class ParseQuery {
 		    a.xxx = b.iii and
 			a.ttt = b.ttt
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("A", "B"));
 		assertEq(p.getFromContent(), "( select city, count(*) from club GROUP BY city ) AS A inner join ( select xyz from xxx WHERE yyy ) AS B on a.xxx = b.iii AND a.ttt = b.ttt");
 	}
-	
+
 	static void testJoinTwoTemporaryTablesWithLimit() {
 		String sql = """
 		  SELECT id, A.city
@@ -533,7 +536,7 @@ class ParseQuery {
 			a.ttt = b.ttt
 		  limit 3
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("A", "B"));
@@ -559,7 +562,7 @@ class ParseQuery {
 			  b.id = uu.id
 		  offSet 3 rows
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("A", "B", "tablespace.uu"));
@@ -585,7 +588,7 @@ class ParseQuery {
 			  b.id = uu.id
 		  FeTCh first 1 row only
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("ABC", "A", "B", "u3"));
@@ -597,7 +600,7 @@ class ParseQuery {
 				1+'1', CONCAT(2,' test')
 		  from  x
 		""";
-		
+
 		assertThrows(() -> new ParseQuery(sql).parse(),
 				RuntimeException.class,
 				"Column must declare alias using ' AS '"
@@ -611,14 +614,13 @@ class ParseQuery {
 				"from" as origin
 		  from  x
 		""";
-		
+
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertListEq(p.getTables(), List.of("x"));
 		assertListEq(p.getColumns(), List.of("strange_id", "no_need_to_use_AS_here", "some_mod", "guess_what", "test2", "origin"));
 	}
-	
-		
+
 	static <T> void assertListEq(List<T> actual, List<T> expected) {
 		if (actual == null && expected == null) return;
 		if ((actual == null && expected != null) ||
@@ -628,11 +630,11 @@ class ParseQuery {
 		for (int i = 0; i < actual.size(); i++)
 			assert actual.get(i).equals(expected.get(i)) : "Actual: '" + actual + "', expected: '" + expected + "'";
 	}
-	
+
 	static void assertEq(String actual, String expected) {
 		assert actual.equals(expected) : "Actual: '" + actual + "', expected: '" + expected + "'";
 	}
-	
+
 	static void assertThrows(Runnable run, Class exceptionClass, String errorMsg) {
 		try {
 			run.run();
@@ -646,15 +648,15 @@ class ParseQuery {
 			assertEq(e.getMessage(), errorMsg);
 		}
 	}
-		
+
 	static void dbg(Object o) {
 		assert dbg1(o);
 	}
-	
+
 	static boolean dbg1(Object o) {
 		pl(o); return true;
 	}
-	
+
 }
 
 /*
