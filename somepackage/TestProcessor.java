@@ -11,12 +11,21 @@ public class TestProcessor {
 	}
 
 	@Query
-	// String sql = "select id from person";
+	// String sql = "select id from phone";
 	// final String sql = null;
-	final String sql = "select id from person";
+	final String sql = "select id from phone";
 
-	@Table
+	// TODO it needs to create a method like:
+	// List<Phone>
+
+
+	@Table(name = "phone")
 	static class Phone {
+		private int id;
+
+		public int getId() {
+			return this.id;
+		}
 	}
 }
 

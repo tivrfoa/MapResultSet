@@ -59,6 +59,10 @@ public class MappingProcessor extends AbstractProcessor {
 			this.annotatedElements.addAll(annotatedElements);
 			for (var e : annotatedElements) {
 				System.out.println("Element: " + e + " and it's type is " + e.getKind());
+				System.out.println("AnnotationMirrors: " + e.getAnnotationMirrors());
+				for (var am : e.getAnnotationMirrors()) {
+					System.out.println(am.getElementValues());
+				}
 				Element enclosingElement = e.getEnclosingElement();
 				String name = e.getSimpleName().toString();
 				System.out.println("element name: " + name);
