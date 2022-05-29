@@ -2,6 +2,9 @@
 
 The goal is to automate the manual process of setting the object's properties from a ResultSet.
 
+MapResultSet is not a query validator, so make sure your
+query actually works before you use it in your Java project.
+
 **TODO**
   - show a picture comparing side-by-side
 

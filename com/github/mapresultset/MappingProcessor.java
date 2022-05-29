@@ -101,14 +101,16 @@ public class MappingProcessor extends AbstractProcessor {
 
 				// Link columns to tables
 				List<TableColumns> listTableColumns = new ArrayList<>();
-				for (var table : p.getTables()) {
+				for (var aliasTableEntry : p.getTables().entrySet()) {
+					final String table = aliasTableEntry.getValue();
+					final String tableAlias = aliasTableEntry.getKey();
 					TableColumns tc = new TableColumns();
 					tc.setTableName(table);
 
 					for (var column : p.getColumns()) {
 						int dotIndex = column.indexOf(".");
 						if (dotIndex != -1) {
-							if (column.substring(0, dotIndex).equals(table)) {
+							if (column.substring(0, dotIndex).equals(tableAlias)) {
 								if (!tc.getColumns().add(column.substring(dotIndex + 1))) {
 									throw new RuntimeException("Duplicate column '" + column.substring(dotIndex + 1) +
 											"' for table: " + table);
