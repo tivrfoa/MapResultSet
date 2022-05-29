@@ -9,6 +9,15 @@ The goal is to automate the manual process of setting the object's properties fr
 
 MapResultSet uses two annotations: `Table` and `Query`
 
+The variable annotated with `@Query` must be final, eg:
+```java
+@Query
+final String listPeople;
+```
+
+And due to [Java Annotation Processor limitation](https://stackoverflow.com/questions/3285652/how-can-i-create-an-annotation-processor-that-processes-a-local-variable), the queries must not
+be local variables.
+
 **TODO** explain how to use these annotations
 
 ## MapResultSet Query Restrictions
@@ -23,11 +32,6 @@ your query more readable too. xD
 3. Columns in `select` must be preceded by the table name if the `from` clause contains
 more than one table;
 4. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
-5. The variable annotated with `@Query` must be final, eg:
-```java
-@Query
-final String listPeople;
-```
 
 Current *known* limitations (ps: please open an issue if you find others =))
  - it doesn't handle 'USING' in joins. MySQL only?

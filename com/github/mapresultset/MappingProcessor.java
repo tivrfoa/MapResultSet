@@ -115,10 +115,6 @@ public class MappingProcessor extends AbstractProcessor {
 								}
 							}
 						} else {
-							// Find which table this column belongs. If the columns
-							// was preceded with the table name it would make my life easier
-							// and the query more readable. Maybe I should impose this
-							// restriction if it's querying from more than one table.
 							if (p.getTables().size() == 1) {
 								if (!tc.getColumns().add(column)) {
 									throw new RuntimeException("Duplicate column '" + column +
@@ -171,7 +167,9 @@ public class MappingProcessor extends AbstractProcessor {
 
     private void processAnnotations(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		for ( TypeElement annotation : annotations ) {
-			System.out.println("Annotation: " + annotation);
+			System.out.println("///////////////////////////////////////////////////////////////////////");
+			System.out.println("========= Processing Annotation: " + annotation + " ========");
+			System.out.println("///////////////////////////////////////////////////////////////////////");
 			Set<? extends Element> annotatedElements
 					= roundEnvironment.getElementsAnnotatedWith(annotation);
 			System.out.println("Annotated Elements: " + annotatedElements);

@@ -2,7 +2,7 @@ package com.github.mapresultset;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.FIELD, ElementType.LOCAL_VARIABLE})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.CLASS)
 public @interface Query {
 }
