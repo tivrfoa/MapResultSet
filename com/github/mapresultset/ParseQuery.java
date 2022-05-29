@@ -8,14 +8,11 @@ import java.util.*;
 * your query more readable too. xD
 *
 * 1. Join must be done using JOIN, not in WHERE clause;
-* 2. Values returned from SELECT that are not a simple column must
+* 2. Values returned from SELECT that are not a simple column name must
 *    have an alias and be preceded with `AS`, eg: select 1 as one; select age + 18 as something;
-* 3. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
-* 4. The variable annotated with `@Query` must be final, eg:
-* ```java
-* @Query
-* final String listPeople;
-* ```
+* 3. Columns in `select` must be preceded by the table name if the `from` clause contains
+more than one table; ps: this is currently being handled in MappingProcessor. TODO: maybe do this validation in this class
+* 4. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
 
 Current *known* limitations (ps: please open an issue if you find others =))
  - it doesn't handle 'USING' in joins. MySQL only?
@@ -25,12 +22,10 @@ public class ParseQuery {
 
 	private String query;
 	private String cleanedQuery; // for easier parsing. Maybe choose a better name =)
-	private String selectContent;
 	private String fromContent;
 	private List<String> columns = new ArrayList<>();
 	private List<String> tables = new ArrayList<>();
 	private int fromIndex = -1;
-	private int lastIndex = -1;
 	private static final int MINIMUM_QUERY_SIZE = 15; // SELECT 1 FROM A
 	private static final int INDEX_AFTER_SELECT = 7; // 'SELECT '
 	private static final String[] OPTIONAL_CLAUSES = {
