@@ -1,3 +1,16 @@
+# MapResultSet
+
+The goal is to automate the manual process of setting the object's properties from a ResultSet.
+
+**TODO**
+  - show a picture comparing side-by-side
+
+## Annotations
+
+MapResultSet uses two annotations: `Table` and `Query`
+
+**TODO** explain how to use these annotations
+
 ## MapResultSet Query Restrictions
 
 MapResultSet has some restrictions regarding your queries.
