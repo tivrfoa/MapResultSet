@@ -23,7 +23,7 @@ public class ParseQuery {
 	private String query;
 	private String cleanedQuery; // for easier parsing. Maybe choose a better name =)
 	private String fromContent;
-	private List<String> columns = new ArrayList<>();
+	private List<ColumnRecord> columns = new ArrayList<>();
 	/**
 	 * key: alias, value: table name
 	 * 
@@ -46,7 +46,7 @@ public class ParseQuery {
 		return fromContent;
 	}
 
-	public List<String> getColumns() {
+	public List<ColumnRecord> getColumns() {
 		return columns;
 	}
 
@@ -93,7 +93,8 @@ public class ParseQuery {
 		final int len = sc.length();
 
 		// It just need to find a ',' that is not inside: "", '' and ()
-		// If it finds one of the chars below, then it needs to have an alias:
+		// If it finds one of the chars below, then it needs to have an alias
+		// and it means it's a generated value and not just a table column:
 		//   ", ', (, +, -
 
 		boolean mustHaveAlias = false;
@@ -104,7 +105,7 @@ public class ParseQuery {
 			} else if (sc.charAt(i) == '+' || sc.charAt(i) == '-') {
 				mustHaveAlias = true;
 			} else if (sc.charAt(i) == ',') {
-				columns.add(getColumnBeforeIdx(sc, i, mustHaveAlias));
+				columns.add(createColumnRecord(sc, i, mustHaveAlias));
 				mustHaveAlias = false;
 			} else {
 				// do nothing
@@ -112,9 +113,31 @@ public class ParseQuery {
 		}
 
 		// add last column
-		columns.add(getColumnBeforeIdx(sc, len, mustHaveAlias));
+		columns.add(createColumnRecord(sc, len, mustHaveAlias));
 
 		dbg("columns: " + columns);
+	}
+
+	private static ColumnRecord createColumnRecord(String sc, int len, boolean mustHaveAlias) {
+		String columnName = getColumnBeforeIdx(sc, len, mustHaveAlias);
+		String alias = null;
+		int columnLen = columnName.length();
+		// check if there's AS before it
+		int j = len - columnLen;
+		if (j - 4 >= 0 && sc.substring(j - 4, j).equals(" AS ")) {
+			alias = columnName;
+			if (mustHaveAlias) {
+				columnName = null;
+			} else {
+				j -= 5;
+				int begin = j;
+				int endExclusive = j + 1;
+
+				while (sc.charAt(begin - 1) != ' ') --begin;
+				columnName = sc.substring(begin, endExclusive);
+			}
+		}
+		return new ColumnRecord(columnName, alias, mustHaveAlias);
 	}
 
 	static String getColumnBeforeIdx(final String str, final int idx, final boolean mustHaveAlias) {
@@ -619,7 +642,7 @@ public class ParseQuery {
 
 	static void testColumnParsing1() {
 		String sql = """
-		  SELECT id + 200 - 30 as strange_id, name no_need_to_use_AS_here, MOD(29,9) as some_mod,
+		  SELECT id + 200 - 30 as strange_id, name as nice_name, MOD(29,9) as some_mod,
 				1+'1' as guess_what, CONCAT(2,' test') as test2,
 				"from" as origin
 		  from  x as Y
@@ -628,7 +651,13 @@ public class ParseQuery {
 		var p = new ParseQuery(sql);
 		p.parse();
 		assertMapEq(p.getTables(), Map.of("Y", "x"));
-		assertListEq(p.getColumns(), List.of("strange_id", "no_need_to_use_AS_here", "some_mod", "guess_what", "test2", "origin"));
+		assertListEq(p.getColumns(), List.of(
+			new ColumnRecord(null, "strange_id", true),
+			new ColumnRecord("name", "nice_name", false),
+			new ColumnRecord(null, "some_mod", true),
+			new ColumnRecord(null, "guess_what", true),
+			new ColumnRecord(null, "test2", true),
+			new ColumnRecord(null, "origin", true)));
 	}
 
 	static List<String> collectionToSortedList(Collection<String> set) {
