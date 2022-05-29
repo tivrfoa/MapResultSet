@@ -2,4 +2,5 @@
 *.class
 target/
 classes/
-
+lib/
+sources.txt

@@ -2,4 +2,5 @@
 
 ## Testing MySQL JDBC connection
 
-javac MySQLCon.java && java -cp .:classes/mysql-connector-java-8.0.29.jar MysqlCon
+javac -d classes/ MySQLCon.java &&
+  java -cp classes/:lib/mysql-connector-java-8.0.29.jar MySQLCon
