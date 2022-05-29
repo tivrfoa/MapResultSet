@@ -26,6 +26,13 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes({"com.github.mapresultset.Table", "com.github.mapresultset.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
+	private static final String template = """
+						public static List<#class#> #queryName#(ResultSet rs) {
+							var list = new ArrayList<#class#>();
+							return list;
+						}
+					""";
+
 	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
 	private List<Element> tables = new ArrayList<>();
 	private List<Element> queries = new ArrayList<>();
@@ -91,6 +98,41 @@ public class MappingProcessor extends AbstractProcessor {
 				p.parse();
 				System.out.println("# Columns: " + p.getColumns());
 				System.out.println("# Tables.: " + p.getTables());
+
+				// Link columns to tables
+				List<TableColumns> listTableColumns = new ArrayList<>();
+				for (var table : p.getTables()) {
+					TableColumns tc = new TableColumns();
+					tc.setTableName(table);
+
+					for (var column : p.getColumns()) {
+						int dotIndex = column.indexOf(".");
+						if (dotIndex != -1) {
+							if (column.substring(0, dotIndex).equals(table)) {
+								if (!tc.getColumns().add(column.substring(dotIndex + 1))) {
+									throw new RuntimeException("Duplicate column '" + column.substring(dotIndex + 1) +
+											"' for table: " + table);
+								}
+							}
+						} else {
+							// Find which table this column belongs. If the columns
+							// was preceded with the table name it would make my life easier
+							// and the query more readable. Maybe I should impose this
+							// restriction if it's querying from more than one table.
+							if (p.getTables().size() == 1) {
+								if (!tc.getColumns().add(column)) {
+									throw new RuntimeException("Duplicate column '" + column +
+											"' for table: " + table);
+								}
+							} else {
+								throw new RuntimeException("Columns must be preceded by the table name " +
+										"when there are more than one table in the 'from' clause.");
+							}
+						}
+					}
+					listTableColumns.add(tc);
+				}
+				System.out.println(listTableColumns);
 			}
 
 			// Create map file
@@ -109,10 +151,13 @@ public class MappingProcessor extends AbstractProcessor {
 						}
 					""";
 
+					final String method3 = template.replaceAll("#class#", "String")
+							.replaceAll("#queryName#", "listSomething");
+
 					// TODO
 					//   - how many classes create? Just one MapResultSet?
 					//   - create in which package?
-					writeBuilderFile("org.acme.MapResultSet", List.of(method1, method2));
+					writeBuilderFile("org.acme.MapResultSet", List.of(method1, method2, method3));
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}

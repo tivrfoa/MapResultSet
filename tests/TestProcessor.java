@@ -11,7 +11,7 @@ public class TestProcessor {
 	}
 
 	@Query
-	final String listPhones = "select id from phone";
+	final String listPhones = "select id, phone.id from phone";
 	// TODO create a test making sure that the two lines
 	//   below throw exception
 	// String sql = "select id from phone";

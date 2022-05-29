@@ -16,4 +16,9 @@ public class MapResultSet {
 		return null;
 	}
 
+	public static List<String> listSomething(ResultSet rs) {
+		var list = new ArrayList<String>();
+		return list;
+	}
+
 }
