@@ -50,6 +50,10 @@ public class ParseQuery {
 		return columns;
 	}
 
+	/**
+	 * 
+	 * @return map: alias -> table name
+	 */
 	public Map<String, String> getTables() {
 		return tables;
 	}

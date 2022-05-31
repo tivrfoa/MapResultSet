@@ -107,121 +107,118 @@ public class MappingProcessor extends AbstractProcessor {
 			List<ClassToCreate> listClassesToCreate = new ArrayList<>();
 			
 			// Parse all queries
-			for (var qe : queries) {
+			for (var queryElement : queries) {
 				List<String> generatedColumns = new ArrayList<>();
-				final String packageName = getPackageName(qe);
-				final String className = getQueryClassName(qe);
+				Set<String> queryImports = new HashSet<>();
+				String queryImportsStr = "";
+				final String packageName = getPackageName(queryElement);
+				final String queryClassName = getQueryClassName(queryElement);
+				final String generatedColumnsClassName = uppercaseFirstLetter(queryElement.toString()) + "GeneratedColumns";
 				String classContent = """
 						package %s;
+
+						#import#
 
 						public class %s {
 
 							
-						""".formatted(packageName, className);
-				var classToCreate = new ClassToCreate(packageName, className, classContent);
-				listClassesToCreate.add(classToCreate);
-				String query = (String) ((VariableElement) qe).getConstantValue();
+						""".formatted(packageName, queryClassName);
+				var queryClassToCreate = new ClassToCreate(packageName, queryClassName, classContent);
+				listClassesToCreate.add(queryClassToCreate);
+				String query = (String) ((VariableElement) queryElement).getConstantValue();
 				System.out.println("-->> Parsing query: " + query);
 				var p = new ParseQuery(query);
 				p.parse();
+				System.out.println("p.getTables() = " + p.getTables());
 
 				for (var column : p.getColumns()) {
 					if (column.isGeneratedValue()) {
 						String alias = column.alias();
-						String Alias = uppercaseFirstLetter(column.alias());
-						/*String content = """
-							private Object %s;
-
-							public Object get%s() {
-								return %s;
+						generatedColumns.add(alias);
+					} else {
+						String table = column.table();
+						if (table == null) {
+							// if it's not a generated column and table is null
+							// then it means the from clause must have a single table
+							if (p.getTables().size() > 1) {
+								throw new RuntimeException("Columns must be preceded by the table name " +
+										"when there are more than one table in the 'from' clause.");
 							}
-
-							public void set%s() {
-
-							}
-
-							""".formatted(alias, Alias, alias, Alias);*/
-
-						//packageMethods.get(ANONYMOUS_TABLE).add(content);
-						//classToCreate.content += content;
+							for (var es : p.getTables().entrySet()) table = es.getValue();
+						} else {
+							table = p.getTables().get(table);
+						}
+						System.out.println("table = " + table + ", tableMap.get(table) = " + tableMap.get(table));
+						if (queryImports.add(tableMap.get(table))) {
+							queryImportsStr += "import " + tableMap.get(table) + ";\n";
+							String classTableName = splitPackageClass(tableMap.get(table))[1];
+							String content = """
+									public List<%s> list%s;
+								""".formatted(classTableName, classTableName);
+							queryClassToCreate.content += content;
+						}
 					}
 				}
 
-				classToCreate.content += "}";
-
-				System.out.println(classToCreate.content);
-
-				// Link columns to tables
-				List<TableColumns> listTableColumns = new ArrayList<>();
-				for (var aliasTableEntry : p.getTables().entrySet()) {
-					final String table = aliasTableEntry.getValue();
-					final String tableAlias = aliasTableEntry.getKey();
-					TableColumns tc = new TableColumns();
-					tc.setTableName(table);
-
-					/*for (var column : p.getColumns()) {
-						int dotIndex = column.indexOf(".");
-						if (dotIndex != -1) {
-							if (column.substring(0, dotIndex).equals(tableAlias)) {
-								if (!tc.getColumns().add(column.substring(dotIndex + 1))) {
-									throw new RuntimeException("Duplicate column '" + column.substring(dotIndex + 1) +
-											"' for table: " + table);
-								}
-							}
-						} else {
-							if (p.getTables().size() == 1) {
-								if (!tc.getColumns().add(column)) {
-									throw new RuntimeException("Duplicate column '" + column +
-											"' for table: " + table);
-								}
-							} else {
-								// Invalid exception for "generated" values that are not columns
-								//throw new RuntimeException("Columns must be preceded by the table name " +
-								//		"when there are more than one table in the 'from' clause.");
-							}
-						}
-					}*/
-					// if (!tc.getColumns().isEmpty())
-					listTableColumns.add(tc);
+				if (!generatedColumns.isEmpty()) {
+					queryClassToCreate.content += """
+							public List<%s> list%s;
+						""".formatted(generatedColumnsClassName, generatedColumnsClassName);
 				}
-				System.out.println(listTableColumns);
-			}
 
-			// Create map file
-				try {
-					final String method1 = """
-						public static List<String> listPhones(ResultSet rs) {
-							// TODO instead of List<String> must be the class, eg Phone
-							//   so I also need to pass to writeBuilderFile the imports
-							return null;
-						}
-					""";
+				queryClassToCreate.content += "}";
+				queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
 
-					final String method2 = """
-						public static List<String> listPerson(ResultSet rs) {
-							return null;
-						}
-					""";
+				System.out.println(queryClassToCreate.content);
+				writeBuilderFile(packageName, queryClassName, queryClassToCreate.content);
 
-					final String method3 = template.replaceAll("#class#", "String")
-							.replaceAll("#queryName#", "listSomething");
+				if (!generatedColumns.isEmpty()) {
+					// Create GeneratedColumns class
 
-					// TODO
-					//   - how many classes create? Just one MapResultSet?
-					//   - create in which package?
-					writeBuilderFile("org.acme.MapResultSet", List.of(method1, method2, method3));
+					classContent = """
+						package %s;
+
+						import java.util.List;
+
+						public class %s {
+
+							
+						""".formatted(packageName, generatedColumnsClassName);
+					var generatedColumnsClassToCreate = new ClassToCreate(packageName, generatedColumnsClassName, classContent);
+
+					for (var field : generatedColumns) {
+						String content = "\tpublic Object " + field + ";\n";
+						generatedColumnsClassToCreate.content += content;
+					}
+					generatedColumnsClassToCreate.content += "}";
+					System.out.println(generatedColumnsClassToCreate.content);
+					writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
+				}
+
+				// Create map file
+				/*try {
+					final String content = createMapResultSetClassForQuery();
+					writeBuilderFile(packageName, "MapResultSet", content);
 				} catch (IOException ex) {
 					ex.printStackTrace();
-				}
+				}*/
+			}
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
 
-		// https://docs.oracle.com/javase/8/docs/api/javax/annotation/processing/AbstractProcessor.html#process-java.util.Set-javax.annotation.processing.RoundEnvironment-
         return true;
     }
 
-    private String getQueryClassName(Element qe) {
+    private String[] splitPackageClass(final String packageClass) {
+		final int lastDotIdx = packageClass.lastIndexOf(".");
+		return new String[] {
+			packageClass.substring(0, lastDotIdx),
+			packageClass.substring(lastDotIdx + 1)
+		};
+	}
+
+	private String getQueryClassName(Element qe) {
 		return uppercaseFirstLetter(qe.toString()) + "Records";
 	}
 
@@ -279,8 +276,7 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 	}
 
-	private void writeBuilderFile(final String className, List<String> methods)
-			throws IOException {
+	private void writeBuilderFile(final String className, List<String> methods) {
 
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
 				"Creating map file ... className = " + className);
@@ -295,8 +291,13 @@ public class MappingProcessor extends AbstractProcessor {
 	    String mapClassName = simpleClassName;
 
 	    System.out.println("filer options: " + processingEnv.getOptions());
-	    JavaFileObject builderFile = processingEnv.getFiler()
-	      .createSourceFile(className);
+	    
+		JavaFileObject builderFile;
+		try {
+			builderFile = processingEnv.getFiler().createSourceFile(className);
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
 	    
 	    try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
 
@@ -320,7 +321,29 @@ public class MappingProcessor extends AbstractProcessor {
 	        }
 
 	        out.println("}");
-	    }
+	    } catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+
+	private void writeBuilderFile(final String packageName, final String className, final String content) {
+
+		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
+				"Creating map file ... className = " + className);
+
+	    System.out.println("filer options: " + processingEnv.getOptions());
+	    JavaFileObject builderFile;
+		try {
+			builderFile = processingEnv.getFiler().createSourceFile(packageName + "." + className);
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	    
+	    try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
+	        out.println(content);
+	    } catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		}
 	}
 }
 

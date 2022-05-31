@@ -1,4 +1,5 @@
 rm -fR classes/* &&
+  rm -fR generatedSources/* &&
   javac -d classes/ com/github/mapresultset/*.java &&
   find org/ -name "*.java" > sources.txt &&
   javac -cp classes/ -processor com.github.mapresultset.MappingProcessor -s generatedSources \

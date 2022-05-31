@@ -19,7 +19,7 @@ public class NotebookDao {
 
     @Query
     private static final String listNotebooks = """
-            select id, name
+            select id, name, 2 + 2 as four
             from notebook
             """;
     

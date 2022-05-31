@@ -37,19 +37,19 @@ final String listNotebooks = """
     from notebook
 """;
 
-public class ListNotebookGeneratedColumns {
+public class ListNotebooksGeneratedColumns {
     public Object idName;
 }
 
 public class ListNotebooksRecords {
     private List<Notebook> listNotebook = new ArrayList<>();
-    private List<ListNotebookGeneratedColumns> generatedColumns = new ArrayList<>();
+    private List<ListNotebooksGeneratedColumns> generatedColumns = new ArrayList<>();
 
     public List<Notebook> getListNotebook() {
         return listNotebook;
     }
 
-    public List<ListNotebookGeneratedColumns> getGeneratedColumns() {
+    public List<ListNotebooksGeneratedColumns> getGeneratedColumns() {
         return generatedColumns;
     }
 }
@@ -64,7 +64,7 @@ public class MapResultSet {
 
             records.getListNotebook().add(n);
 
-            ListNotebookGeneratedColumns c = new ListNotebookGeneratedColumns();
+            ListNotebooksGeneratedColumns c = new ListNotebooksGeneratedColumns();
             c.idName = rs.getString(3);
 
             records.getGeneratedColumns().add(c);

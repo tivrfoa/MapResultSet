@@ -34,7 +34,7 @@ public class TestProcessor {
 	}
 
 	@Table(name = "phone")
-	static class Phone {
+	public static class Phone {
 		private int id;
 
 		public int getId() {
