@@ -1,3 +1,3 @@
 package com.github.mapresultset;
 
-public record ColumnRecord(String name, String alias, boolean isGeneratedValue) {}
+public record ColumnRecord(String table, String name, String alias, boolean isGeneratedValue) {}

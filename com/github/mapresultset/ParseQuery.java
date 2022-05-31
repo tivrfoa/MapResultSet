@@ -89,6 +89,9 @@ public class ParseQuery {
 
 	void parseColumns() {
 		final String sc = cleanedQuery.substring(INDEX_AFTER_SELECT, fromIndex);
+		if (sc.equals("*")) {
+			throw new RuntimeException("'select *' is not a valid query for MapResultSet.");
+		}
 		// dbg("Select content: " + sc);
 		final int len = sc.length();
 
@@ -118,12 +121,13 @@ public class ParseQuery {
 		dbg("columns: " + columns);
 	}
 
-	private static ColumnRecord createColumnRecord(String sc, int len, boolean mustHaveAlias) {
-		String columnName = getColumnBeforeIdx(sc, len, mustHaveAlias);
+	private static ColumnRecord createColumnRecord(String sc, int idx, boolean mustHaveAlias) {
+		String columnName = getColumnBeforeIdx(sc, idx, mustHaveAlias);
 		String alias = null;
+		String tableName = null;
 		int columnLen = columnName.length();
 		// check if there's AS before it
-		int j = len - columnLen;
+		int j = idx - columnLen;
 		if (j - 4 >= 0 && sc.substring(j - 4, j).equals(" AS ")) {
 			alias = columnName;
 			if (mustHaveAlias) {
@@ -137,7 +141,28 @@ public class ParseQuery {
 				columnName = sc.substring(begin, endExclusive);
 			}
 		}
-		return new ColumnRecord(columnName, alias, mustHaveAlias);
+
+		if (columnName != null) {
+			int lastDotIdx = columnName.lastIndexOf(".");
+			if (lastDotIdx != -1) {
+				// check if there's a dot before that
+				int previousDotIdx = -1;
+				for (int i = lastDotIdx - 1; i >= 0; i--) {
+					if (columnName.charAt(i) == '.') {
+						previousDotIdx = i;
+						break;
+					}
+				}
+				if (previousDotIdx == -1) {
+					tableName = columnName.substring(0, lastDotIdx);
+				} else {
+					tableName = columnName.substring(previousDotIdx + 1, lastDotIdx);
+				}
+				columnName = columnName.substring(lastDotIdx + 1);
+			}
+		}
+
+		return new ColumnRecord(tableName, columnName, alias, mustHaveAlias);
 	}
 
 	static String getColumnBeforeIdx(final String str, final int idx, final boolean mustHaveAlias) {
@@ -299,6 +324,7 @@ public class ParseQuery {
 		testBelowMinimumQuerySize();
 		testNoSelect();
 		testNoFrom();
+		testSelectStartThrows();
 		testGetFromContent();
 		testOneTable();
 		testNoTable();
@@ -348,10 +374,24 @@ public class ParseQuery {
 		assertEq(ParseQuery.cleanQuery(sql), "SELECT * FROM client AS c WHERE id > 10 ORDER BY name");
 	}
 
+	static void testSelectStartThrows() {
+		final String sql = """
+		
+			select *
+		  from   client
+		  
+		""";
+
+		assertThrows(() -> new ParseQuery(sql).parse(),
+				RuntimeException.class,
+				"'select *' is not a valid query for MapResultSet."
+		);
+	}
+
 	static void testGetFromContent() {
 		String sql = """
 		
-			select *
+			select age
 		  from   client
 		  
 		""";
@@ -375,7 +415,7 @@ public class ParseQuery {
 	static void testOneTable() {
 		String sql = """
 		
-			select *
+			select nick_name
 		  from   client
 		  
 		""";
@@ -426,7 +466,7 @@ public class ParseQuery {
 	static void testInvalidJoin() {
 		String sql = """
 		
-			select *
+			select name
 		  from   client join address on 
 		  
 		""";
@@ -439,7 +479,7 @@ public class ParseQuery {
 	static void testTwoTables() {
 		String sql = """
 		
-			select *
+			select name
 		  from   client join address on client.id = address.client_id
 		  
 		""";
@@ -464,7 +504,7 @@ public class ParseQuery {
 
 	static void testWithWhereClause() {
 		String sql = """
-		  SELECT *
+		  SELECT name
 		  from   club
 		  WHERE club.pool_temperature = 'is warm'
 		""";
@@ -489,7 +529,7 @@ public class ParseQuery {
 
 	static void testJoinTemporaryTable() {
 		String sql = """
-		  SELECT id, A.city
+		  SELECT id, A.city as GreatCity
 		  from   (
 			select city, count(*)
 			from club
@@ -652,12 +692,12 @@ public class ParseQuery {
 		p.parse();
 		assertMapEq(p.getTables(), Map.of("Y", "x"));
 		assertListEq(p.getColumns(), List.of(
-			new ColumnRecord(null, "strange_id", true),
-			new ColumnRecord("name", "nice_name", false),
-			new ColumnRecord(null, "some_mod", true),
-			new ColumnRecord(null, "guess_what", true),
-			new ColumnRecord(null, "test2", true),
-			new ColumnRecord(null, "origin", true)));
+			new ColumnRecord(null, null, "strange_id", true),
+			new ColumnRecord(null, "name", "nice_name", false),
+			new ColumnRecord(null, null, "some_mod", true),
+			new ColumnRecord(null, null, "guess_what", true),
+			new ColumnRecord(null, null, "test2", true),
+			new ColumnRecord(null, null, "origin", true)));
 	}
 
 	static List<String> collectionToSortedList(Collection<String> set) {
