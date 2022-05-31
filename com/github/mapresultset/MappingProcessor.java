@@ -26,12 +26,20 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes({"com.github.mapresultset.Table", "com.github.mapresultset.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
+	static enum TYPE_KEY { // TODO give a better name
+		PACKAGE,
+		CLASS,
+		CONTENT,
+	}
+
 	private static final String template = """
 						public static List<#class#> #queryName#(ResultSet rs) {
 							var list = new ArrayList<#class#>();
 							return list;
 						}
 					""";
+
+	private static final String ANONYMOUS_TABLE = null;
 
 	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
 	private List<Element> tables = new ArrayList<>();
@@ -89,15 +97,59 @@ public class MappingProcessor extends AbstractProcessor {
 
 			System.out.println("------ map: Table -> Class -------");
 			System.out.println(tableMap);
+
+			// It will create one MapResultSet class in each package that
+			// contains a @Query
+			// map: package -> list of methods ?
+			Map<String, List<String>> packageMethods = new HashMap<>();
+			packageMethods.put(ANONYMOUS_TABLE, new ArrayList<>());
+
+			List<ClassToCreate> listClassesToCreate = new ArrayList<>();
 			
 			// Parse all queries
 			for (var qe : queries) {
+				List<String> generatedColumns = new ArrayList<>();
+				final String packageName = getPackageName(qe);
+				final String className = getQueryClassName(qe);
+				String classContent = """
+						package %s;
+
+						public class %s {
+
+							
+						""".formatted(packageName, className);
+				var classToCreate = new ClassToCreate(packageName, className, classContent);
+				listClassesToCreate.add(classToCreate);
 				String query = (String) ((VariableElement) qe).getConstantValue();
 				System.out.println("-->> Parsing query: " + query);
 				var p = new ParseQuery(query);
 				p.parse();
-				System.out.println("# Columns: " + p.getColumns());
-				System.out.println("# Tables.: " + p.getTables());
+
+				for (var column : p.getColumns()) {
+					if (column.isGeneratedValue()) {
+						String alias = column.alias();
+						String Alias = uppercaseFirstLetter(column.alias());
+						/*String content = """
+							private Object %s;
+
+							public Object get%s() {
+								return %s;
+							}
+
+							public void set%s() {
+
+							}
+
+							""".formatted(alias, Alias, alias, Alias);*/
+
+						//packageMethods.get(ANONYMOUS_TABLE).add(content);
+						//classToCreate.content += content;
+					}
+				}
+
+				classToCreate.content += "}";
+
+				System.out.println(classToCreate.content);
 
 				// Link columns to tables
 				List<TableColumns> listTableColumns = new ArrayList<>();
@@ -107,7 +159,7 @@ public class MappingProcessor extends AbstractProcessor {
 					TableColumns tc = new TableColumns();
 					tc.setTableName(table);
 
-					for (var column : p.getColumns()) {
+					/*for (var column : p.getColumns()) {
 						int dotIndex = column.indexOf(".");
 						if (dotIndex != -1) {
 							if (column.substring(0, dotIndex).equals(tableAlias)) {
@@ -123,11 +175,13 @@ public class MappingProcessor extends AbstractProcessor {
 											"' for table: " + table);
 								}
 							} else {
-								throw new RuntimeException("Columns must be preceded by the table name " +
-										"when there are more than one table in the 'from' clause.");
+								// Invalid exception for "generated" values that are not columns
+								//throw new RuntimeException("Columns must be preceded by the table name " +
+								//		"when there are more than one table in the 'from' clause.");
 							}
 						}
-					}
+					}*/
+					// if (!tc.getColumns().isEmpty())
 					listTableColumns.add(tc);
 				}
 				System.out.println(listTableColumns);
@@ -167,7 +221,26 @@ public class MappingProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void processAnnotations(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
+    private String getQueryClassName(Element qe) {
+		return uppercaseFirstLetter(qe.toString()) + "Records";
+	}
+
+	private String uppercaseFirstLetter(final String str) {
+		String Up = str.substring(0, 1).toUpperCase();
+		if (str.length() > 1) {
+			Up += str.substring(1);
+		}
+		return Up;
+	}
+
+	private String getPackageName(Element qe) {
+		var enclosingElement = qe.getEnclosingElement().toString();
+		int lastDot = enclosingElement.lastIndexOf(".");
+
+		return enclosingElement.substring(0, lastDot);
+	}
+
+	private void processAnnotations(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		for ( TypeElement annotation : annotations ) {
 			System.out.println("///////////////////////////////////////////////////////////////////////");
 			System.out.println("========= Processing Annotation: " + annotation + " ========");

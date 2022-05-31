@@ -1,0 +1,43 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch OneToMany",
+            "request": "launch",
+            "mainClass": "OneToMany",
+            "projectName": "MapResultSet_a9a3711"
+        },
+        {
+            "type": "java",
+            "name": "Launch ParseQuery",
+            "request": "launch",
+            "mainClass": "com.github.mapresultset.ParseQuery",
+            "projectName": "MapResultSet_a9a3711",
+            "vmArgs": "-ea"
+        },
+        {
+            "type": "java",
+            "name": "Launch MySQLCon",
+            "request": "launch",
+            "mainClass": "org.acme.dao.MySQLCon",
+            "projectName": "MapResultSet_a9a3711"
+        },
+        {
+            "type": "java",
+            "name": "Launch TestProcessor",
+            "request": "launch",
+            "mainClass": "tests.TestProcessor",
+            "projectName": "MapResultSet_a9a3711"
+        }
+    ]
+}

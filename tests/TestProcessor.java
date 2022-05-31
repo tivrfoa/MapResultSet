@@ -1,8 +1,9 @@
 package tests;
 
-import org.acme.Notebook;
 import com.github.mapresultset.Query;
 import com.github.mapresultset.Table;
+
+import org.acme.domain.Notebook;
 
 public class TestProcessor {
 

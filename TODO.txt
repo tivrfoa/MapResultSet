@@ -12,3 +12,65 @@
 || Create a maven plugin;
 || Handle Java modules;
 || Make it available on Maven;
+
+# Generated Classes Structure
+
+## Package
+
+Generated classes will be in the same package that contains the @Query.
+
+## Class Name
+
+There will be one Generated class per @Query.
+It will be the name of the query with the first letter in uppercase,
+followed by Records.
+
+For each 
+
+
+Example:
+
+```Java
+@Query
+final String listNotebooks = """
+    select id, name, id + name as idName
+    from notebook
+""";
+
+public class ListNotebookGeneratedColumns {
+    public Object idName;
+}
+
+public class ListNotebooksRecords {
+    private List<Notebook> listNotebook = new ArrayList<>();
+    private List<ListNotebookGeneratedColumns> generatedColumns = new ArrayList<>();
+
+    public List<Notebook> getListNotebook() {
+        return listNotebook;
+    }
+
+    public List<ListNotebookGeneratedColumns> getGeneratedColumns() {
+        return generatedColumns;
+    }
+}
+
+public class MapResultSet {
+    public static ListNotebooksRecords listNotebooks(ResultSet rs) {
+        ListNotebooksRecords records = new ListNotebooksRecords();
+        while (rs.next()) {
+            Notebook n = new Notebook();
+            n.setId(rs.getInt(1));
+            n.setName(rs.getString(2));
+
+            records.getListNotebook().add(n);
+
+            ListNotebookGeneratedColumns c = new ListNotebookGeneratedColumns();
+            c.idName = rs.getString(3);
+
+            records.getGeneratedColumns().add(c);
+        }
+
+        return records;
+    }
+}
+```
