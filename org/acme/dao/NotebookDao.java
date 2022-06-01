@@ -1,5 +1,6 @@
 package org.acme.dao;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,12 +25,18 @@ public class NotebookDao {
             """;
     
     public static List<Notebook> listNotebooks() {
-        var mysqlCon = new MySQLCon();
+        try {
+            var mysqlCon = new MySQLCon();
 
-        Connection con = mysqlCon.getConnection();
-        Statement stmt = con.createStatement();
-        ResultSet rs = stmt.executeQuery(listNotebooks);
+            Connection con = mysqlCon.getConnection();
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(listNotebooks);
 
-        return MapResultSet.listNotebooks(rs);
+            var list = MapResultSet.listNotebooks(rs);
+            System.out.println("NotebookDao - list = " + list);
+            return list.listNotebook;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
     }
 }

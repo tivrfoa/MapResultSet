@@ -3,7 +3,7 @@ package tests;
 import com.github.mapresultset.Query;
 import com.github.mapresultset.Table;
 
-import org.acme.domain.Notebook;
+import org.acme.dao.NotebookDao;
 
 public class TestProcessor {
 
@@ -29,8 +29,7 @@ public class TestProcessor {
 	// List<Phone> phones = MapResultSet.listPhones(rs);
 
 	public static void main(String[] args) {
-		var phone = new Phone();
-		var notebook = new Notebook();
+		System.out.println(NotebookDao.listNotebooks());
 	}
 
 	@Table(name = "phone")

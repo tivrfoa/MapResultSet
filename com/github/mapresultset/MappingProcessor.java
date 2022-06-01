@@ -108,14 +108,18 @@ public class MappingProcessor extends AbstractProcessor {
 			
 			// Parse all queries
 			for (var queryElement : queries) {
+				final String queryName = queryElement.toString();
 				List<String> generatedColumns = new ArrayList<>();
 				Set<String> queryImports = new HashSet<>();
 				String queryImportsStr = "";
 				final String packageName = getPackageName(queryElement);
-				final String queryClassName = getQueryClassName(queryElement);
-				final String generatedColumnsClassName = uppercaseFirstLetter(queryElement.toString()) + "GeneratedColumns";
+				final String queryClassName = getQueryClassName(queryName);
+				final String generatedColumnsClassName = uppercaseFirstLetter(queryName) + "GeneratedColumns";
 				String classContent = """
 						package %s;
+
+						import java.util.ArrayList;
+						import java.util.List;
 
 						#import#
 
@@ -153,7 +157,7 @@ public class MappingProcessor extends AbstractProcessor {
 							queryImportsStr += "import " + tableMap.get(table) + ";\n";
 							String classTableName = splitPackageClass(tableMap.get(table))[1];
 							String content = """
-									public List<%s> list%s;
+									public List<%s> list%s = new ArrayList<>();
 								""".formatted(classTableName, classTableName);
 							queryClassToCreate.content += content;
 						}
@@ -162,15 +166,15 @@ public class MappingProcessor extends AbstractProcessor {
 
 				if (!generatedColumns.isEmpty()) {
 					queryClassToCreate.content += """
-							public List<%s> list%s;
-						""".formatted(generatedColumnsClassName, generatedColumnsClassName);
+							public List<%s> generatedColumns = new ArrayList<>();
+						""".formatted(generatedColumnsClassName);
 				}
 
 				queryClassToCreate.content += "}";
 				queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
 
 				System.out.println(queryClassToCreate.content);
-				writeBuilderFile(packageName, queryClassName, queryClassToCreate.content);
+				writeBuilderFile(queryClassToCreate);
 
 				if (!generatedColumns.isEmpty()) {
 					// Create GeneratedColumns class
@@ -196,12 +200,8 @@ public class MappingProcessor extends AbstractProcessor {
 				}
 
 				// Create map file
-				/*try {
-					final String content = createMapResultSetClassForQuery();
-					writeBuilderFile(packageName, "MapResultSet", content);
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}*/
+				final String content = createMapResultSetClassForQuery(queryName, packageName, queryClassName, queryImports);
+				writeBuilderFile(packageName, "MapResultSet", content);
 			}
 		} else {
 			processAnnotations(annotations, roundEnvironment);
@@ -210,7 +210,53 @@ public class MappingProcessor extends AbstractProcessor {
         return true;
     }
 
-    private String[] splitPackageClass(final String packageClass) {
+    private String createMapResultSetClassForQuery(String queryName, String packageName, String queryClassName,
+			Set<String> queryImports) {
+		if (packageName.equals("tests")) {
+			return "public class MapResultSet {}";
+		}
+		String imports = """
+				import java.sql.ResultSet;
+				import java.sql.SQLException;
+				""";
+		for (var i : queryImports) {
+			imports += "import " + i + ";\n";
+		}
+		
+		// String methodBody = "return null;";
+		String methodBody = """
+					ListNotebooksRecords records = new ListNotebooksRecords();
+					System.out.println(records);
+					while (rs.next()) {
+						Notebook n = new Notebook();
+						n.setId(rs.getInt(1));
+						n.setName(rs.getString(2));
+						System.out.println(n);
+			
+						records.listNotebook.add(n);
+						System.out.println("added notebook");
+						ListNotebooksGeneratedColumns c = new ListNotebooksGeneratedColumns();
+						c.four = rs.getString(3);
+						System.out.println(c.four);
+						records.generatedColumns.add(c);
+					}
+			
+					return records;
+			""";
+		return """
+				package %s;
+
+				%s
+
+				public class MapResultSet {
+					public static %s %s(ResultSet rs) throws SQLException {
+						%s
+					}
+				}
+				""".formatted(packageName, imports, queryClassName, queryName, methodBody);
+	}
+
+	private String[] splitPackageClass(final String packageClass) {
 		final int lastDotIdx = packageClass.lastIndexOf(".");
 		return new String[] {
 			packageClass.substring(0, lastDotIdx),
@@ -218,8 +264,8 @@ public class MappingProcessor extends AbstractProcessor {
 		};
 	}
 
-	private String getQueryClassName(Element qe) {
-		return uppercaseFirstLetter(qe.toString()) + "Records";
+	private String getQueryClassName(final String queryName) {
+		return uppercaseFirstLetter(queryName) + "Records";
 	}
 
 	private String uppercaseFirstLetter(final String str) {
@@ -324,6 +370,10 @@ public class MappingProcessor extends AbstractProcessor {
 	    } catch (IOException e) {
 			throw new RuntimeException(e.getMessage());
 		}
+	}
+
+	private void writeBuilderFile(final ClassToCreate clazz) {
+		writeBuilderFile(clazz.packageName, clazz.className, clazz.content);
 	}
 
 	private void writeBuilderFile(final String packageName, final String className, final String content) {

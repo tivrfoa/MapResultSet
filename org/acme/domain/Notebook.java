@@ -22,5 +22,11 @@ public class Notebook {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	@Override
+	public String toString() {
+		return "Notebook [id=" + id + ", name=" + name + "]";
+	}
+	
 }
 
