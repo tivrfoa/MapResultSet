@@ -1,0 +1,7 @@
+org/acme/dao/NotebookDao.java
+org/acme/dao/MySQLCon.java
+org/acme/domain/Person.java
+org/acme/domain/Company.java
+org/acme/domain/Country.java
+org/acme/domain/Notebook.java
+org/acme/domain/OtherNotebook.java

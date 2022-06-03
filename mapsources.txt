@@ -1,0 +1,9 @@
+com/github/mapresultset/Field.java
+com/github/mapresultset/Query.java
+com/github/mapresultset/ClassToCreate.java
+com/github/mapresultset/ParseQuery.java
+com/github/mapresultset/Structure.java
+com/github/mapresultset/ColumnRecord.java
+com/github/mapresultset/Table.java
+com/github/mapresultset/MappingProcessor.java
+com/github/mapresultset/TableColumns.java

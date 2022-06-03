@@ -312,7 +312,7 @@ public class MappingProcessor extends AbstractProcessor {
 					for (var mirror : enclosed.getAnnotationMirrors()) {
 						DeclaredType annotationType = mirror.getAnnotationType();
 						TypeElement annotationElement = (TypeElement) annotationType.asElement();
-						System.out.println(annotationElement);
+						System.out.println("annotationElement: " + annotationElement);
 					}
 				}
 
