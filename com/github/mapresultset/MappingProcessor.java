@@ -19,7 +19,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
@@ -305,6 +307,23 @@ public class MappingProcessor extends AbstractProcessor {
 
 				for (var enclosed : e.getEnclosedElements()) {
 					System.out.println(enclosed + " type is " + enclosed.getKind());
+					System.out.println("Modifiers: " + enclosed.getModifiers());
+					System.out.println(enclosed.getAnnotationMirrors());
+					for (var mirror : enclosed.getAnnotationMirrors()) {
+						DeclaredType annotationType = mirror.getAnnotationType();
+						TypeElement annotationElement = (TypeElement) annotationType.asElement();
+						System.out.println(annotationElement);
+					}
+				}
+
+				List<VariableElement> fields = ElementFilter.fieldsIn(e.getEnclosedElements());
+				for (VariableElement field : fields) {
+					TypeMirror fieldType = field.asType();
+					String fullTypeClassName = fieldType.toString();
+					// Validate fullTypeClassName
+					System.out.println(field);
+					System.out.println("fieldType: " + fieldType);
+					System.out.println("fullTypeClassName: " + fullTypeClassName);
 				}
 
 
