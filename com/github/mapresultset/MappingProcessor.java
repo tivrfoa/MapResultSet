@@ -226,18 +226,17 @@ public class MappingProcessor extends AbstractProcessor {
 		// String methodBody = "return null;";
 		String methodBody = """
 					ListNotebooksRecords records = new ListNotebooksRecords();
-					System.out.println(records);
+
 					while (rs.next()) {
 						Notebook n = new Notebook();
-						n.setId(rs.getInt(1));
-						n.setName(rs.getString(2));
-						System.out.println(n);
+						n.setId(rs.getInt("id"));
+						n.setName(rs.getString("name"));
 			
 						records.listNotebook.add(n);
-						System.out.println("added notebook");
+
 						ListNotebooksGeneratedColumns c = new ListNotebooksGeneratedColumns();
-						c.four = rs.getString(3);
-						System.out.println(c.four);
+						c.four = rs.getInt("four");
+
 						records.generatedColumns.add(c);
 					}
 			
