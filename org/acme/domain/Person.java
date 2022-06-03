@@ -1,6 +1,6 @@
 package org.acme.domain;
 
-import com.github.mapresultset.Table;
+import com.github.mapresultset.api.Table;
 
 @Table(name = "person")
 public class Person {

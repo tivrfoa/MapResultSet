@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 
-import com.github.mapresultset.Query;
+import com.github.mapresultset.api.Query;
 
 import org.acme.domain.Notebook;
 

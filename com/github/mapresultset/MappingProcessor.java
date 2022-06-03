@@ -25,7 +25,7 @@ import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
-@SupportedAnnotationTypes({"com.github.mapresultset.Table", "com.github.mapresultset.Query"})
+@SupportedAnnotationTypes({"com.github.mapresultset.api.Table", "com.github.mapresultset.api.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
 	static enum TYPE_KEY { // TODO give a better name

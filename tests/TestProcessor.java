@@ -1,7 +1,7 @@
 package tests;
 
-import com.github.mapresultset.Query;
-import com.github.mapresultset.Table;
+import com.github.mapresultset.api.Query;
+import com.github.mapresultset.api.Table;
 
 import org.acme.dao.NotebookDao;
 

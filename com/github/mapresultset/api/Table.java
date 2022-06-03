@@ -1,4 +1,4 @@
-package com.github.mapresultset;
+package com.github.mapresultset.api;
 
 import java.lang.annotation.*;
 
