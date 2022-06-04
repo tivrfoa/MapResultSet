@@ -7,9 +7,9 @@ import org.acme.dao.NotebookDao;
 
 public class TestProcessor {
 
-	//@Query
+	@Query
 	final String listPhones = """
-		select phone.id, c.model
+		select phone.id, c.name
 		from phone join company as c on
 		  phone.company_id = c.id
 		""";
@@ -39,6 +39,11 @@ public class TestProcessor {
 		public int getId() {
 			return this.id;
 		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+		
 	}
 }
 

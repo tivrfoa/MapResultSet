@@ -184,7 +184,11 @@ public class MappingProcessor extends AbstractProcessor {
 						m = new Structure(fullClassName, structureType);
 						queryStructures.put(fullClassName, m);
 					}
-					m.fields.put(column.name(), structure.fields.get(column.name()));
+					var classFieldType = structure.fields.get(column.name());
+					if (classFieldType == null) {
+						throw new RuntimeException("Class " + fullClassName + " does not have field named: " + column.name());
+					}
+					m.fields.put(column.name(), classFieldType);
 				}
 			}
 
@@ -259,10 +263,10 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		String methodBody = """
-			ListNotebooksRecords records = new ListNotebooksRecords();
+			%s records = new %s();
 
 			while (rs.next()) {	
-				""";
+				""".formatted(queryClassName, queryClassName);
 
 		
 		for (var entry : queryStructures.entrySet()) {
@@ -304,7 +308,7 @@ public class MappingProcessor extends AbstractProcessor {
 
 		methodBody += """
 				}
-				
+
 				return records;
 		""";
 	
