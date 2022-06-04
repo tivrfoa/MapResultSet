@@ -33,7 +33,7 @@ public class NotebookDao {
             ResultSet rs = stmt.executeQuery(listNotebooks);
 
             var list = MapResultSet.listNotebooks(rs);
-            System.out.println(list.generatedColumns.get(0).four);
+            System.out.println(list.getGeneratedColumns().get(0).getFour());
             return list.listNotebook;
         } catch (Exception ex) {
             throw new RuntimeException(ex.getMessage());

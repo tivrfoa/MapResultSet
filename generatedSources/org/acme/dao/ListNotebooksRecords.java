@@ -10,5 +10,8 @@ public class ListNotebooksRecords {
 
 
 	public List<Notebook> listNotebook = new ArrayList<>();
-	public List<ListNotebooksGeneratedColumns> generatedColumns = new ArrayList<>();
+	private List<ListNotebooksGeneratedColumns> generatedColumns = new ArrayList<>();
+	public List<ListNotebooksGeneratedColumns> getGeneratedColumns() {
+		return generatedColumns;
+	}
 }

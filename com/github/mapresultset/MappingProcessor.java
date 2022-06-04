@@ -28,6 +28,8 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Table", "com.github.mapresultset.api.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
+	private static final String GENERATED_COLUMNS = "GeneratedColumns";
+
 	static enum TYPE_KEY { // TODO give a better name
 		PACKAGE,
 		CLASS,
@@ -121,7 +123,7 @@ public class MappingProcessor extends AbstractProcessor {
 			String queryImportsStr = "";
 			final String packageName = getPackageName(queryElement);
 			final String queryClassName = getQueryClassName(queryName);
-			final String generatedColumnsClassName = uppercaseFirstLetter(queryName) + "GeneratedColumns";
+			final String generatedColumnsClassName = uppercaseFirstLetter(queryName) + GENERATED_COLUMNS;
 			String classContent = """
 					package %s;
 
@@ -188,8 +190,11 @@ public class MappingProcessor extends AbstractProcessor {
 
 			if (!generatedColumns.isEmpty()) {
 				queryClassToCreate.content += """
-						public List<%s> generatedColumns = new ArrayList<>();
-					""".formatted(generatedColumnsClassName);
+						private List<%s> generatedColumns = new ArrayList<>();
+						public List<%s> getGeneratedColumns() {
+							return generatedColumns;
+						}
+					""".formatted(generatedColumnsClassName, generatedColumnsClassName);
 			}
 
 			queryClassToCreate.content += "}";
@@ -202,39 +207,49 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println(queryStructures);
 
 			if (!generatedColumns.isEmpty()) {
-				// Create GeneratedColumns class
-
-				classContent = """
-					package %s;
-
-					import java.util.List;
-
-					public class %s {
-
-						
-					""".formatted(packageName, generatedColumnsClassName);
-				var generatedColumnsClassToCreate = new ClassToCreate(packageName, generatedColumnsClassName, classContent);
-
-				for (var field : generatedColumns) {
-					String content = "\tpublic Object " + field + ";\n";
-					generatedColumnsClassToCreate.content += content;
-				}
-				generatedColumnsClassToCreate.content += "}";
-				System.out.println(generatedColumnsClassToCreate.content);
-				writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
+				createGeneratedColumnsClass(packageName, generatedColumnsClassName, generatedColumns);
 			}
 
 			// Create map file
-			final String content = createMapResultSetClassForQuery(queryName, packageName, queryClassName, queryImports);
+			final String content = createMapResultSetClassForQuery(queryName, packageName, queryClassName, queryImports, queryStructures);
 			writeBuilderFile(packageName, "MapResultSet", content);
 		}
 	}
 
-    private String createMapResultSetClassForQuery(String queryName, String packageName, String queryClassName,
-			Set<String> queryImports) {
-		if (packageName.equals("tests")) {
-			return "public class MapResultSet {}";
+    private void createGeneratedColumnsClass(String packageName, String generatedColumnsClassName,
+			List<String> generatedColumns) {
+		String classContent = """
+			package %s;
+
+			import java.util.List;
+
+			public class %s {
+
+				
+			""".formatted(packageName, generatedColumnsClassName);
+		var generatedColumnsClassToCreate = new ClassToCreate(packageName, generatedColumnsClassName, classContent);
+
+		for (var field : generatedColumns) {
+			String Field = uppercaseFirstLetter(field);
+			String content = """
+				private Object %s;
+				public Object get%s() {
+					return %s;
+				}
+				public void set%s(Object %s) {
+					this.%s = %s;
+				}
+				""".formatted(field, Field, field, Field, field, field, field);
+			generatedColumnsClassToCreate.content += content;
 		}
+		generatedColumnsClassToCreate.content += "}";
+		System.out.println(generatedColumnsClassToCreate.content);
+		writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
+	}
+
+	private String createMapResultSetClassForQuery(String queryName, String packageName, String queryClassName,
+			Set<String> queryImports, Map<String, Structure> queryStructures) {
+
 		String imports = """
 				import java.sql.ResultSet;
 				import java.sql.SQLException;
@@ -242,26 +257,57 @@ public class MappingProcessor extends AbstractProcessor {
 		for (var i : queryImports) {
 			imports += "import " + i + ";\n";
 		}
-		
-		// String methodBody = "return null;";
+
 		String methodBody = """
-					ListNotebooksRecords records = new ListNotebooksRecords();
+			ListNotebooksRecords records = new ListNotebooksRecords();
 
-					while (rs.next()) {
-						Notebook n = new Notebook();
-						n.setId(rs.getInt("id"));
-						n.setName(rs.getString("name"));
-			
-						records.listNotebook.add(n);
+			while (rs.next()) {	
+				""";
 
-						ListNotebooksGeneratedColumns c = new ListNotebooksGeneratedColumns();
-						c.four = rs.getInt("four");
+		
+		for (var entry : queryStructures.entrySet()) {
+			String className = entry.getKey();
+			if (className.contains("."))
+				className = splitPackageClass(entry.getKey())[1];
+			String createObject = """
+					{
+						%s obj = new %s();
+			""".formatted(className, className);
+			methodBody += createObject;
+			String setFields = "";
+			for (var field : entry.getValue().fields.entrySet()) {
+				String fieldName = field.getKey();
+				String fieldSetMethod = "set" + uppercaseFirstLetter(fieldName);
+				System.out.println("field: " + field);
+				String resultSetGetMethod = ResultSetTypes.fromString(field.getValue()).getResultSetGetMethod();
 
-						records.generatedColumns.add(c);
+				setFields += """
+						obj.%s(rs.%s("%s"));
+				""".formatted(fieldSetMethod, resultSetGetMethod, fieldName);
+			}
+			methodBody += setFields;
+
+			String closeCreateObject;
+			if (className.endsWith(GENERATED_COLUMNS)) {
+				closeCreateObject = """
+						records.getGeneratedColumns().add(obj);
 					}
-			
-					return records;
-			""";
+				""";
+			} else {
+				closeCreateObject = """
+						records.list%s.add(obj);
+					}
+				""".formatted(className);
+			}
+			methodBody += closeCreateObject;
+		}
+
+		methodBody += """
+				}
+				
+				return records;
+		""";
+	
 		return """
 				package %s;
 

@@ -5,5 +5,11 @@ import java.util.List;
 public class ListNotebooksGeneratedColumns {
 
 
-	public Object four;
+private Object four;
+public Object getFour() {
+	return four;
+}
+public void setFour(Object four) {
+	this.four = four;
+}
 }

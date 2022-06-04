@@ -7,7 +7,7 @@ import org.acme.dao.NotebookDao;
 
 public class TestProcessor {
 
-	@Query
+	//@Query
 	final String listPhones = """
 		select phone.id, c.model
 		from phone join company as c on
