@@ -34,19 +34,12 @@ public class MappingProcessor extends AbstractProcessor {
 		CONTENT,
 	}
 
-	private static final String template = """
-						public static List<#class#> #queryName#(ResultSet rs) {
-							var list = new ArrayList<#class#>();
-							return list;
-						}
-					""";
-
 	private static final String ANONYMOUS_TABLE = null;
 
 	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
 	private List<Element> tables = new ArrayList<>();
 	private List<Element> queries = new ArrayList<>();
-	private List<Structure> structures = new ArrayList<>();
+	private Map<String, Structure> structures = new HashMap<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -56,6 +49,17 @@ public class MappingProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
+    }
+
+    @Override
+    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
+		if ( roundEnvironment.processingOver() ) {
+			processLastRound(annotations, roundEnvironment);
+		} else {
+			processAnnotations(annotations, roundEnvironment);
+		}
+
+        return true;
     }
 
 	public void processLastRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
@@ -112,6 +116,7 @@ public class MappingProcessor extends AbstractProcessor {
 		for (var queryElement : queries) {
 			final String queryName = queryElement.toString();
 			List<String> generatedColumns = new ArrayList<>();
+			Map<String, Structure> queryStructures = new HashMap<>();
 			Set<String> queryImports = new HashSet<>();
 			String queryImportsStr = "";
 			final String packageName = getPackageName(queryElement);
@@ -141,6 +146,12 @@ public class MappingProcessor extends AbstractProcessor {
 				if (column.isGeneratedValue()) {
 					String alias = column.alias();
 					generatedColumns.add(alias);
+					var m = queryStructures.get(generatedColumnsClassName);
+					if (m == null) {
+						m = new Structure(generatedColumnsClassName, "CLASS");
+						queryStructures.put(generatedColumnsClassName, m);
+					}
+					m.fields.put(alias, "Object"); // TODO let user specify a type
 				} else {
 					String table = column.table();
 					if (table == null) {
@@ -154,15 +165,24 @@ public class MappingProcessor extends AbstractProcessor {
 					} else {
 						table = p.getTables().get(table);
 					}
-					System.out.println("table = " + table + ", tableMap.get(table) = " + tableMap.get(table));
-					if (queryImports.add(tableMap.get(table))) {
-						queryImportsStr += "import " + tableMap.get(table) + ";\n";
-						String classTableName = splitPackageClass(tableMap.get(table))[1];
+					String fullClassName = tableMap.get(table);
+					System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassName);
+					if (queryImports.add(fullClassName)) {
+						queryImportsStr += "import " + fullClassName + ";\n";
+						String classTableName = splitPackageClass(fullClassName)[1];
 						String content = """
 								public List<%s> list%s = new ArrayList<>();
 							""".formatted(classTableName, classTableName);
 						queryClassToCreate.content += content;
 					}
+					var structure = structures.get(fullClassName);
+					var structureType = structure.type;
+					var m = queryStructures.get(fullClassName);
+					if (m == null) {
+						m = new Structure(fullClassName, structureType);
+						queryStructures.put(fullClassName, m);
+					}
+					m.fields.put(column.name(), structure.fields.get(column.name()));
 				}
 			}
 
@@ -177,6 +197,9 @@ public class MappingProcessor extends AbstractProcessor {
 
 			System.out.println(queryClassToCreate.content);
 			writeBuilderFile(queryClassToCreate);
+
+			System.out.println("-------- Query Structures ------------");
+			System.out.println(queryStructures);
 
 			if (!generatedColumns.isEmpty()) {
 				// Create GeneratedColumns class
@@ -206,17 +229,6 @@ public class MappingProcessor extends AbstractProcessor {
 			writeBuilderFile(packageName, "MapResultSet", content);
 		}
 	}
-
-    @Override
-    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
-		if ( roundEnvironment.processingOver() ) {
-			processLastRound(annotations, roundEnvironment);
-		} else {
-			processAnnotations(annotations, roundEnvironment);
-		}
-
-        return true;
-    }
 
     private String createMapResultSetClassForQuery(String queryName, String packageName, String queryClassName,
 			Set<String> queryImports) {
@@ -293,7 +305,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private void processAnnotations(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		for ( TypeElement annotation : annotations ) {
 			System.out.println("///////////////////////////////////////////////////////////////////////");
-			System.out.println("========= Processing Annotation: " + annotation + " ========");
+			System.out.println("====== Processing Annotation: " + annotation + " ========");
 			System.out.println("///////////////////////////////////////////////////////////////////////");
 			Set<? extends Element> annotatedElements
 					= roundEnvironment.getElementsAnnotatedWith(annotation);
@@ -316,12 +328,12 @@ public class MappingProcessor extends AbstractProcessor {
 				} else {
 					tables.add(e);
 					List<VariableElement> fields = ElementFilter.fieldsIn(e.getEnclosedElements());
-					List<Field> listField = new ArrayList<>();
+					Map<String, String> mapField = new HashMap<>();
 					for (VariableElement field : fields) {
 						String fieldType = field.asType().toString();
-						listField.add(new Field(field.toString(), fieldType));
+						mapField.put(field.toString(), fieldType);
 					}
-					structures.add(new Structure(elementName, e.getKind().toString(), listField));
+					structures.put(elementName, new Structure(elementName, e.getKind().toString(), mapField));
 				}
 			}
 		}
@@ -340,8 +352,6 @@ public class MappingProcessor extends AbstractProcessor {
 	    String simpleClassName = className.substring(lastDot + 1);
 	    // String mapClassName = simpleClassName + "MapResultSet";
 	    String mapClassName = simpleClassName;
-
-	    System.out.println("filer options: " + processingEnv.getOptions());
 	    
 		JavaFileObject builderFile;
 		try {
