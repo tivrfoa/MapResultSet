@@ -1,11 +1,22 @@
 package org.acme.domain;
 
+import java.math.BigDecimal;
+
 import com.github.mapresultset.api.Table;
 
 @Table(name = "notebook")
 public class Notebook {
 	private int id;
 	private String name;
+	private BigDecimal value;
+
+	public BigDecimal getValue() {
+		return value;
+	}
+
+	public void setValue(BigDecimal value) {
+		this.value = value;
+	}
 
 	public int getId() {
 		return id;
@@ -25,7 +36,7 @@ public class Notebook {
 
 	@Override
 	public String toString() {
-		return "Notebook [id=" + id + ", name=" + name + "]";
+		return "Notebook [id=" + id + ", name=" + name + ", value=" + value + "]";
 	}
 	
 }

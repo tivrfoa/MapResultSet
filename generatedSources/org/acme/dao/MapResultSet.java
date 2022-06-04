@@ -14,6 +14,7 @@ while (rs.next()) {
 			Notebook obj = new Notebook();
 		obj.setName(rs.getString("name"));
 		obj.setId(rs.getInt("id"));
+		obj.setValue(rs.getBigDecimal("value"));
 		records.listNotebook.add(obj);
 	}
 		{

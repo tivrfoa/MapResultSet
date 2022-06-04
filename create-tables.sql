@@ -1,3 +1,6 @@
+drop table company;
+drop table notebook;
+drop table person;
 
 create table company (
     id int primary key,
@@ -12,6 +15,7 @@ insert into company values
 create table notebook (
     id int primary key auto_increment,
     name varchar(30),
+    value decimal(7, 2),
     company_id int not null,
     foreign key(company_id) references company(id)
 );
@@ -20,8 +24,18 @@ insert into notebook (name, company_id) values
 ('ideapad', 1),
 ('aspire 5', 2);
 
+update notebook
+set value = 1234.56
+where id = 2;
+
+
+
+
+-------------- QUERIES ------------
+
 select id, name
 from notebook;
+
 
 -- List company's notebooks
 select c.name, n.name

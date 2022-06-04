@@ -1,6 +1,7 @@
 package com.github.mapresultset;
 
 public enum ResultSetTypes {
+    BIG_DECIMAL,
     DATE,
     INT,
     OBJECT,
@@ -13,6 +14,7 @@ public enum ResultSetTypes {
 
     public static ResultSetTypes fromString(String strType) {
         return switch (strType) {
+            case "java.math.BigDecimal" -> BIG_DECIMAL;
             case "int" -> INT;
             case "Object" -> OBJECT;
             case "String", "java.lang.String" -> STRING;
@@ -22,6 +24,7 @@ public enum ResultSetTypes {
 
     public String getResultSetGetMethod() {
         return switch (this) {
+            case BIG_DECIMAL -> "getBigDecimal";
             case INT -> "getInt";
             case OBJECT -> "getObject";
             case STRING -> "getString";
