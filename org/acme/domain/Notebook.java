@@ -1,7 +1,9 @@
 package org.acme.domain;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 
+import com.github.mapresultset.api.Column;
 import com.github.mapresultset.api.Table;
 
 @Table(name = "notebook")
@@ -9,6 +11,16 @@ public class Notebook {
 	private int id;
 	private String name;
 	private BigDecimal value;
+	@Column (name = "release_date")
+	private Date releaseDate;
+
+	public Date getReleaseDate() {
+		return releaseDate;
+	}
+
+	public void setReleaseDate(Date releaseDate) {
+		this.releaseDate = releaseDate;
+	}
 
 	public BigDecimal getValue() {
 		return value;

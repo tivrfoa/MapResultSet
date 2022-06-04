@@ -2,30 +2,26 @@ package com.github.mapresultset;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
-@SupportedAnnotationTypes({"com.github.mapresultset.api.Table", "com.github.mapresultset.api.Query"})
+@SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table", "com.github.mapresultset.api.Query"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
@@ -41,6 +37,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
 	private List<Element> tables = new ArrayList<>();
 	private List<Element> queries = new ArrayList<>();
+	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
 	private Map<String, Structure> structures = new HashMap<>();
 
 	@Override
@@ -71,6 +68,7 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println(">>>>>>>>>>>> Last round! Fight! <<<<<<<<<<<<");
 		System.out.println("tables.: " + tables);
 		System.out.println("queries: " + queries);
+		System.out.println("classMappedColumns: " + classMappedColumns);
 		System.out.println("structures: " + structures);
 
 
@@ -86,14 +84,7 @@ public class MappingProcessor extends AbstractProcessor {
 				tableName = packageAndClass.substring(ld + 1);
 			}
 			
-			for (var am : te.getAnnotationMirrors()) {
-				for (var entry : am.getElementValues().entrySet()) {
-					// TODO maybe there is a better way instead of using toString
-					if (entry.getKey().toString().equals("name()")) {
-						tableName = entry.getValue().getValue().toString();
-					}
-				}
-			}
+			tableName = getAnnotationParameter(te, "name()");
 
 			if (tableMap.get(tableName) != null) {
 				throw new RuntimeException("It can't map " + packageAndClass + " to " + tableName +
@@ -186,7 +177,10 @@ public class MappingProcessor extends AbstractProcessor {
 					}
 					var classFieldType = structure.fields.get(column.name());
 					if (classFieldType == null) {
-						throw new RuntimeException("Class " + fullClassName + " does not have field named: " + column.name());
+						var field = classMappedColumns.get(new FullClassName(fullClassName)).get(new ColumnName(column.name()));
+						if (field == null)
+							throw new RuntimeException("Class " + fullClassName + " does not have field named: " + column.name());
+						classFieldType = structure.fields.get(field.name());
 					}
 					m.fields.put(column.name(), classFieldType);
 				}
@@ -220,7 +214,27 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 	}
 
-    private void createGeneratedColumnsClass(String packageName, String generatedColumnsClassName,
+	/**
+	 * Very ugly code
+	 * 
+	 * TODO maybe there is a better way instead of using toString
+	 * 
+	 * @param te
+	 * @param string
+	 * @return
+	 */
+    private String getAnnotationParameter(Element te, String param) {
+		for (var am : te.getAnnotationMirrors()) {
+			for (var entry : am.getElementValues().entrySet()) {
+				if (entry.getKey().toString().equals(param)) {
+					return entry.getValue().getValue().toString();
+				}
+			}
+		}
+		return null;
+	}
+
+	private void createGeneratedColumnsClass(String packageName, String generatedColumnsClassName,
 			List<String> generatedColumns) {
 		String classContent = """
 			package %s;
@@ -281,13 +295,20 @@ public class MappingProcessor extends AbstractProcessor {
 			String setFields = "";
 			for (var field : entry.getValue().fields.entrySet()) {
 				String fieldName = field.getKey();
+				String columnName = fieldName;
+				var mappedClassFields = classMappedColumns.get(new FullClassName(entry.getKey()));
+				if (mappedClassFields != null) {
+					if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
+						fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
+					}
+				}
 				String fieldSetMethod = "set" + uppercaseFirstLetter(fieldName);
 				System.out.println("field: " + field);
 				String resultSetGetMethod = ResultSetTypes.fromString(field.getValue()).getResultSetGetMethod();
 
 				setFields += """
 						obj.%s(rs.%s("%s"));
-				""".formatted(fieldSetMethod, resultSetGetMethod, fieldName);
+				""".formatted(fieldSetMethod, resultSetGetMethod, columnName);
 			}
 			methodBody += setFields;
 
@@ -357,10 +378,12 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println("///////////////////////////////////////////////////////////////////////");
 			System.out.println("====== Processing Annotation: " + annotation + " ========");
 			System.out.println("///////////////////////////////////////////////////////////////////////");
+
 			Set<? extends Element> annotatedElements
 					= roundEnvironment.getElementsAnnotatedWith(annotation);
 			System.out.println("Annotated Elements: " + annotatedElements);
 			this.annotatedElements.addAll(annotatedElements);
+			
 			for (var e : annotatedElements) {
 				String elementName = e.toString();
 				System.out.println("Element: " + elementName + " and it's type is " + e.getKind());
@@ -369,24 +392,53 @@ public class MappingProcessor extends AbstractProcessor {
 				System.out.println("element enclosingElement: " + enclosingElement);
 				System.out.println("element enclosedElements: " + e.getEnclosedElements());
 
-				if (e instanceof VariableElement ve) {
-					String query = (String) ve.getConstantValue();
-					if (query == null) {
-						throw new RuntimeException("Variable annotated with @Query must be final and not null");
-					}
-					queries.add(e);
-				} else {
-					tables.add(e);
-					List<VariableElement> fields = ElementFilter.fieldsIn(e.getEnclosedElements());
-					Map<String, String> mapField = new HashMap<>();
-					for (VariableElement field : fields) {
-						String fieldType = field.asType().toString();
-						mapField.put(field.toString(), fieldType);
-					}
-					structures.put(elementName, new Structure(elementName, e.getKind().toString(), mapField));
+				switch (annotation.toString()) {
+					case "com.github.mapresultset.api.Column":
+						processColumn(elementName, e);
+					break;
+					case "com.github.mapresultset.api.Table":
+						processTable(elementName, e);
+						break;
+					case "com.github.mapresultset.api.Query":
+						processQuery(elementName, e);
+						break;
 				}
 			}
 		}
+	}
+
+	private void processQuery(String elementName, Element e) {
+		String query = (String) ((VariableElement) e).getConstantValue();
+		if (query == null) {
+			throw new RuntimeException("Variable annotated with @Query must be final and not null");
+		}
+		queries.add(e);
+	}
+
+	private void processTable(String elementName, Element e) {
+		tables.add(e);
+		List<VariableElement> fields = ElementFilter.fieldsIn(e.getEnclosedElements());
+		Map<String, String> mapField = new HashMap<>();
+		for (VariableElement field : fields) {
+			String fieldType = field.asType().toString();
+			mapField.put(field.toString(), fieldType);
+		}
+		structures.put(elementName, new Structure(elementName, e.getKind().toString(), mapField));
+	}
+
+	private void processColumn(String elementName, Element e) {
+		var fieldName = new FieldName(e.toString());
+		var columnName = new ColumnName(getAnnotationParameter(e, "name()"));
+		System.out.println("column: " + fieldName + ", value = " + columnName);
+
+		var structureStr = e.getEnclosingElement().toString();
+		var structure = new FullClassName(structureStr);
+		var map = classMappedColumns.get(structure);
+		if (map == null) {
+			map = new HashMap<>();
+			classMappedColumns.put(structure, map);
+		}
+		map.put(columnName, fieldName);
 	}
 
 	private void writeBuilderFile(final String className, List<String> methods) {

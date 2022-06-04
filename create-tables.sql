@@ -1,5 +1,5 @@
-drop table company;
 drop table notebook;
+drop table company;
 drop table person;
 
 create table company (
@@ -16,6 +16,7 @@ create table notebook (
     id int primary key auto_increment,
     name varchar(30),
     value decimal(7, 2),
+    release_date date default(current_date),
     company_id int not null,
     foreign key(company_id) references company(id)
 );
