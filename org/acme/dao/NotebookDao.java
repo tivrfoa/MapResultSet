@@ -11,17 +11,12 @@ import com.github.mapresultset.api.Query;
 
 import org.acme.domain.Notebook;
 
-/**
- * NotebookDao
- * 
- * https://www.baeldung.com/java-dao-pattern
- */
 public class NotebookDao {
 
     @Query
     private static final String listNotebooks = """
             select id, name, 2 + 2 as four, value as value, release_date,
-                   is_available
+                   is_available, is_ssd as isSSD
             from notebook
             """;
     
@@ -37,6 +32,7 @@ public class NotebookDao {
             System.out.println(list.getGeneratedColumns().get(0).getFour());
             return list.listNotebook;
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
         }
     }

@@ -302,7 +302,7 @@ public class MappingProcessor extends AbstractProcessor {
 						fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
 					}
 				}
-				String fieldSetMethod = "set" + uppercaseFirstLetter(fieldName);
+				String fieldSetMethod = getFieldSetMethod(fieldName, field.getValue());
 				System.out.println("field: " + field);
 				var resultSetType = ResultSetTypes.fromString(field.getValue());
 				if (resultSetType == ResultSetTypes.CHAR) {
@@ -352,6 +352,18 @@ public class MappingProcessor extends AbstractProcessor {
 					}
 				}
 				""".formatted(packageName, imports, queryClassName, queryName, methodBody);
+	}
+
+	private String getFieldSetMethod(String fieldName, String value) {
+		if (value.equals("boolean")) {
+			if (fieldName.startsWith("is") && fieldName.length() > 2) {
+				return "set" + fieldName.substring(2);
+			} else {
+				return "set" + uppercaseFirstLetter(fieldName);
+			}
+		} else {
+			return "set" + uppercaseFirstLetter(fieldName);
+		}
 	}
 
 	private String[] splitPackageClass(final String packageClass) {

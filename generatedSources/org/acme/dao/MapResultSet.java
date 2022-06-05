@@ -12,6 +12,7 @@ public class MapResultSet {
 		while (rs.next()) {
 			{
 				Notebook obj = new Notebook();
+				obj.setSSD(rs.getBoolean("is_ssd"));
 				obj.setReleaseDate(rs.getDate("release_date"));
 				obj.setName(rs.getString("name"));
 				obj.setId(rs.getInt("id"));

@@ -15,6 +15,16 @@ public class Notebook {
 	private Date releaseDate;
 	@Column (name = "is_available")
 	private char isAvailable;
+	@Column (name = "is_ssd")
+	private boolean isSSD;
+
+	public boolean isSSD() {
+		return isSSD;
+	}
+
+	public void setSSD(boolean isSSD) {
+		this.isSSD = isSSD;
+	}
 
 	public char getIsAvailable() {
 		return isAvailable;
