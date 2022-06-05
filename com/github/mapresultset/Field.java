@@ -1,5 +1,3 @@
 package com.github.mapresultset;
 
-public record Field(String name, String type) {
-    
-}
+public record Field(String name, String type) {}

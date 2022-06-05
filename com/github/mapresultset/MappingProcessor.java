@@ -38,7 +38,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private List<Element> tables = new ArrayList<>();
 	private List<Element> queries = new ArrayList<>();
 	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
-	private Map<String, Structure> structures = new HashMap<>();
+	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -69,28 +69,29 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println("tables.: " + tables);
 		System.out.println("queries: " + queries);
 		System.out.println("classMappedColumns: " + classMappedColumns);
-		System.out.println("structures: " + structures);
+		System.out.println("Java Structures: " + javaStructures);
 
 
-		// Map Table name -> to Class (including package)
+		// Map: Table Name -> Full Class Name (including package)
 		Map<String, String> tableMap = new HashMap<>();
 		for (var te : tables) {
 			final String packageAndClass = te.toString();
-			int ld = packageAndClass.lastIndexOf(".");
-			String tableName;
-			if (ld == -1) {
-				tableName = packageAndClass;
+			String tableName = getAnnotationParameter(te, "name()");
+			if (tableName != null) {
+				if (tableMap.get(tableName) != null) {
+					throw new RuntimeException("It can't map " + packageAndClass + " to " + tableName +
+							", because class '" + tableMap.get(tableName) +
+							"' is already mapped to that table.");
+				}
 			} else {
-				tableName = packageAndClass.substring(ld + 1);
+				int ld = packageAndClass.lastIndexOf(".");
+				if (ld == -1) {
+					tableName = packageAndClass;
+				} else {
+					tableName = packageAndClass.substring(ld + 1);
+				}
 			}
 			
-			tableName = getAnnotationParameter(te, "name()");
-
-			if (tableMap.get(tableName) != null) {
-				throw new RuntimeException("It can't map " + packageAndClass + " to " + tableName +
-						", because class '" + tableMap.get(tableName) +
-						"' is already mapped to that table.");
-			}
 			tableMap.put(tableName, packageAndClass);
 		}
 
@@ -109,7 +110,7 @@ public class MappingProcessor extends AbstractProcessor {
 		for (var queryElement : queries) {
 			final String queryName = queryElement.toString();
 			List<String> generatedColumns = new ArrayList<>();
-			Map<String, Structure> queryStructures = new HashMap<>();
+			Map<FullClassName, QueryStructure> queryStructures = new HashMap<>();
 			Set<String> queryImports = new HashSet<>();
 			String queryImportsStr = "";
 			final String packageName = getPackageName(queryElement);
@@ -136,15 +137,17 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println("p.getTables() = " + p.getTables());
 
 			for (var column : p.getColumns()) {
+				System.out.println(column);
 				if (column.isGeneratedValue()) {
 					String alias = column.alias();
 					generatedColumns.add(alias);
-					var m = queryStructures.get(generatedColumnsClassName);
+					var m = queryStructures.get(new FullClassName(generatedColumnsClassName));
 					if (m == null) {
-						m = new Structure(generatedColumnsClassName, "CLASS");
-						queryStructures.put(generatedColumnsClassName, m);
+						m = new QueryStructure(new FullClassName(generatedColumnsClassName), JavaStructure.Type.CLASS);
+						queryStructures.put(new FullClassName(generatedColumnsClassName), m);
 					}
-					m.fields.put(alias, "Object"); // TODO let user specify a type
+					// TODO let user specify a type
+					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
 				} else {
 					String table = column.table();
 					if (table == null) {
@@ -158,31 +161,36 @@ public class MappingProcessor extends AbstractProcessor {
 					} else {
 						table = p.getTables().get(table);
 					}
-					String fullClassName = tableMap.get(table);
+					String fullClassNameStr = tableMap.get(table);
+					var fullClassName = new FullClassName(tableMap.get(table));
 					System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassName);
-					if (queryImports.add(fullClassName)) {
-						queryImportsStr += "import " + fullClassName + ";\n";
-						String classTableName = splitPackageClass(fullClassName)[1];
+					if (queryImports.add(fullClassNameStr)) {
+						queryImportsStr += "import " + fullClassName.name() + ";\n";
+						String classTableName = splitPackageClass(fullClassNameStr)[1];
 						String content = """
 								public List<%s> list%s = new ArrayList<>();
 							""".formatted(classTableName, classTableName);
 						queryClassToCreate.content += content;
 					}
-					var structure = structures.get(fullClassName);
+					var structure = javaStructures.get(fullClassName);
 					var structureType = structure.type;
 					var m = queryStructures.get(fullClassName);
 					if (m == null) {
-						m = new Structure(fullClassName, structureType);
+						m = new QueryStructure(fullClassName, structureType);
 						queryStructures.put(fullClassName, m);
 					}
-					var classFieldType = structure.fields.get(column.name());
+					
+					var fieldName = new FieldName(column.name());
+					var classFieldType = structure.fields.get(fieldName);
 					if (classFieldType == null) {
-						var field = classMappedColumns.get(new FullClassName(fullClassName)).get(new ColumnName(column.name()));
-						if (field == null)
-							throw new RuntimeException("Class " + fullClassName + " does not have field named: " + column.name());
-						classFieldType = structure.fields.get(field.name());
+						fieldName = classMappedColumns.get(fullClassName).get(new ColumnName(column.name()));
+						if (fieldName == null)
+							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + column.name());
+						classFieldType = structure.fields.get(fieldName);
 					}
-					m.fields.put(column.name(), classFieldType);
+					String alias = column.alias();
+					if (alias == null) alias = column.name();
+					m.fields.put(new ColumnName(column.name()), new ColumnField(alias, new Field(fieldName.name(), classFieldType.name())));
 				}
 			}
 
@@ -266,7 +274,7 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private String createMapResultSetClassForQuery(String queryName, String packageName, String queryClassName,
-			Set<String> queryImports, Map<String, Structure> queryStructures) {
+			Set<String> queryImports, Map<FullClassName, QueryStructure> queryStructures) {
 
 		String imports = """
 				import java.sql.ResultSet;
@@ -284,38 +292,40 @@ public class MappingProcessor extends AbstractProcessor {
 
 		
 		for (var entry : queryStructures.entrySet()) {
-			String className = entry.getKey();
+			FullClassName fullCassName = entry.getKey();
+			String className = fullCassName.name();
 			if (className.contains("."))
-				className = splitPackageClass(entry.getKey())[1];
+				className = splitPackageClass(className)[1];
 			String createObject = """
 						{
 							%s obj = new %s();
 			""".formatted(className, className);
 			methodBody += createObject;
 			String setFields = "";
-			for (var field : entry.getValue().fields.entrySet()) {
-				String fieldName = field.getKey();
-				String columnName = fieldName;
-				var mappedClassFields = classMappedColumns.get(new FullClassName(entry.getKey()));
+			for (var fieldEntry : entry.getValue().fields.entrySet()) {
+				String fieldName = fieldEntry.getKey().name();
+				String columnAlias = fieldEntry.getValue().columnAlias();
+				Field field = fieldEntry.getValue().field();
+				var mappedClassFields = classMappedColumns.get(fullCassName);
 				if (mappedClassFields != null) {
 					if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
 						fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
 					}
 				}
-				String fieldSetMethod = getFieldSetMethod(fieldName, field.getValue());
-				System.out.println("field: " + field);
-				var resultSetType = ResultSetTypes.fromString(field.getValue());
+				String fieldSetMethod = getFieldSetMethod(fieldName, field);
+				System.out.println("field: " + fieldEntry);
+				var resultSetType = ResultSetTypes.fromString(field.type());
 				if (resultSetType == ResultSetTypes.CHAR) {
 					setFields += """
 									var str = rs.getString("%s");
 									if (str != null)
 										obj.%s(str.charAt(0));
-					""".formatted(columnName, fieldSetMethod);
+					""".formatted(columnAlias, fieldSetMethod);
 				} else {
 					String resultSetGetMethod = resultSetType.getResultSetGetMethod();
 					setFields += """
 									obj.%s(rs.%s("%s"));
-					""".formatted(fieldSetMethod, resultSetGetMethod, columnName);
+					""".formatted(fieldSetMethod, resultSetGetMethod, columnAlias);
 				}
 			}
 			methodBody += setFields;
@@ -354,8 +364,8 @@ public class MappingProcessor extends AbstractProcessor {
 				""".formatted(packageName, imports, queryClassName, queryName, methodBody);
 	}
 
-	private String getFieldSetMethod(String fieldName, String value) {
-		if (value.equals("boolean")) {
+	private String getFieldSetMethod(String fieldName, Field field) {
+		if (field.type().equals("boolean")) {
 			if (fieldName.startsWith("is") && fieldName.length() > 2) {
 				return "set" + fieldName.substring(2);
 			} else {
@@ -438,12 +448,13 @@ public class MappingProcessor extends AbstractProcessor {
 	private void processTable(String elementName, Element e) {
 		tables.add(e);
 		List<VariableElement> fields = ElementFilter.fieldsIn(e.getEnclosedElements());
-		Map<String, String> mapField = new HashMap<>();
+		Map<FieldName, FieldType> mapField = new HashMap<>();
 		for (VariableElement field : fields) {
 			String fieldType = field.asType().toString();
-			mapField.put(field.toString(), fieldType);
+			mapField.put(new FieldName(field.toString()), new FieldType(fieldType));
 		}
-		structures.put(elementName, new Structure(elementName, e.getKind().toString(), mapField));
+		System.out.println("mapField = " + mapField);
+		javaStructures.put(new FullClassName(elementName), new JavaStructure(elementName, e.getKind().toString(), mapField));
 	}
 
 	private void processColumn(String elementName, Element e) {

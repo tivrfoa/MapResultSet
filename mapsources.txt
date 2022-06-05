@@ -6,9 +6,12 @@ com/github/mapresultset/Field.java
 com/github/mapresultset/ClassToCreate.java
 com/github/mapresultset/ParseQuery.java
 com/github/mapresultset/FieldName.java
-com/github/mapresultset/Structure.java
+com/github/mapresultset/QueryStructure.java
 com/github/mapresultset/ResultSetTypes.java
 com/github/mapresultset/ColumnName.java
 com/github/mapresultset/ColumnRecord.java
 com/github/mapresultset/MappingProcessor.java
+com/github/mapresultset/ColumnField.java
+com/github/mapresultset/JavaStructure.java
 com/github/mapresultset/TableColumns.java
+com/github/mapresultset/FieldType.java

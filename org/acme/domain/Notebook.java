@@ -17,6 +17,16 @@ public class Notebook {
 	private char isAvailable;
 	@Column (name = "is_ssd")
 	private boolean isSSD;
+	@Column (name = "has_wifi")
+	private boolean hasWifi;
+
+	public boolean isHasWifi() {
+		return hasWifi;
+	}
+
+	public void setHasWifi(boolean hasWifi) {
+		this.hasWifi = hasWifi;
+	}
 
 	public boolean isSSD() {
 		return isSSD;
@@ -68,8 +78,8 @@ public class Notebook {
 
 	@Override
 	public String toString() {
-		return "Notebook [id=" + id + ", isAvailable=" + isAvailable + ", name=" + name + ", releaseDate=" + releaseDate
-				+ ", value=" + value + "]";
+		return "Notebook [hasWifi=" + hasWifi + ", id=" + id + ", isAvailable=" + isAvailable + ", isSSD=" + isSSD
+				+ ", name=" + name + ", releaseDate=" + releaseDate + ", value=" + value + "]";
 	}
 	
 }

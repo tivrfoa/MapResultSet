@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * 
  */
-public class Structure {
+public class JavaStructure {
     public static enum Type {
         CLASS,
         RECORD,
@@ -14,21 +14,21 @@ public class Structure {
 
     String fullName;
     Type type;
-    Map<String, String> fields;
+    Map<FieldName, FieldType> fields;
 
-    public Structure(String fullName, String type) {
+    public JavaStructure(String fullName, String type) {
         this(fullName, type, new HashMap<>());
     }
 
-    public Structure(String fullName, Type type) {
+    public JavaStructure(String fullName, Type type) {
         this(fullName, type, new HashMap<>());
     }
 
-    public Structure(String fullName, String type, Map<String, String> fields) {
+    public JavaStructure(String fullName, String type, Map<FieldName, FieldType>fields) {
         this(fullName, getType(type), fields);
     }
 
-    public Structure(String fullName, Type type, Map<String, String> fields) {
+    public JavaStructure(String fullName, Type type, Map<FieldName, FieldType> fields) {
         this.fullName = fullName;
         this.type = type;
         this.fields = fields;
