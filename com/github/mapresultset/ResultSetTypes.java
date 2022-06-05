@@ -2,6 +2,7 @@ package com.github.mapresultset;
 
 public enum ResultSetTypes {
     BIG_DECIMAL,
+    CHAR,
     DATE,
     INT,
     OBJECT,
@@ -16,6 +17,7 @@ public enum ResultSetTypes {
         return switch (strType) {
             case "java.math.BigDecimal" -> BIG_DECIMAL;
             case "java.sql.Date" -> DATE;
+            case "char" -> CHAR;
             case "int" -> INT;
             case "Object" -> OBJECT;
             case "String", "java.lang.String" -> STRING;
@@ -30,7 +32,7 @@ public enum ResultSetTypes {
             case INT -> "getInt";
             case OBJECT -> "getObject";
             case STRING -> "getString";
-            default -> throw new RuntimeException("getMethod not mapped for:" + this);
+            default -> throw new RuntimeException("get method not mapped for:" + this);
         };
     }
 }

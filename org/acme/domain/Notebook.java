@@ -13,6 +13,16 @@ public class Notebook {
 	private BigDecimal value;
 	@Column (name = "release_date")
 	private Date releaseDate;
+	@Column (name = "is_available")
+	private char isAvailable;
+
+	public char getIsAvailable() {
+		return isAvailable;
+	}
+
+	public void setIsAvailable(char isAvailable) {
+		this.isAvailable = isAvailable;
+	}
 
 	public Date getReleaseDate() {
 		return releaseDate;
@@ -48,7 +58,8 @@ public class Notebook {
 
 	@Override
 	public String toString() {
-		return "Notebook [id=" + id + ", name=" + name + ", value=" + value + "]";
+		return "Notebook [id=" + id + ", isAvailable=" + isAvailable + ", name=" + name + ", releaseDate=" + releaseDate
+				+ ", value=" + value + "]";
 	}
 	
 }

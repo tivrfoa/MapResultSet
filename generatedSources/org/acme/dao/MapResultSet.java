@@ -16,6 +16,9 @@ public class MapResultSet {
 				obj.setName(rs.getString("name"));
 				obj.setId(rs.getInt("id"));
 				obj.setValue(rs.getBigDecimal("value"));
+				var str = rs.getString("is_available");
+				if (str != null)
+					obj.setIsAvailable(str.charAt(0));
 				records.listNotebook.add(obj);
 			}
 			{

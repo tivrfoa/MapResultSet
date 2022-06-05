@@ -304,11 +304,19 @@ public class MappingProcessor extends AbstractProcessor {
 				}
 				String fieldSetMethod = "set" + uppercaseFirstLetter(fieldName);
 				System.out.println("field: " + field);
-				String resultSetGetMethod = ResultSetTypes.fromString(field.getValue()).getResultSetGetMethod();
-
-				setFields += """
-								obj.%s(rs.%s("%s"));
-				""".formatted(fieldSetMethod, resultSetGetMethod, columnName);
+				var resultSetType = ResultSetTypes.fromString(field.getValue());
+				if (resultSetType == ResultSetTypes.CHAR) {
+					setFields += """
+									var str = rs.getString("%s");
+									if (str != null)
+										obj.%s(str.charAt(0));
+					""".formatted(columnName, fieldSetMethod);
+				} else {
+					String resultSetGetMethod = resultSetType.getResultSetGetMethod();
+					setFields += """
+									obj.%s(rs.%s("%s"));
+					""".formatted(fieldSetMethod, resultSetGetMethod, columnName);
+				}
 			}
 			methodBody += setFields;
 
