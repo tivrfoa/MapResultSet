@@ -25,16 +25,8 @@ import javax.tools.JavaFileObject;
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
-
-	static enum TYPE_KEY { // TODO give a better name
-		PACKAGE,
-		CLASS,
-		CONTENT,
-	}
-
 	private static final String ANONYMOUS_TABLE = null;
 
-	private Set<Element> annotatedElements = new HashSet<>(); // TODO this is probably not necessary
 	private List<Element> tables = new ArrayList<>();
 	private List<Element> queries = new ArrayList<>();
 	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
@@ -101,10 +93,7 @@ public class MappingProcessor extends AbstractProcessor {
 		// It will create one MapResultSet class in each package that
 		// contains a @Query
 		// map: package -> list of methods ?
-		Map<String, List<String>> packageMethods = new HashMap<>();
-		packageMethods.put(ANONYMOUS_TABLE, new ArrayList<>());
-
-		List<ClassToCreate> listClassesToCreate = new ArrayList<>();
+		Map<String, QueryMethodsAndImports> packageMethods = new HashMap<>();
 		
 		// Parse all queries
 		for (var queryElement : queries) {
@@ -129,7 +118,6 @@ public class MappingProcessor extends AbstractProcessor {
 						
 					""".formatted(packageName, queryClassName);
 			var queryClassToCreate = new ClassToCreate(packageName, queryClassName, classContent);
-			listClassesToCreate.add(queryClassToCreate);
 			String query = (String) ((VariableElement) queryElement).getConstantValue();
 			System.out.println("-->> Parsing query: " + query);
 			var p = new ParseQuery(query);
@@ -150,6 +138,7 @@ public class MappingProcessor extends AbstractProcessor {
 					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
 				} else {
 					String table = column.table();
+					System.out.println("table = " + table);
 					if (table == null) {
 						// if it's not a generated column and table is null
 						// then it means the from clause must have a single table
@@ -206,7 +195,6 @@ public class MappingProcessor extends AbstractProcessor {
 			queryClassToCreate.content += "}";
 			queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
 
-			System.out.println(queryClassToCreate.content);
 			writeBuilderFile(queryClassToCreate);
 
 			System.out.println("-------- Query Structures ------------");
@@ -216,8 +204,21 @@ public class MappingProcessor extends AbstractProcessor {
 				createGeneratedColumnsClass(packageName, generatedColumnsClassName, generatedColumns);
 			}
 
-			// Create map file
-			final String content = createMapResultSetClassForQuery(queryName, packageName, queryClassName, queryImports, queryStructures);
+			var queryMethodsAndImports = packageMethods.get(packageName);
+			if (queryMethodsAndImports == null) {
+				queryMethodsAndImports = new QueryMethodsAndImports();
+				packageMethods.put(packageName, queryMethodsAndImports);
+			}
+			
+			queryMethodsAndImports.imports.addAll(queryImports);
+			queryMethodsAndImports.methods += createQueryMethod(queryName, queryClassName, queryStructures);
+		}
+		
+		// Create a MapResultClass for each package that contains a @Query
+		for (var pm : packageMethods.entrySet()) {
+			final String packageName = pm.getKey();
+			final QueryMethodsAndImports qmi = pm.getValue();
+			final String content = createMapResultSetClassForQuery(packageName, qmi.imports, qmi.methods);
 			writeBuilderFile(packageName, "MapResultSet", content);
 		}
 	}
@@ -273,16 +274,8 @@ public class MappingProcessor extends AbstractProcessor {
 		writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
 	}
 
-	private String createMapResultSetClassForQuery(String queryName, String packageName, String queryClassName,
-			Set<String> queryImports, Map<FullClassName, QueryStructure> queryStructures) {
-
-		String imports = """
-				import java.sql.ResultSet;
-				import java.sql.SQLException;
-				""";
-		for (var i : queryImports) {
-			imports += "import " + i + ";\n";
-		}
+	private String createQueryMethod(String queryName, String queryClassName,
+			Map<FullClassName, QueryStructure> queryStructures) {
 
 		String methodBody = """
 		%s records = new %s();
@@ -313,7 +306,6 @@ public class MappingProcessor extends AbstractProcessor {
 					}
 				}
 				String fieldSetMethod = getFieldSetMethod(fieldName, field);
-				System.out.println("field: " + fieldEntry);
 				var resultSetType = ResultSetTypes.fromString(field.type());
 				if (resultSetType == ResultSetTypes.CHAR) {
 					setFields += """
@@ -352,16 +344,34 @@ public class MappingProcessor extends AbstractProcessor {
 		""";
 	
 		return """
+
+					public static %s %s(ResultSet rs) throws SQLException {
+						%s
+					}
+
+				""".formatted(queryClassName, queryName, methodBody);
+	}
+
+	private String createMapResultSetClassForQuery(String packageName,
+			Set<String> mapResultSetImports, String methods) {
+
+		String imports = """
+				import java.sql.ResultSet;
+				import java.sql.SQLException;
+				""";
+		for (var i : mapResultSetImports) {
+			imports += "import " + i + ";\n";
+		}
+	
+		return """
 				package %s;
 
 				%s
 
 				public class MapResultSet {
-					public static %s %s(ResultSet rs) throws SQLException {
-						%s
-					}
+					%s
 				}
-				""".formatted(packageName, imports, queryClassName, queryName, methodBody);
+				""".formatted(packageName, imports, methods);
 	}
 
 	private String getFieldSetMethod(String fieldName, Field field) {
@@ -412,7 +422,6 @@ public class MappingProcessor extends AbstractProcessor {
 			Set<? extends Element> annotatedElements
 					= roundEnvironment.getElementsAnnotatedWith(annotation);
 			System.out.println("Annotated Elements: " + annotatedElements);
-			this.annotatedElements.addAll(annotatedElements);
 			
 			for (var e : annotatedElements) {
 				String elementName = e.toString();

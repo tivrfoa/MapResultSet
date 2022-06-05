@@ -204,6 +204,7 @@ public class ParseQuery {
 				String tableName = joinTable;
 				String alias = joinTable;
 				// check if it has an alias
+				// TODO FIXME (?) for now it only works if it uses 'AS' for the table alias
 				if (i + 4 <= len && fromContent.substring(i, i + 4).equals(" AS ")) {
 					i += 4; // skip ' as '
 					alias = "";

@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.github.mapresultset.api.Query;
 
+import org.acme.domain.Company;
 import org.acme.domain.Notebook;
 
 public class NotebookDao {
@@ -19,18 +20,44 @@ public class NotebookDao {
                    is_available, is_ssd as isSSD, has_wifi
             from notebook
             """;
+
+    @Query
+    private static final String sumValuesGroupedByCompany = """
+            select c.id, c.name, sum(n.value) as sum
+            from notebook as n join company as c on
+              n.company_id = c.id
+            group by c.id, c.name
+            """;
     
     public static List<Notebook> listNotebooks() {
+        try {
+            var list = MapResultSet.listNotebooks(executeQuery(listNotebooks));
+            System.out.println(list.getGeneratedColumns().get(0).getFour());
+            return list.listNotebook;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+    
+    public static List<Company> sumValuesGroupedByCompany() {
+        try {
+            var list = MapResultSet.sumValuesGroupedByCompany(executeQuery(sumValuesGroupedByCompany));
+            System.out.println(list.getGeneratedColumns().get(0).getSum());
+            return list.listCompany;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    public static ResultSet executeQuery(final String query) {
         try {
             var mysqlCon = new MySQLCon();
 
             Connection con = mysqlCon.getConnection();
             Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery(listNotebooks);
-
-            var list = MapResultSet.listNotebooks(rs);
-            System.out.println(list.getGeneratedColumns().get(0).getFour());
-            return list.listNotebook;
+            return stmt.executeQuery(listNotebooks);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

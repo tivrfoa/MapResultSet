@@ -30,6 +30,7 @@ public class TestProcessor {
 
 	public static void main(String[] args) {
 		System.out.println(NotebookDao.listNotebooks());
+		System.out.println(NotebookDao.sumValuesGroupedByCompany());
 	}
 
 	@Table(name = "phone")

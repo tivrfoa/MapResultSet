@@ -44,3 +44,9 @@ from notebook;
 select c.name, n.name
 from notebook n join company c on
   n.company_id = c.id;
+
+-- sumValuesGroupedByCompany
+select c.id, c.name, sum(n.value)
+from notebook n join company c on
+    n.company_id = c.id
+group by c.id, c.name

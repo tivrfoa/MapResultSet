@@ -7,6 +7,7 @@ import tests.TestProcessor.Phone;
 
 
 public class MapResultSet {
+	
 	public static ListPhonesRecords listPhones(ResultSet rs) throws SQLException {
 		ListPhonesRecords records = new ListPhonesRecords();
 
@@ -26,5 +27,7 @@ public class MapResultSet {
 		return records;
 
 	}
+
+
 }
 

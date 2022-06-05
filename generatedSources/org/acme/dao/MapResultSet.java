@@ -3,9 +3,11 @@ package org.acme.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.acme.domain.Notebook;
+import org.acme.domain.Company;
 
 
 public class MapResultSet {
+	
 	public static ListNotebooksRecords listNotebooks(ResultSet rs) throws SQLException {
 		ListNotebooksRecords records = new ListNotebooksRecords();
 
@@ -33,5 +35,29 @@ public class MapResultSet {
 		return records;
 
 	}
+
+
+	public static SumValuesGroupedByCompanyRecords sumValuesGroupedByCompany(ResultSet rs) throws SQLException {
+		SumValuesGroupedByCompanyRecords records = new SumValuesGroupedByCompanyRecords();
+
+		while (rs.next()) {
+			{
+				Company obj = new Company();
+				obj.setName(rs.getString("name"));
+				obj.setId(rs.getInt("id"));
+				records.listCompany.add(obj);
+			}
+			{
+				SumValuesGroupedByCompanyGeneratedColumns obj = new SumValuesGroupedByCompanyGeneratedColumns();
+				obj.setSum(rs.getObject("sum"));
+				records.getGeneratedColumns().add(obj);
+			}
+		}
+
+		return records;
+
+	}
+
+
 }
 
