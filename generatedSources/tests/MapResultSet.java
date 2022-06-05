@@ -15,12 +15,12 @@ public class MapResultSet {
 			{
 				Company obj = new Company();
 				obj.setName(rs.getString("name"));
-				records.listCompany.add(obj);
+				records.getListCompany().add(obj);
 			}
 			{
 				Phone obj = new Phone();
 				obj.setId(rs.getInt("id"));
-				records.listPhone.add(obj);
+				records.getListPhone().add(obj);
 			}
 		}
 

@@ -23,7 +23,7 @@ public class MapResultSet {
 				var str = rs.getString("is_available");
 				if (str != null)
 					obj.setIsAvailable(str.charAt(0));
-				records.listNotebook.add(obj);
+				records.getListNotebook().add(obj);
 			}
 			{
 				ListNotebooksGeneratedColumns obj = new ListNotebooksGeneratedColumns();
@@ -45,7 +45,7 @@ public class MapResultSet {
 				Company obj = new Company();
 				obj.setName(rs.getString("name"));
 				obj.setId(rs.getInt("id"));
-				records.listCompany.add(obj);
+				records.getListCompany().add(obj);
 			}
 			{
 				SumValuesGroupedByCompanyGeneratedColumns obj = new SumValuesGroupedByCompanyGeneratedColumns();

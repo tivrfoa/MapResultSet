@@ -9,7 +9,10 @@ import org.acme.domain.Company;
 public class SumValuesGroupedByCompanyRecords {
 
 
-	public List<Company> listCompany = new ArrayList<>();
+	private List<Company> listCompany = new ArrayList<>();
+	public List<Company> getListCompany() {
+		return listCompany;
+	}
 	private List<SumValuesGroupedByCompanyGeneratedColumns> generatedColumns = new ArrayList<>();
 	public List<SumValuesGroupedByCompanyGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;

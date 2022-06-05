@@ -33,7 +33,7 @@ public class NotebookDao {
         try {
             var list = MapResultSet.listNotebooks(executeQuery(listNotebooks));
             System.out.println(list.getGeneratedColumns().get(0).getFour());
-            return list.listNotebook;
+            return list.getListNotebook();
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
@@ -46,7 +46,7 @@ public class NotebookDao {
             var list = MapResultSet.sumValuesGroupedByCompany(rs);
             for (var v : list.getGeneratedColumns())
                 System.out.println(v.getSum());
-            return list.listCompany;
+            return list.getListCompany();
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

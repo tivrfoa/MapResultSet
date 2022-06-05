@@ -10,6 +10,12 @@ import org.acme.domain.Company;
 public class ListPhonesRecords {
 
 
-	public List<Phone> listPhone = new ArrayList<>();
-	public List<Company> listCompany = new ArrayList<>();
+	private List<Phone> listPhone = new ArrayList<>();
+	public List<Phone> getListPhone() {
+		return listPhone;
+	}
+	private List<Company> listCompany = new ArrayList<>();
+	public List<Company> getListCompany() {
+		return listCompany;
+	}
 }

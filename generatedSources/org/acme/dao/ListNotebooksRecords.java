@@ -9,7 +9,10 @@ import org.acme.domain.Notebook;
 public class ListNotebooksRecords {
 
 
-	public List<Notebook> listNotebook = new ArrayList<>();
+	private List<Notebook> listNotebook = new ArrayList<>();
+	public List<Notebook> getListNotebook() {
+		return listNotebook;
+	}
 	private List<ListNotebooksGeneratedColumns> generatedColumns = new ArrayList<>();
 	public List<ListNotebooksGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;

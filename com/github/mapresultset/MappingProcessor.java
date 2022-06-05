@@ -25,7 +25,6 @@ import javax.tools.JavaFileObject;
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
-	private static final String ANONYMOUS_TABLE = null;
 
 	private List<Element> tables = new ArrayList<>();
 	private List<Element> queries = new ArrayList<>();
@@ -157,8 +156,11 @@ public class MappingProcessor extends AbstractProcessor {
 						queryImportsStr += "import " + fullClassName.name() + ";\n";
 						String classTableName = splitPackageClass(fullClassNameStr)[1];
 						String content = """
-								public List<%s> list%s = new ArrayList<>();
-							""".formatted(classTableName, classTableName);
+								private List<%s> list%s = new ArrayList<>();
+								public List<%s> getList%s() {
+									return list%s;
+								}
+							""".formatted(classTableName, classTableName, classTableName, classTableName, classTableName);
 						queryClassToCreate.content += content;
 					}
 					var structure = javaStructures.get(fullClassName);
@@ -330,7 +332,7 @@ public class MappingProcessor extends AbstractProcessor {
 				""";
 			} else {
 				closeCreateObject = """
-								records.list%s.add(obj);
+								records.getList%s().add(obj);
 							}
 				""".formatted(className);
 			}
@@ -479,54 +481,6 @@ public class MappingProcessor extends AbstractProcessor {
 			classMappedColumns.put(structure, map);
 		}
 		map.put(columnName, fieldName);
-	}
-
-	private void writeBuilderFile(final String className, List<String> methods) {
-
-		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-				"Creating map file ... className = " + className);
-	    String packageName = null;
-	    int lastDot = className.lastIndexOf('.');
-	    if (lastDot > 0) {
-	        packageName = className.substring(0, lastDot);
-	    }
-
-	    String simpleClassName = className.substring(lastDot + 1);
-	    // String mapClassName = simpleClassName + "MapResultSet";
-	    String mapClassName = simpleClassName;
-	    
-		JavaFileObject builderFile;
-		try {
-			builderFile = processingEnv.getFiler().createSourceFile(className);
-		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
-		}
-	    
-	    try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
-
-	        if (packageName != null) {
-	            out.print("package ");
-	            out.print(packageName);
-	            out.println(";");
-	            out.println();
-	        }
-
-	        // imports
-	        out.println("import java.sql.ResultSet;");
-	        out.println("import java.util.ArrayList;");
-	        out.println("import java.util.List;");
-	        out.println();
-
-	        out.println("public class " + mapClassName + " {\n");
-
-	        for (var m : methods) {
-	        	out.println(m);
-	        }
-
-	        out.println("}");
-	    } catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
-		}
 	}
 
 	private void writeBuilderFile(final ClassToCreate clazz) {
