@@ -250,13 +250,13 @@ public class MappingProcessor extends AbstractProcessor {
 		for (var field : generatedColumns) {
 			String Field = uppercaseFirstLetter(field);
 			String content = """
-				private Object %s;
-				public Object get%s() {
-					return %s;
-				}
-				public void set%s(Object %s) {
-					this.%s = %s;
-				}
+					private Object %s;
+					public Object get%s() {
+						return %s;
+					}
+					public void set%s(Object %s) {
+						this.%s = %s;
+					}
 				""".formatted(field, Field, field, Field, field, field, field);
 			generatedColumnsClassToCreate.content += content;
 		}
@@ -277,10 +277,10 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		String methodBody = """
-			%s records = new %s();
+		%s records = new %s();
 
-			while (rs.next()) {	
-				""".formatted(queryClassName, queryClassName);
+				while (rs.next()) {
+		""".formatted(queryClassName, queryClassName);
 
 		
 		for (var entry : queryStructures.entrySet()) {
@@ -288,8 +288,8 @@ public class MappingProcessor extends AbstractProcessor {
 			if (className.contains("."))
 				className = splitPackageClass(entry.getKey())[1];
 			String createObject = """
-					{
-						%s obj = new %s();
+						{
+							%s obj = new %s();
 			""".formatted(className, className);
 			methodBody += createObject;
 			String setFields = "";
@@ -307,7 +307,7 @@ public class MappingProcessor extends AbstractProcessor {
 				String resultSetGetMethod = ResultSetTypes.fromString(field.getValue()).getResultSetGetMethod();
 
 				setFields += """
-						obj.%s(rs.%s("%s"));
+								obj.%s(rs.%s("%s"));
 				""".formatted(fieldSetMethod, resultSetGetMethod, columnName);
 			}
 			methodBody += setFields;
@@ -315,13 +315,13 @@ public class MappingProcessor extends AbstractProcessor {
 			String closeCreateObject;
 			if (className.endsWith(GENERATED_COLUMNS)) {
 				closeCreateObject = """
-						records.getGeneratedColumns().add(obj);
-					}
+								records.getGeneratedColumns().add(obj);
+							}
 				""";
 			} else {
 				closeCreateObject = """
-						records.list%s.add(obj);
-					}
+								records.list%s.add(obj);
+							}
 				""".formatted(className);
 			}
 			methodBody += closeCreateObject;
