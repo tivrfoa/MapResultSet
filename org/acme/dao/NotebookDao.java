@@ -42,8 +42,10 @@ public class NotebookDao {
     
     public static List<Company> sumValuesGroupedByCompany() {
         try {
-            var list = MapResultSet.sumValuesGroupedByCompany(executeQuery(sumValuesGroupedByCompany));
-            System.out.println(list.getGeneratedColumns().get(0).getSum());
+            var rs = executeQuery(sumValuesGroupedByCompany);
+            var list = MapResultSet.sumValuesGroupedByCompany(rs);
+            for (var v : list.getGeneratedColumns())
+                System.out.println(v.getSum());
             return list.listCompany;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -57,7 +59,7 @@ public class NotebookDao {
 
             Connection con = mysqlCon.getConnection();
             Statement stmt = con.createStatement();
-            return stmt.executeQuery(listNotebooks);
+            return stmt.executeQuery(query);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

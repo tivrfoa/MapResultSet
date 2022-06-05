@@ -27,6 +27,7 @@ create table notebook (
 insert into notebook (name, value, is_available, is_ssd, has_wifi, company_id) values
 ('ideapad', 9581.20, 'S', true, true, 1),
 ('aspire 3', 1000, 'N', false, true, 2);
+('aspire 5', 2000, 'S', true, true, 2);
 
 
 
@@ -46,7 +47,7 @@ from notebook n join company c on
   n.company_id = c.id;
 
 -- sumValuesGroupedByCompany
-select c.id, c.name, sum(n.value)
+select c.id, c.name, sum(n.value) as sum
 from notebook n join company c on
     n.company_id = c.id
-group by c.id, c.name
+group by c.id, c.name;
