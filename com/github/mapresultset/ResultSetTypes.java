@@ -5,6 +5,8 @@ public enum ResultSetTypes {
     BOOLEAN,
     CHAR,
     DATE,
+    DOUBLE,
+    FLOAT,
     INT,
     OBJECT,
     SHORT,
@@ -20,6 +22,8 @@ public enum ResultSetTypes {
             case "java.sql.Date" -> DATE;
             case "boolean" -> BOOLEAN;
             case "char" -> CHAR;
+            case "double" -> DOUBLE;
+            case "float" -> FLOAT;
             case "int" -> INT;
             case "Object" -> OBJECT;
             case "String", "java.lang.String" -> STRING;
@@ -32,6 +36,8 @@ public enum ResultSetTypes {
             case BIG_DECIMAL -> "getBigDecimal";
             case BOOLEAN -> "getBoolean";
             case DATE -> "getDate";
+            case DOUBLE -> "getDouble";
+            case FLOAT -> "getFloat";
             case INT -> "getInt";
             case OBJECT -> "getObject";
             case STRING -> "getString";

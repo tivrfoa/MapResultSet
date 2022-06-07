@@ -19,6 +19,34 @@ public class Notebook {
 	private boolean isSSD;
 	@Column (name = "has_wifi")
 	private boolean hasWifi;
+	@Column (name = "cpu_speed")
+	private float cpuSpeed;
+	@Column (name = "production_cost")
+	private double productionCost;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public float getCpuSpeed() {
+		return cpuSpeed;
+	}
+
+	public void setCpuSpeed(float cpuSpeed) {
+		this.cpuSpeed = cpuSpeed;
+	}
 
 	public boolean isHasWifi() {
 		return hasWifi;
@@ -60,26 +88,19 @@ public class Notebook {
 		this.value = value;
 	}
 
-	public int getId() {
-		return id;
+	public double getProductionCost() {
+		return productionCost;
 	}
 
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	public void setProductionCost(double productionCost) {
+		this.productionCost = productionCost;
 	}
 
 	@Override
 	public String toString() {
-		return "Notebook [hasWifi=" + hasWifi + ", id=" + id + ", isAvailable=" + isAvailable + ", isSSD=" + isSSD
-				+ ", name=" + name + ", releaseDate=" + releaseDate + ", value=" + value + "]";
+		return "Notebook [cpuSpeed=" + cpuSpeed + ", hasWifi=" + hasWifi + ", id=" + id + ", isAvailable=" + isAvailable
+				+ ", isSSD=" + isSSD + ", name=" + name + ", productionCost=" + productionCost + ", releaseDate="
+				+ releaseDate + ", value=" + value + "]";
 	}
 	
 }

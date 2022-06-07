@@ -20,14 +20,18 @@ create table notebook (
     is_available char(1),
     is_ssd boolean,
     has_wifi boolean,
+    cpu_speed float,
+    production_cost double,
     company_id int not null,
     foreign key(company_id) references company(id)
 );
 
-insert into notebook (name, value, is_available, is_ssd, has_wifi, company_id) values
-('ideapad', 9581.20, 'S', true, true, 1),
-('aspire 3', 1000, 'N', false, true, 2);
-('aspire 5', 2000, 'S', true, true, 2);
+insert into notebook (name, value, is_available, is_ssd, has_wifi,
+                      cpu_speed, production_cost, company_id)
+values
+('ideapad', 9581.20, 'S', true, true, 3000.1, 586.52, 1),
+('aspire 3', 1000, 'N', false, true, 2000.1, 500.52, 2),
+('aspire 5', 2000, 'S', true, true, 4000.1, 600.52, 2);
 
 
 
