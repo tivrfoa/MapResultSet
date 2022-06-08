@@ -310,7 +310,7 @@ public class MappingProcessor extends AbstractProcessor {
 						fieldName, fieldString);
 			} else {
 				fieldsInitialization += """
-								var %s = rs.%s("%s");
+				var %s = rs.%s("%s");
 				""".formatted(fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
 			}
 		}
@@ -318,26 +318,26 @@ public class MappingProcessor extends AbstractProcessor {
 		String constructorParameters = "";
 		for (int i = 0; i < recordComponents.fields.size(); i++) {
 			String fieldName = recordComponents.fields.get(i);
-			ResultSetType resultSetType = recordComponents.types.get(i);
+			String fieldType = recordComponents.types.get(i);
 			if (!fieldsInQuery.contains(fieldName)) {
 				fieldsInitialization += """
 								var %s = %s;
-				""".formatted(fieldName, getDefaultValueForType(resultSetType.getResultSetGetMethod()));
+				""".formatted(fieldName, getDefaultValueForType(fieldType));
 			}
 			constructorParameters += fieldName;
 			if (i + 1 < recordComponents.fields.size()) constructorParameters += ", ";
 		}
 		
 		return """
-				{
-					%s
-					%s obj = new %s(%s);
-				}
+					{
+						%s
+						%s obj = new %s(%s);
 		""".formatted(fieldsInitialization, recordName, recordName, constructorParameters);
 	}
 
-	private String getDefaultValueForType(String resultSetGetMethod) {
-		return switch (resultSetGetMethod) {
+	private String getDefaultValueForType(String fieldType) {
+		System.out.println("############## getting default value for type: " + fieldType);
+		return switch (fieldType) {
 			case "int", "float", "double" -> "0";
 			case "char" -> "' '";
 			case "boolean" -> "false";
@@ -563,16 +563,11 @@ public class MappingProcessor extends AbstractProcessor {
 	 * @param str eg: Country(int,java.lang.String)
 	 * @return
 	 */
-	private List<ResultSetType> getTypesFromConstructor(String str) {
+	private List<String> getTypesFromConstructor(String str) {
 		System.out.println("Parsing constructor: " + str);
-		List<ResultSetType> resultSetTypes = new ArrayList<>();
 		int parentheses = str.indexOf("(");
 		str = str.substring(parentheses + 1, str.length() - 1);
-		String[] strTypes = str.split(",");
-		for (String s : strTypes) {
-			resultSetTypes.add(ResultSetType.fromString(s));
-		}
-		return resultSetTypes;
+		return Arrays.asList(str.split(","));
 	}
 
 	private void processColumn(String elementName, Element e) {

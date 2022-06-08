@@ -1,6 +1,7 @@
 drop table if exists notebook;
 drop table if exists company;
 drop table if exists person;
+drop table if exists country;
 
 create table company (
     id int primary key,
@@ -35,6 +36,29 @@ values
 
 
 
+
+create table country (
+    id int primary key,
+    name varchar(30)
+);
+
+create table person (
+    id int primary key,
+    name varchar(30),
+    country_id int not null,
+    foreign key(country_id) references country(id)
+);
+
+insert into country(id, name) values
+(1, 'Brazil'),
+(2, 'Vietnan'),
+(3, 'Switzerland'),
+(4, 'Germany');
+
+insert into person (id, name, country_id) values
+(1, 'Leandro', 2),
+(2, 'Guilherme', 4),
+(3, 'Marcos', 1);
 
 
 -------------- QUERIES ------------

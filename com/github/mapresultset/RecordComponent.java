@@ -5,5 +5,5 @@ import java.util.List;
 
 public class RecordComponent {
     List<String> fields = new ArrayList<>();
-    List<ResultSetType> types = new ArrayList<>();
+    List<String> types = new ArrayList<>();
 }

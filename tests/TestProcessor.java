@@ -4,6 +4,7 @@ import com.github.mapresultset.api.Query;
 import com.github.mapresultset.api.Table;
 
 import org.acme.dao.NotebookDao;
+import org.acme.dao.PersonDao;
 
 public class TestProcessor {
 
@@ -31,6 +32,7 @@ public class TestProcessor {
 	public static void main(String[] args) {
 		System.out.println(NotebookDao.listNotebooks());
 		System.out.println(NotebookDao.sumValuesGroupedByCompany());
+		System.out.println(PersonDao.listPersonCountry());
 	}
 
 	@Table(name = "phone")

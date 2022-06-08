@@ -2,23 +2,46 @@ package org.acme.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.acme.domain.Person;
 import org.acme.domain.Notebook;
 import org.acme.domain.Company;
+import org.acme.domain.Country;
 
 
 public class MapResultSet {
 	
+	public static ListPersonCountryRecords listPersonCountry(ResultSet rs) throws SQLException {
+		ListPersonCountryRecords records = new ListPersonCountryRecords();
+
+		while (rs.next()) {
+			{
+				Person obj = new Person();
+				obj.setName(rs.getString("name"));
+				records.getListPerson().add(obj);
+			}
+			{
+				var name = rs.getString("name");
+				var id = 0;
+
+				Country obj = new Country(id, name);
+				records.getListCountry().add(obj);
+			}
+		}
+
+		return records;
+
+	}
+
+
 	public static ListNotebooksRecords listNotebooks(ResultSet rs) throws SQLException {
 		ListNotebooksRecords records = new ListNotebooksRecords();
 
 		while (rs.next()) {
 			{
 				Notebook obj = new Notebook();
-				obj.setProductionCost(rs.getDouble("production_cost"));
 				obj.setSSD(rs.getBoolean("isSSD"));
 				obj.setReleaseDate(rs.getDate("release_date"));
 				obj.setName(rs.getString("name"));
-				obj.setCpuSpeed(rs.getFloat("clock"));
 				obj.setId(rs.getInt("id"));
 				obj.setHasWifi(rs.getBoolean("has_wifi"));
 				obj.setValue(rs.getBigDecimal("value"));
