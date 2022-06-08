@@ -1,5 +1,12 @@
 # Bugs
 
 || handle columns with same name, but from different tables ...
+    I'll handle it later. For now the user use an alias.
+    FIXME It needs to pass the qualifier together with the label, eg: p.name instead of just name
+```
+select p.name, c.name, c.phone_code as PhoneCode
+            from person as p join country as c on
+              p.country_id = c.id
+```
 || alias might not a simple word
 || 

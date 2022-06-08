@@ -8,6 +8,7 @@ public class MySQLCon {
 
 	public static void main(String args[]) throws Exception {
 		testMySQLConnection();
+		testResultSetLabelWithTableBeforeLabel();
 	}
 
 	private static void testMySQLConnection() throws Exception {
@@ -33,6 +34,25 @@ public class MySQLCon {
 			rs = psId2.executeQuery();
 			while(rs.next())
 				System.out.println(rs.getInt(1) + "  " + rs.getString(2));
+		}
+	}
+
+	private static void testResultSetLabelWithTableBeforeLabel() throws Exception {
+		var mysqlCon = new MySQLCon();
+
+		final String query = """
+            select p.name, c.name, c.phone_code as PhoneCode
+            from person as p join country as c on
+              p.country_id = c.id
+            """;
+
+		try (Connection con = mysqlCon.getConnection();
+				Statement stmt = con.createStatement();) {
+			ResultSet rs = stmt.executeQuery(query);
+			while(rs.next()) {
+				System.out.println("Person name: " + rs.getString("p.name"));
+				System.out.println("Country name: " + rs.getString("c.name"));
+			}
 		}
 	}
 

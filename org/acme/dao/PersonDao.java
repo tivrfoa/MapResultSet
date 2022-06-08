@@ -17,6 +17,15 @@ public class PersonDao {
             from person as p join country as c on
               p.country_id = c.id
             """;
+
+    // FIXME can't use result with label name because there's more
+    // than one ...
+    @Query
+    private static final String listPersonNameCountryName = """
+            select p.name, c.name, c.phone_code as PhoneCode
+            from person as p join country as c on
+              p.country_id = c.id
+            """;
     
     public static List<Person> listPersonCountry() {
         try {
