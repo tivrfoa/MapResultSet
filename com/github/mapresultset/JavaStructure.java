@@ -1,6 +1,5 @@
 package com.github.mapresultset;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,26 +14,24 @@ public class JavaStructure {
     String fullName;
     Type type;
     Map<FieldName, FieldType> fields;
+    RecordComponent recordComponents;
 
-    public JavaStructure(String fullName, String type) {
-        this(fullName, type, new HashMap<>());
+    public JavaStructure(String fullName, String type, Map<FieldName, FieldType> fields,
+            RecordComponent recordComponents) {
+        this(fullName, getType(type), fields, recordComponents);
     }
 
-    public JavaStructure(String fullName, Type type) {
-        this(fullName, type, new HashMap<>());
-    }
-
-    public JavaStructure(String fullName, String type, Map<FieldName, FieldType>fields) {
-        this(fullName, getType(type), fields);
-    }
-
-    public JavaStructure(String fullName, Type type, Map<FieldName, FieldType> fields) {
+    public JavaStructure(String fullName, Type type, Map<FieldName, FieldType> fields, RecordComponent recordComponents) {
         this.fullName = fullName;
         this.type = type;
         this.fields = fields;
+        if (type == Type.RECORD && recordComponents == null) {
+            throw new RuntimeException("Must pass record components (record parameters) when the type is a 'record'.");
+        }
+        this.recordComponents = recordComponents;
     }
 
-    private static Type getType(String type) {
+    public static Type getType(String type) {
         return switch (type) {
             case "CLASS" -> Type.CLASS;
             case "RECORD" -> Type.RECORD;
@@ -44,7 +41,8 @@ public class JavaStructure {
 
     @Override
     public String toString() {
-        return "Structure [ fullName=" + fullName + ", type=" + type + ", fields=" + fields + "]";
+        return "\nStructure [ fullName=" + fullName + ", type=" + type + ", fields=" + fields +
+                ", recordComponents=" + recordComponents + "]\n";
     }
 
 }

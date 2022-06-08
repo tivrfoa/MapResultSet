@@ -3,6 +3,9 @@ package com.github.mapresultset;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,11 +18,14 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+
+import com.github.mapresultset.JavaStructure.Type;
 
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table", "com.github.mapresultset.api.Query"})
 public class MappingProcessor extends AbstractProcessor {
@@ -276,6 +282,69 @@ public class MappingProcessor extends AbstractProcessor {
 		writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
 	}
 
+	private String getRecordConstructor(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields) {
+		RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
+
+		List<String> fieldsInQuery = new ArrayList<>();
+		String fieldsInitialization = "";
+		for (var fieldEntry : fields.entrySet()) {
+			String fieldName = fieldEntry.getKey().name();
+			fieldsInQuery.add(fieldName);
+			String columnAlias = fieldEntry.getValue().columnAlias();
+			Field field = fieldEntry.getValue().field();
+			var mappedClassFields = classMappedColumns.get(fullClassName);
+			if (mappedClassFields != null) {
+				if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
+					fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
+				}
+			}
+			var resultSetType = ResultSetType.fromString(field.type());
+			if (resultSetType == ResultSetType.CHAR) {
+				String fieldString = fieldName + "String";
+				fieldsInitialization += """
+								var %s = rs.getString("%s");
+								var %s = ' ';
+								if (%s != null && %s.length() >= 1)
+									%s = %s.charAt(0);
+				""".formatted(fieldString, columnAlias, fieldName, fieldString, fieldString,
+						fieldName, fieldString);
+			} else {
+				fieldsInitialization += """
+								var %s = rs.%s("%s");
+				""".formatted(fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
+			}
+		}
+		
+		String constructorParameters = "";
+		for (int i = 0; i < recordComponents.fields.size(); i++) {
+			String fieldName = recordComponents.fields.get(i);
+			ResultSetType resultSetType = recordComponents.types.get(i);
+			if (!fieldsInQuery.contains(fieldName)) {
+				fieldsInitialization += """
+								var %s = %s;
+				""".formatted(fieldName, getDefaultValueForType(resultSetType.getResultSetGetMethod()));
+			}
+			constructorParameters += fieldName;
+			if (i + 1 < recordComponents.fields.size()) constructorParameters += ", ";
+		}
+		
+		return """
+				{
+					%s
+					%s obj = new %s(%s);
+				}
+		""".formatted(fieldsInitialization, recordName, recordName, constructorParameters);
+	}
+
+	private String getDefaultValueForType(String resultSetGetMethod) {
+		return switch (resultSetGetMethod) {
+			case "int", "float", "double" -> "0";
+			case "char" -> "' '";
+			case "boolean" -> "false";
+			default -> "null";
+		};
+	}
+
 	private String createQueryMethod(String queryName, String queryClassName,
 			Map<FullClassName, QueryStructure> queryStructures) {
 
@@ -287,42 +356,49 @@ public class MappingProcessor extends AbstractProcessor {
 
 		
 		for (var entry : queryStructures.entrySet()) {
-			FullClassName fullCassName = entry.getKey();
-			String className = fullCassName.name();
+			FullClassName fullClassName = entry.getKey();
+			QueryStructure queryStructure = entry.getValue();
+			String className = fullClassName.name();
 			if (className.contains("."))
 				className = splitPackageClass(className)[1];
-			String createObject = """
-						{
-							%s obj = new %s();
-			""".formatted(className, className);
-			methodBody += createObject;
-			String setFields = "";
-			for (var fieldEntry : entry.getValue().fields.entrySet()) {
-				String fieldName = fieldEntry.getKey().name();
-				String columnAlias = fieldEntry.getValue().columnAlias();
-				Field field = fieldEntry.getValue().field();
-				var mappedClassFields = classMappedColumns.get(fullCassName);
-				if (mappedClassFields != null) {
-					if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
-						fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
+			
+			if (queryStructure.type == Type.RECORD) {
+				methodBody += getRecordConstructor(fullClassName, className, queryStructure.fields);
+			} else {
+				String createObject = """
+							{
+								%s obj = new %s();
+				""".formatted(className, className);
+				methodBody += createObject;
+				String setFields = "";
+				for (var fieldEntry : queryStructure.fields.entrySet()) {
+					String fieldName = fieldEntry.getKey().name();
+					String columnAlias = fieldEntry.getValue().columnAlias();
+					Field field = fieldEntry.getValue().field();
+					var mappedClassFields = classMappedColumns.get(fullClassName);
+					if (mappedClassFields != null) {
+						if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
+							fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
+						}
+					}
+
+					String fieldSetMethod = getFieldSetMethod(fieldName, field);
+					var resultSetType = ResultSetType.fromString(field.type());
+					if (resultSetType == ResultSetType.CHAR) {
+						setFields += """
+										var str = rs.getString("%s");
+										if (str != null && str.length() >= 1)
+											obj.%s(str.charAt(0));
+						""".formatted(columnAlias, fieldSetMethod);
+					} else {
+						String resultSetGetMethod = resultSetType.getResultSetGetMethod();
+						setFields += """
+										obj.%s(rs.%s("%s"));
+						""".formatted(fieldSetMethod, resultSetGetMethod, columnAlias);
 					}
 				}
-				String fieldSetMethod = getFieldSetMethod(fieldName, field);
-				var resultSetType = ResultSetTypes.fromString(field.type());
-				if (resultSetType == ResultSetTypes.CHAR) {
-					setFields += """
-									var str = rs.getString("%s");
-									if (str != null)
-										obj.%s(str.charAt(0));
-					""".formatted(columnAlias, fieldSetMethod);
-				} else {
-					String resultSetGetMethod = resultSetType.getResultSetGetMethod();
-					setFields += """
-									obj.%s(rs.%s("%s"));
-					""".formatted(fieldSetMethod, resultSetGetMethod, columnAlias);
-				}
+				methodBody += setFields;
 			}
-			methodBody += setFields;
 
 			String closeCreateObject;
 			if (className.endsWith(GENERATED_COLUMNS)) {
@@ -432,6 +508,9 @@ public class MappingProcessor extends AbstractProcessor {
 				Element enclosingElement = e.getEnclosingElement();
 				System.out.println("element enclosingElement: " + enclosingElement);
 				System.out.println("element enclosedElements: " + e.getEnclosedElements());
+				for (var enclosed : e.getEnclosedElements()) {
+					System.out.println(enclosed + " kind is: " + enclosed.getKind());
+				}
 
 				switch (annotation.toString()) {
 					case "com.github.mapresultset.api.Column":
@@ -465,7 +544,35 @@ public class MappingProcessor extends AbstractProcessor {
 			mapField.put(new FieldName(field.toString()), new FieldType(fieldType));
 		}
 		System.out.println("mapField = " + mapField);
-		javaStructures.put(new FullClassName(elementName), new JavaStructure(elementName, e.getKind().toString(), mapField));
+		JavaStructure.Type type = JavaStructure.getType(e.getKind().toString());
+		RecordComponent recordComponents = new RecordComponent();
+		if (type == JavaStructure.Type.RECORD) {
+			for (var enclosed : e.getEnclosedElements()) {
+				if (enclosed.getKind() == ElementKind.RECORD_COMPONENT) {
+					recordComponents.fields.add(enclosed.toString());
+				} else if (enclosed.getKind() == ElementKind.CONSTRUCTOR) {
+					recordComponents.types = getTypesFromConstructor(enclosed.toString());
+				}
+			}
+		}
+		javaStructures.put(new FullClassName(elementName), new JavaStructure(elementName, type, mapField, recordComponents));
+	}
+
+	/**
+	 * 
+	 * @param str eg: Country(int,java.lang.String)
+	 * @return
+	 */
+	private List<ResultSetType> getTypesFromConstructor(String str) {
+		System.out.println("Parsing constructor: " + str);
+		List<ResultSetType> resultSetTypes = new ArrayList<>();
+		int parentheses = str.indexOf("(");
+		str = str.substring(parentheses + 1, str.length() - 1);
+		String[] strTypes = str.split(",");
+		for (String s : strTypes) {
+			resultSetTypes.add(ResultSetType.fromString(s));
+		}
+		return resultSetTypes;
 	}
 
 	private void processColumn(String elementName, Element e) {

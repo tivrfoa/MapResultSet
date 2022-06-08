@@ -1,6 +1,6 @@
 package com.github.mapresultset;
 
-public enum ResultSetTypes {
+public enum ResultSetType {
     BIG_DECIMAL,
     BOOLEAN,
     CHAR,
@@ -14,9 +14,9 @@ public enum ResultSetTypes {
     TIME,
     TIMESTAMP;
 
-    ResultSetTypes() {}
+    ResultSetType() {}
 
-    public static ResultSetTypes fromString(String strType) {
+    public static ResultSetType fromString(String strType) {
         return switch (strType) {
             case "java.math.BigDecimal" -> BIG_DECIMAL;
             case "java.sql.Date" -> DATE;

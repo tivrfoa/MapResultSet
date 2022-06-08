@@ -23,7 +23,7 @@ public class MapResultSet {
 				obj.setHasWifi(rs.getBoolean("has_wifi"));
 				obj.setValue(rs.getBigDecimal("value"));
 				var str = rs.getString("is_available");
-				if (str != null)
+				if (str != null && str.length() >= 1)
 					obj.setIsAvailable(str.charAt(0));
 				records.getListNotebook().add(obj);
 			}
