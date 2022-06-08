@@ -20,10 +20,11 @@ public class MapResultSet {
 				records.getListPerson().add(obj);
 			}
 			{
-				var name = rs.getString("name");
+								var name = rs.getString("name");
+				var phoneCode = rs.getInt("PhoneCode");
 				var id = 0;
 
-				Country obj = new Country(id, name);
+				Country obj = new Country(id, name, phoneCode);
 				records.getListCountry().add(obj);
 			}
 		}

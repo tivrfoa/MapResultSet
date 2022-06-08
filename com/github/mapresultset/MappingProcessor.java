@@ -289,7 +289,6 @@ public class MappingProcessor extends AbstractProcessor {
 		String fieldsInitialization = "";
 		for (var fieldEntry : fields.entrySet()) {
 			String fieldName = fieldEntry.getKey().name();
-			fieldsInQuery.add(fieldName);
 			String columnAlias = fieldEntry.getValue().columnAlias();
 			Field field = fieldEntry.getValue().field();
 			var mappedClassFields = classMappedColumns.get(fullClassName);
@@ -298,6 +297,7 @@ public class MappingProcessor extends AbstractProcessor {
 					fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
 				}
 			}
+			fieldsInQuery.add(fieldName);
 			var resultSetType = ResultSetType.fromString(field.type());
 			if (resultSetType == ResultSetType.CHAR) {
 				String fieldString = fieldName + "String";
@@ -310,7 +310,7 @@ public class MappingProcessor extends AbstractProcessor {
 						fieldName, fieldString);
 			} else {
 				fieldsInitialization += """
-				var %s = rs.%s("%s");
+								var %s = rs.%s("%s");
 				""".formatted(fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
 			}
 		}

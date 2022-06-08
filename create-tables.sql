@@ -39,7 +39,8 @@ values
 
 create table country (
     id int primary key,
-    name varchar(30)
+    name varchar(30),
+    phone_code int
 );
 
 create table person (
@@ -49,11 +50,11 @@ create table person (
     foreign key(country_id) references country(id)
 );
 
-insert into country(id, name) values
-(1, 'Brazil'),
-(2, 'Vietnan'),
-(3, 'Switzerland'),
-(4, 'Germany');
+insert into country(id, name, phone_code) values
+(1, 'Brazil', 55),
+(2, 'Vietnam', 84),
+(3, 'Switzerland', 41),
+(4, 'Germany', 49);
 
 insert into person (id, name, country_id) values
 (1, 'Leandro', 2),
