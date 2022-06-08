@@ -1,4 +1,5 @@
 com/github/mapresultset/api/Query.java
+com/github/mapresultset/api/ManyToOne.java
 com/github/mapresultset/api/Table.java
 com/github/mapresultset/api/Id.java
 com/github/mapresultset/api/Column.java
@@ -16,5 +17,6 @@ com/github/mapresultset/MappingProcessor.java
 com/github/mapresultset/ResultSetType.java
 com/github/mapresultset/ColumnField.java
 com/github/mapresultset/JavaStructure.java
+com/github/mapresultset/Relationship.java
 com/github/mapresultset/TableColumns.java
 com/github/mapresultset/FieldType.java

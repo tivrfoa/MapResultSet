@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +25,8 @@ import javax.tools.JavaFileObject;
 
 import com.github.mapresultset.JavaStructure.Type;
 
-@SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table", "com.github.mapresultset.api.Query"})
+@SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
+		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
@@ -36,6 +35,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private List<Element> queries = new ArrayList<>();
 	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
 	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
+	private List<Relationship> relationships = new ArrayList<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -330,7 +330,7 @@ public class MappingProcessor extends AbstractProcessor {
 		
 		return """
 					{
-						%s
+		%s
 						%s obj = new %s(%s);
 		""".formatted(fieldsInitialization, recordName, recordName, constructorParameters);
 	}
@@ -338,9 +338,12 @@ public class MappingProcessor extends AbstractProcessor {
 	private String getDefaultValueForType(String fieldType) {
 		System.out.println("############## getting default value for type: " + fieldType);
 		return switch (fieldType) {
-			case "int", "float", "double" -> "0";
-			case "char" -> "' '";
 			case "boolean" -> "false";
+			case "char" -> "' '";
+			case "int" -> "0";
+			case "float" -> "0.0f";
+			case "double" -> "0.0";
+			case "long" -> "0L";
 			default -> "null";
 		};
 	}
@@ -522,9 +525,23 @@ public class MappingProcessor extends AbstractProcessor {
 					case "com.github.mapresultset.api.Query":
 						processQuery(elementName, e);
 						break;
+					case "com.github.mapresultset.api.ManyToOne":
+						processManyToOne(elementName, e);
+						break;
+					case "com.github.mapresultset.api.Id":
+						processId(elementName, e);
+						break;
 				}
 			}
 		}
+	}
+
+	private void processId(String elementName, Element e) {
+		System.out.println("TODO process id: " + elementName);
+		System.out.println(e);
+	}
+
+	private void processManyToOne(String elementName, Element e) {
 	}
 
 	private void processQuery(String elementName, Element e) {

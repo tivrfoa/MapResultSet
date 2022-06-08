@@ -4,7 +4,7 @@
 |x| Generate the classes that receive ResultSet and return the objects;
 || Change generated source location?
 |x| Handle table name;
-|| Handle Java Record
+|x| Handle Java Record
 || Handle query paramater oneToMany = true, one = SomeClass;
 || Make it a Maven project;
 || Use spotless to format code;

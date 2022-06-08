@@ -1,4 +1,5 @@
 # Bugs
 
-|| 
+|| handle columns with same name, but from different tables ...
 || alias might not a simple word
+|| 

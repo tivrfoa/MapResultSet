@@ -20,11 +20,14 @@ public class MapResultSet {
 				records.getListPerson().add(obj);
 			}
 			{
-								var name = rs.getString("name");
+				var name = rs.getString("name");
 				var phoneCode = rs.getInt("PhoneCode");
 				var id = 0;
+				var density = 0.0f;
+				var squareMeters = 0.0;
+				var someBigNumber = 0L;
 
-				Country obj = new Country(id, name, phoneCode);
+				Country obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber);
 				records.getListCountry().add(obj);
 			}
 		}
@@ -40,9 +43,11 @@ public class MapResultSet {
 		while (rs.next()) {
 			{
 				Notebook obj = new Notebook();
+				obj.setProductionCost(rs.getDouble("production_cost"));
 				obj.setSSD(rs.getBoolean("isSSD"));
 				obj.setReleaseDate(rs.getDate("release_date"));
 				obj.setName(rs.getString("name"));
+				obj.setCpuSpeed(rs.getFloat("clock"));
 				obj.setId(rs.getInt("id"));
 				obj.setHasWifi(rs.getBoolean("has_wifi"));
 				obj.setValue(rs.getBigDecimal("value"));

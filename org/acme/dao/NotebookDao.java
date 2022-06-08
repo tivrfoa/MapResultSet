@@ -17,7 +17,8 @@ public class NotebookDao {
     @Query
     private static final String listNotebooks = """
             select id, name, 2 + 2 as four, value as value, release_date,
-                   is_available, is_ssd as isSSD, has_wifi
+                   is_available, is_ssd as isSSD, has_wifi, cpu_speed as clock,
+                   production_cost
             from notebook
             """;
 
