@@ -338,7 +338,6 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private String getDefaultValueForType(String fieldType) {
-		System.out.println("############## getting default value for type: " + fieldType);
 		return switch (fieldType) {
 			case "boolean" -> "false";
 			case "char" -> "' '";
@@ -359,10 +358,12 @@ public class MappingProcessor extends AbstractProcessor {
 				while (rs.next()) {
 		""".formatted(queryClassName, queryClassName);
 
+		Map<FullClassName, String> objects = new HashMap<>();
 		int objCounter = 0;
 		for (var entry : queryStructures.entrySet()) {
 			objCounter++;
 			FullClassName fullClassName = entry.getKey();
+			objects.put(fullClassName, "obj" + objCounter);
 			QueryStructure queryStructure = entry.getValue();
 			String className = fullClassName.name();
 			if (className.contains("."))
@@ -405,19 +406,34 @@ public class MappingProcessor extends AbstractProcessor {
 				methodBody += setFields;
 			}
 
-			String closeCreateObject;
 			if (className.endsWith(GENERATED_COLUMNS)) {
-				closeCreateObject = """
+				methodBody += """
 							records.getGeneratedColumns().add(obj%s);
 
 				""".formatted(objCounter);
 			} else {
-				closeCreateObject = """
+				methodBody += """
 							records.getList%s().add(obj%s);
-							
+
 				""".formatted(className, objCounter);
 			}
-			methodBody += closeCreateObject;
+		}
+
+		// Check relationships
+		for (var rel : relationships) {
+			var owner = objects.get(rel.javaStructWithMappingAnnotation());
+			var partner = objects.get(rel.partner());
+			if (owner == null || partner == null) continue;
+			switch (rel.type()) {
+				case ManyToOne:
+					String set = "set" + uppercaseFirstLetter(rel.partnerFieldName().name());
+					methodBody += """
+								%s.%s(%s);
+					""".formatted(owner, set, partner);
+					// methodBody += owner + "." + set + "(" + partner + ");";
+					break;
+				default: throw new RuntimeException(rel.type() + " is not implemented yet.");
+			}
 		}
 
 		methodBody += """
@@ -551,7 +567,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private void processManyToOne(String elementName, Element e) {
 		FullClassName fcn = new FullClassName(e.getEnclosingElement().toString());
 		FullClassName partner = new FullClassName(e.asType().toString());
-		relationships.add(new Relationship(fcn, partner, Relationship.Type.ManyToOne));
+		relationships.add(new Relationship(fcn, partner, new FieldName(elementName), Relationship.Type.ManyToOne));
 	}
 
 	private void processQuery(String elementName, Element e) {

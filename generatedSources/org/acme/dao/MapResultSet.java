@@ -16,11 +16,12 @@ public class MapResultSet {
 		while (rs.next()) {
 			Person obj1 = new Person();
 			obj1.setName(rs.getString("name"));
+			obj1.setId(rs.getInt("id"));
 			records.getListPerson().add(obj1);
 
 			var name = rs.getString("name");
+			var id = rs.getInt("id");
 			var phoneCode = rs.getInt("PhoneCode");
-			var id = 0;
 			var density = 0.0f;
 			var squareMeters = 0.0;
 			var someBigNumber = 0L;
@@ -28,6 +29,7 @@ public class MapResultSet {
 			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber);
 			records.getListCountry().add(obj2);
 
+			obj1.setCountry(obj2);
 		}
 
 		return records;
@@ -53,6 +55,7 @@ public class MapResultSet {
 			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber);
 			records.getListCountry().add(obj2);
 
+			obj1.setCountry(obj2);
 		}
 
 		return records;
