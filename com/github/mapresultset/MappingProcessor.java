@@ -36,6 +36,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
 	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
 	private List<Relationship> relationships = new ArrayList<>();
+	private Map<FullClassName, List<FieldName>> primaryKeys = new HashMap<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -67,6 +68,8 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println("queries: " + queries);
 		System.out.println("classMappedColumns: " + classMappedColumns);
 		System.out.println("Java Structures: " + javaStructures);
+		System.out.println("\n---------- Primary Keys ---------\n" + primaryKeys);
+		System.out.println("\n---------- Relationships ---------\n" + relationships);
 
 
 		// Map: Table Name -> Full Class Name (including package)
@@ -537,11 +540,19 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private void processId(String elementName, Element e) {
-		System.out.println("TODO process id: " + elementName);
-		System.out.println(e);
+		FullClassName fcn = new FullClassName(e.getEnclosingElement().toString());
+		var fields = primaryKeys.get(fcn);
+		if (fields == null) {
+			fields = new ArrayList<>();
+			primaryKeys.put(fcn, fields);
+		}
+		fields.add(new FieldName(elementName));
 	}
 
 	private void processManyToOne(String elementName, Element e) {
+		FullClassName fcn = new FullClassName(e.getEnclosingElement().toString());
+		FullClassName partner = new FullClassName(e.asType().toString());
+		relationships.add(new Relationship(fcn, partner, Relationship.Type.ManyToOne));
 	}
 
 	private void processQuery(String elementName, Element e) {

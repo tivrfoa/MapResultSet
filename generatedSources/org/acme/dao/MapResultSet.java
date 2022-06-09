@@ -37,6 +37,33 @@ public class MapResultSet {
 	}
 
 
+	public static ListPersonNameCountryNameRecords listPersonNameCountryName(ResultSet rs) throws SQLException {
+		ListPersonNameCountryNameRecords records = new ListPersonNameCountryNameRecords();
+
+		while (rs.next()) {
+			{
+				Person obj = new Person();
+				obj.setName(rs.getString("name"));
+				records.getListPerson().add(obj);
+			}
+			{
+				var name = rs.getString("name");
+				var phoneCode = rs.getInt("PhoneCode");
+				var id = 0;
+				var density = 0.0f;
+				var squareMeters = 0.0;
+				var someBigNumber = 0L;
+
+				Country obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber);
+				records.getListCountry().add(obj);
+			}
+		}
+
+		return records;
+
+	}
+
+
 	public static ListNotebooksRecords listNotebooks(ResultSet rs) throws SQLException {
 		ListNotebooksRecords records = new ListNotebooksRecords();
 
