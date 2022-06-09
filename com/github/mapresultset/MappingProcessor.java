@@ -285,7 +285,7 @@ public class MappingProcessor extends AbstractProcessor {
 		writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
 	}
 
-	private String getRecordConstructor(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields) {
+	private String getRecordConstructor(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields, int objCounter) {
 		RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
 
 		List<String> fieldsInQuery = new ArrayList<>();
@@ -305,15 +305,15 @@ public class MappingProcessor extends AbstractProcessor {
 			if (resultSetType == ResultSetType.CHAR) {
 				String fieldString = fieldName + "String";
 				fieldsInitialization += """
-								var %s = rs.getString("%s");
-								var %s = ' ';
-								if (%s != null && %s.length() >= 1)
-									%s = %s.charAt(0);
+							var %s = rs.getString("%s");
+							var %s = ' ';
+							if (%s != null && %s.length() >= 1)
+								%s = %s.charAt(0);
 				""".formatted(fieldString, columnAlias, fieldName, fieldString, fieldString,
 						fieldName, fieldString);
 			} else {
 				fieldsInitialization += """
-								var %s = rs.%s("%s");
+							var %s = rs.%s("%s");
 				""".formatted(fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
 			}
 		}
@@ -324,7 +324,7 @@ public class MappingProcessor extends AbstractProcessor {
 			String fieldType = recordComponents.types.get(i);
 			if (!fieldsInQuery.contains(fieldName)) {
 				fieldsInitialization += """
-								var %s = %s;
+							var %s = %s;
 				""".formatted(fieldName, getDefaultValueForType(fieldType));
 			}
 			constructorParameters += fieldName;
@@ -332,10 +332,9 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 		
 		return """
-					{
 		%s
-						%s obj = new %s(%s);
-		""".formatted(fieldsInitialization, recordName, recordName, constructorParameters);
+					%s obj%s = new %s(%s);
+		""".formatted(fieldsInitialization, recordName, objCounter, recordName, constructorParameters);
 	}
 
 	private String getDefaultValueForType(String fieldType) {
@@ -360,8 +359,9 @@ public class MappingProcessor extends AbstractProcessor {
 				while (rs.next()) {
 		""".formatted(queryClassName, queryClassName);
 
-		
+		int objCounter = 0;
 		for (var entry : queryStructures.entrySet()) {
+			objCounter++;
 			FullClassName fullClassName = entry.getKey();
 			QueryStructure queryStructure = entry.getValue();
 			String className = fullClassName.name();
@@ -369,12 +369,11 @@ public class MappingProcessor extends AbstractProcessor {
 				className = splitPackageClass(className)[1];
 			
 			if (queryStructure.type == Type.RECORD) {
-				methodBody += getRecordConstructor(fullClassName, className, queryStructure.fields);
+				methodBody += getRecordConstructor(fullClassName, className, queryStructure.fields, objCounter);
 			} else {
 				String createObject = """
-							{
-								%s obj = new %s();
-				""".formatted(className, className);
+							%s obj%s = new %s();
+				""".formatted(className, objCounter, className);
 				methodBody += createObject;
 				String setFields = "";
 				for (var fieldEntry : queryStructure.fields.entrySet()) {
@@ -392,15 +391,15 @@ public class MappingProcessor extends AbstractProcessor {
 					var resultSetType = ResultSetType.fromString(field.type());
 					if (resultSetType == ResultSetType.CHAR) {
 						setFields += """
-										var str = rs.getString("%s");
-										if (str != null && str.length() >= 1)
-											obj.%s(str.charAt(0));
-						""".formatted(columnAlias, fieldSetMethod);
+									var str = rs.getString("%s");
+									if (str != null && str.length() >= 1)
+										obj%s.%s(str.charAt(0));
+						""".formatted(columnAlias, objCounter, fieldSetMethod);
 					} else {
 						String resultSetGetMethod = resultSetType.getResultSetGetMethod();
 						setFields += """
-										obj.%s(rs.%s("%s"));
-						""".formatted(fieldSetMethod, resultSetGetMethod, columnAlias);
+									obj%s.%s(rs.%s("%s"));
+						""".formatted(objCounter, fieldSetMethod, resultSetGetMethod, columnAlias);
 					}
 				}
 				methodBody += setFields;
@@ -409,14 +408,14 @@ public class MappingProcessor extends AbstractProcessor {
 			String closeCreateObject;
 			if (className.endsWith(GENERATED_COLUMNS)) {
 				closeCreateObject = """
-								records.getGeneratedColumns().add(obj);
-							}
-				""";
+							records.getGeneratedColumns().add(obj%s);
+
+				""".formatted(objCounter);
 			} else {
 				closeCreateObject = """
-								records.getList%s().add(obj);
-							}
-				""".formatted(className);
+							records.getList%s().add(obj%s);
+							
+				""".formatted(className, objCounter);
 			}
 			methodBody += closeCreateObject;
 		}

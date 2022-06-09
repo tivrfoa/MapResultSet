@@ -12,16 +12,14 @@ public class MapResultSet {
 		ListPhonesRecords records = new ListPhonesRecords();
 
 		while (rs.next()) {
-			{
-				Company obj = new Company();
-				obj.setName(rs.getString("name"));
-				records.getListCompany().add(obj);
-			}
-			{
-				Phone obj = new Phone();
-				obj.setId(rs.getInt("id"));
-				records.getListPhone().add(obj);
-			}
+			Company obj1 = new Company();
+			obj1.setName(rs.getString("name"));
+			records.getListCompany().add(obj1);
+
+			Phone obj2 = new Phone();
+			obj2.setId(rs.getInt("id"));
+			records.getListPhone().add(obj2);
+
 		}
 
 		return records;
