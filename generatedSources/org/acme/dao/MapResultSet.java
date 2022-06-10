@@ -19,13 +19,13 @@ public class MapResultSet {
 			obj1.setId(rs.getInt("id"));
 			records.getListPerson().add(obj1);
 
-			var name = rs.getString("name");
-			var id = rs.getInt("id");
-			var phoneCode = rs.getInt("PhoneCode");
-			var density = 0.0f;
-			var squareMeters = 0.0;
-			var someBigNumber = 0L;
-			var listPerson = null;
+			java.lang.String name = rs.getString("name");
+			int id = rs.getInt("id");
+			int phoneCode = rs.getInt("PhoneCode");
+			float density = 0.0f;
+			double squareMeters = 0.0;
+			long someBigNumber = 0L;
+			java.util.List<org.acme.domain.Person> listPerson = null;
 
 			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
 			records.getListCountry().add(obj2);
@@ -46,13 +46,13 @@ public class MapResultSet {
 			obj1.setName(rs.getString("name"));
 			records.getListPerson().add(obj1);
 
-			var name = rs.getString("name");
-			var phoneCode = rs.getInt("PhoneCode");
-			var id = 0;
-			var density = 0.0f;
-			var squareMeters = 0.0;
-			var someBigNumber = 0L;
-			var listPerson = null;
+			java.lang.String name = rs.getString("name");
+			int phoneCode = rs.getInt("PhoneCode");
+			int id = 0;
+			float density = 0.0f;
+			double squareMeters = 0.0;
+			long someBigNumber = 0L;
+			java.util.List<org.acme.domain.Person> listPerson = null;
 
 			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
 			records.getListCountry().add(obj2);

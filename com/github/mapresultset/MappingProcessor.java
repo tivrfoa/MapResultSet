@@ -306,16 +306,16 @@ public class MappingProcessor extends AbstractProcessor {
 			if (resultSetType == ResultSetType.CHAR) {
 				String fieldString = fieldName + "String";
 				fieldsInitialization += """
-							var %s = rs.getString("%s");
+							%s %s = rs.getString("%s");
 							var %s = ' ';
 							if (%s != null && %s.length() >= 1)
 								%s = %s.charAt(0);
-				""".formatted(fieldString, columnAlias, fieldName, fieldString, fieldString,
+				""".formatted(field.type(), fieldString, columnAlias, fieldName, fieldString, fieldString,
 						fieldName, fieldString);
 			} else {
 				fieldsInitialization += """
-							var %s = rs.%s("%s");
-				""".formatted(fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
+							%s %s = rs.%s("%s");
+				""".formatted(field.type(), fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
 			}
 		}
 		
@@ -325,8 +325,8 @@ public class MappingProcessor extends AbstractProcessor {
 			String fieldType = recordComponents.types.get(i);
 			if (!fieldsInQuery.contains(fieldName)) {
 				fieldsInitialization += """
-							var %s = %s;
-				""".formatted(fieldName, getDefaultValueForType(fieldType));
+							%s %s = %s;
+				""".formatted(fieldType, fieldName, getDefaultValueForType(fieldType));
 			}
 			constructorParameters += fieldName;
 			if (i + 1 < recordComponents.fields.size()) constructorParameters += ", ";
