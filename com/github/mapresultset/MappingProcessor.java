@@ -26,7 +26,8 @@ import javax.tools.JavaFileObject;
 import com.github.mapresultset.JavaStructure.Type;
 
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
-		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne"})
+		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne",
+		"com.github.mapresultset.api.OneToMany"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
@@ -543,8 +544,11 @@ public class MappingProcessor extends AbstractProcessor {
 					case "com.github.mapresultset.api.Query":
 						processQuery(elementName, e);
 						break;
+					case "com.github.mapresultset.api.OneToMany":
+						processManyRelationship(elementName, e, Relationship.Type.OneToMany);
+						break;
 					case "com.github.mapresultset.api.ManyToOne":
-						processManyToOne(elementName, e);
+						processManyRelationship(elementName, e, Relationship.Type.ManyToOne);
 						break;
 					case "com.github.mapresultset.api.Id":
 						processId(elementName, e);
@@ -564,10 +568,10 @@ public class MappingProcessor extends AbstractProcessor {
 		fields.add(new FieldName(elementName));
 	}
 
-	private void processManyToOne(String elementName, Element e) {
+	private void processManyRelationship(String elementName, Element e, Relationship.Type type) {
 		FullClassName fcn = new FullClassName(e.getEnclosingElement().toString());
 		FullClassName partner = new FullClassName(e.asType().toString());
-		relationships.add(new Relationship(fcn, partner, new FieldName(elementName), Relationship.Type.ManyToOne));
+		relationships.add(new Relationship(fcn, partner, new FieldName(elementName), type));
 	}
 
 	private void processQuery(String elementName, Element e) {

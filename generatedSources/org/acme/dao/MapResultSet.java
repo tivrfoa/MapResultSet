@@ -25,8 +25,9 @@ public class MapResultSet {
 			var density = 0.0f;
 			var squareMeters = 0.0;
 			var someBigNumber = 0L;
+			var listPerson = null;
 
-			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber);
+			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
 			records.getListCountry().add(obj2);
 
 			obj1.setCountry(obj2);
@@ -51,8 +52,9 @@ public class MapResultSet {
 			var density = 0.0f;
 			var squareMeters = 0.0;
 			var someBigNumber = 0L;
+			var listPerson = null;
 
-			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber);
+			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
 			records.getListCountry().add(obj2);
 
 			obj1.setCountry(obj2);
