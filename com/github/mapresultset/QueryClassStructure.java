@@ -8,13 +8,13 @@ import com.github.mapresultset.JavaStructure.Type;
 /**
  * 
  */
-public class QueryStructure {
+public class QueryClassStructure {
     
     FullClassName fullClassName;
     Type type;
     Map<ColumnName, ColumnField> fields = new HashMap<>();
 
-    public QueryStructure(FullClassName fullClassName, Type type) {
+    public QueryClassStructure(FullClassName fullClassName, Type type) {
         this.fullClassName = fullClassName;
         this.type = type;
     }

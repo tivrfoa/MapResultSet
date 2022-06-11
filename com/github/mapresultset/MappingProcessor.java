@@ -39,6 +39,11 @@ public class MappingProcessor extends AbstractProcessor {
 	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
 	private Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
 	private Map<FullClassName, List<FieldName>> primaryKeys = new HashMap<>();
+	/**
+	 * key: query class name
+	 * value: list of grouped by methods
+	 */
+	final Map<String, List<String>> queryGroupedByMethods = new HashMap<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -54,6 +59,7 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			processLastRound(annotations, roundEnvironment);
+			System.out.println("\n---------- Query Grouped By Methods -----------\n" + queryGroupedByMethods);
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -110,7 +116,7 @@ public class MappingProcessor extends AbstractProcessor {
 		for (var queryElement : queries) {
 			final String queryName = queryElement.toString();
 			List<String> generatedColumns = new ArrayList<>();
-			Map<FullClassName, QueryStructure> queryStructures = new HashMap<>();
+			Map<FullClassName, QueryClassStructure> queryStructures = new HashMap<>();
 			Set<String> queryImports = new HashSet<>();
 			String queryImportsStr = "";
 			final String packageName = getPackageName(queryElement);
@@ -122,6 +128,10 @@ public class MappingProcessor extends AbstractProcessor {
 
 					import java.util.ArrayList;
 					import java.util.List;
+					// TODO the two imports below should be added conditionally
+					// when there's a groupBy method
+					import java.util.Map;
+					import java.util.HashMap;
 
 					#import#
 
@@ -155,7 +165,7 @@ public class MappingProcessor extends AbstractProcessor {
 					generatedColumns.add(alias);
 					var m = queryStructures.get(generatedColumnsFullClassName);
 					if (m == null) {
-						m = new QueryStructure(generatedColumnsFullClassName, JavaStructure.Type.CLASS);
+						m = new QueryClassStructure(generatedColumnsFullClassName, JavaStructure.Type.CLASS);
 						queryStructures.put(generatedColumnsFullClassName, m);
 					}
 					// TODO let user specify a type
@@ -193,7 +203,7 @@ public class MappingProcessor extends AbstractProcessor {
 					var structureType = structure.type;
 					var m = queryStructures.get(fullClassName);
 					if (m == null) {
-						m = new QueryStructure(fullClassName, structureType);
+						m = new QueryClassStructure(fullClassName, structureType);
 						queryStructures.put(fullClassName, m);
 					}
 					
@@ -223,8 +233,6 @@ public class MappingProcessor extends AbstractProcessor {
 
 			queryClassToCreate.content += "\n\t//##end##\n}";
 			queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
-
-			// writeBuilderFile(queryClassToCreate);
 			queryClassesToCreate.put(queryClassName, queryClassToCreate);
 
 			System.out.println("-------- Query Structures ------------");
@@ -253,6 +261,12 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		for (ClassToCreate classToCreate : queryClassesToCreate.values()) {
+			List<String> queryGroupByMethods = queryGroupedByMethods.get(classToCreate.className);
+			if (queryGroupByMethods != null) {
+				String methods = "";
+				for (String s: queryGroupByMethods) methods += s;
+				classToCreate.content = classToCreate.content.replace("//##end##\n", methods);
+			}
 			writeBuilderFile(classToCreate);
 		}
 	}
@@ -373,7 +387,7 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private String createQueryMethod(String queryName, String queryClassName,
-			Map<FullClassName, QueryStructure> queryStructures) {
+			Map<FullClassName, QueryClassStructure> queryStructures) {
 
 		String methodBody = """
 		%s records = new %s();
@@ -387,7 +401,7 @@ public class MappingProcessor extends AbstractProcessor {
 			objCounter++;
 			FullClassName fullClassName = entry.getKey();
 			objects.put(fullClassName, "obj" + objCounter);
-			QueryStructure queryStructure = entry.getValue();
+			QueryClassStructure queryStructure = entry.getValue();
 			String className = fullClassName.name();
 			if (className.contains("."))
 				className = splitPackageClass(className)[1];
@@ -481,13 +495,19 @@ public class MappingProcessor extends AbstractProcessor {
 			FullClassName fcn = queryStructure.getKey();
 			var owner = relationships.get(fcn);
 			if (owner == null) continue;
+			relLoop:
 			for (var partner : owner) {
 				var partnerObj = queryStructures.get(partner.partner());
 				if (partnerObj == null) continue;
 				switch (partner.type()) {
 					case OneToOne, ManyToOne:
-						ret += createManyRelationshipGrupedByMethod(owner, queryStructure);
-						break;
+						List<String> groupedByMethods = queryGroupedByMethods.get(queryClassName);
+						if (groupedByMethods == null) {
+							groupedByMethods = new ArrayList<>();
+							queryGroupedByMethods.put(queryClassName, groupedByMethods);
+						}
+						groupedByMethods.add(createManyRelationshipGrupedByMethod(fcn, owner, queryStructures));
+						break relLoop;
 				}	
 			}
 		}
@@ -495,12 +515,28 @@ public class MappingProcessor extends AbstractProcessor {
 		return ret;
 	}
 
-	private String createManyRelationshipGrupedByMethod(List<Relationship> owner, Entry<FullClassName, QueryStructure> queryStructure) {
-		System.out.println("owner relationships: " + owner);
-		/*return """
-				public stat
-				""";*/
-				return "";
+	private String createManyRelationshipGrupedByMethod(FullClassName fcn, List<Relationship> ownerRelationships,
+			Map<FullClassName, QueryClassStructure> queryStructures) {
+		System.out.println("owner relationships: " + ownerRelationships);
+		String ownerClass = fcn.getClassName();
+		// TODO can't group by if there's no @Id for this class ...
+		// also one of the columns in the query must be the id
+		QueryClassStructure queryClassStructure = queryStructures.get(fcn);
+		String methodBody = "";
+
+		for (var rel : ownerRelationships) {
+			var partnerObj = queryStructures.get(rel.partner());
+			if (partnerObj == null) continue;
+		}
+
+		return """
+			private static record %sId() {}
+				public List<%s> groupedBy%s() {
+					// Map<%sId, %s> map = new HashMap<>();
+					%s
+					return null;
+				}
+			""".formatted(ownerClass, ownerClass, ownerClass, ownerClass, ownerClass, methodBody);
 	}
 
 	private String createMapResultSetClassForQuery(String packageName,

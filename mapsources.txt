@@ -12,7 +12,7 @@ com/github/mapresultset/RecordComponent.java
 com/github/mapresultset/ClassToCreate.java
 com/github/mapresultset/ParseQuery.java
 com/github/mapresultset/FieldName.java
-com/github/mapresultset/QueryStructure.java
+com/github/mapresultset/QueryClassStructure.java
 com/github/mapresultset/ColumnName.java
 com/github/mapresultset/ColumnRecord.java
 com/github/mapresultset/QueryMethodsAndImports.java
