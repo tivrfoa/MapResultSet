@@ -4,6 +4,7 @@ com/github/mapresultset/api/Table.java
 com/github/mapresultset/api/Id.java
 com/github/mapresultset/api/Column.java
 com/github/mapresultset/api/OneToMany.java
+com/github/mapresultset/ParsedTable.java
 com/github/mapresultset/FullClassName.java
 com/github/mapresultset/Field.java
 com/github/mapresultset/RecordComponent.java

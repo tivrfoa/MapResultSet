@@ -114,6 +114,7 @@ public class MappingProcessor extends AbstractProcessor {
 			final String packageName = getPackageName(queryElement);
 			final String queryClassName = getQueryClassName(queryName);
 			final String generatedColumnsClassName = uppercaseFirstLetter(queryName) + GENERATED_COLUMNS;
+			final FullClassName generatedColumnsFullClassName = new FullClassName(generatedColumnsClassName);
 			String classContent = """
 					package %s;
 
@@ -131,21 +132,34 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println("-->> Parsing query: " + query);
 			var p = new ParseQuery(query);
 			p.parse();
-			System.out.println("p.getTables() = " + p.getTables());
+			// System.out.println("p.getTables() = " + p.getTables());
+			System.out.println(p);
 
 			for (var column : p.getColumns()) {
-				System.out.println(column);
-				if (column.isGeneratedValue()) {
+				System.out.println("---> Handling column: " + column);
+				boolean isTemporaryTable = false;
+				if (column.table() != null) {
+					isTemporaryTable = p.getTables().get(column.table()).isTemporaryTable();
+				}
+				if (column.isGeneratedValue() || isTemporaryTable) {
+					System.out.println("---> It is a generated column");
 					String alias = column.alias();
+					if (alias == null) {
+						if (!isTemporaryTable) {
+							throw new RuntimeException("Invalid state");
+						}
+						alias = column.table();
+					}
 					generatedColumns.add(alias);
-					var m = queryStructures.get(new FullClassName(generatedColumnsClassName));
+					var m = queryStructures.get(generatedColumnsFullClassName);
 					if (m == null) {
-						m = new QueryStructure(new FullClassName(generatedColumnsClassName), JavaStructure.Type.CLASS);
-						queryStructures.put(new FullClassName(generatedColumnsClassName), m);
+						m = new QueryStructure(generatedColumnsFullClassName, JavaStructure.Type.CLASS);
+						queryStructures.put(generatedColumnsFullClassName, m);
 					}
 					// TODO let user specify a type
 					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
 				} else {
+					System.out.println("---> It's a real column from a table");
 					String table = column.table();
 					System.out.println("table = " + table);
 					if (table == null) {
@@ -155,9 +169,9 @@ public class MappingProcessor extends AbstractProcessor {
 							throw new RuntimeException("Columns must be preceded by the table name " +
 									"when there are more than one table in the 'from' clause.");
 						}
-						for (var es : p.getTables().entrySet()) table = es.getValue();
+						for (var es : p.getTables().entrySet()) table = es.getValue().tableName();
 					} else {
-						table = p.getTables().get(table);
+						table = p.getTables().get(table).tableName();
 					}
 					String fullClassNameStr = tableMap.get(table);
 					var fullClassName = new FullClassName(tableMap.get(table));
@@ -499,6 +513,7 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private String uppercaseFirstLetter(final String str) {
+		System.out.println("---> uppercaseFirstLetter. param = " + str);
 		String Up = str.substring(0, 1).toUpperCase();
 		if (str.length() > 1) {
 			Up += str.substring(1);

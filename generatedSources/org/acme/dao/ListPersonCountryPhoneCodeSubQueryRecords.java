@@ -7,7 +7,7 @@ import org.acme.domain.Person;
 import org.acme.domain.Country;
 
 
-public class ListPersonCountryRecords {
+public class ListPersonCountryPhoneCodeSubQueryRecords {
 
 
 	private List<Person> listPerson = new ArrayList<>();
@@ -18,8 +18,8 @@ public class ListPersonCountryRecords {
 	public List<Country> getListCountry() {
 		return listCountry;
 	}
-	private List<ListPersonCountryGeneratedColumns> generatedColumns = new ArrayList<>();
-	public List<ListPersonCountryGeneratedColumns> getGeneratedColumns() {
+	private List<ListPersonCountryPhoneCodeSubQueryGeneratedColumns> generatedColumns = new ArrayList<>();
+	public List<ListPersonCountryPhoneCodeSubQueryGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;
 	}
 }

@@ -10,14 +10,18 @@ import org.acme.domain.Country;
 
 public class MapResultSet {
 	
-	public static ListPersonCountryRecords listPersonCountry(ResultSet rs) throws SQLException {
-		ListPersonCountryRecords records = new ListPersonCountryRecords();
+	public static ListPersonCountryPhoneCodeSubQueryRecords listPersonCountryPhoneCodeSubQuery(ResultSet rs) throws SQLException {
+		ListPersonCountryPhoneCodeSubQueryRecords records = new ListPersonCountryPhoneCodeSubQueryRecords();
 
 		while (rs.next()) {
 			Person obj1 = new Person();
 			obj1.setName(rs.getString("name"));
 			obj1.setId(rs.getInt("id"));
 			records.getListPerson().add(obj1);
+
+			ListPersonCountryPhoneCodeSubQueryGeneratedColumns obj2 = new ListPersonCountryPhoneCodeSubQueryGeneratedColumns();
+			obj2.setTable_plus_phone_code(rs.getObject("table_plus_phone_code"));
+			records.getGeneratedColumns().add(obj2);
 
 			java.lang.String name = rs.getString("name");
 			int id = rs.getInt("id");
@@ -27,10 +31,42 @@ public class MapResultSet {
 			long someBigNumber = 0L;
 			java.util.List<org.acme.domain.Person> listPerson = null;
 
-			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
-			records.getListCountry().add(obj2);
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			records.getListCountry().add(obj3);
 
-			obj1.setCountry(obj2);
+			obj1.setCountry(obj3);
+		}
+
+		return records;
+
+	}
+
+
+	public static ListPersonCountryRecords listPersonCountry(ResultSet rs) throws SQLException {
+		ListPersonCountryRecords records = new ListPersonCountryRecords();
+
+		while (rs.next()) {
+			Person obj1 = new Person();
+			obj1.setName(rs.getString("name"));
+			obj1.setId(rs.getInt("id"));
+			records.getListPerson().add(obj1);
+
+			ListPersonCountryGeneratedColumns obj2 = new ListPersonCountryGeneratedColumns();
+			obj2.setPlus_sign_phone_code(rs.getObject("plus_sign_phone_code"));
+			records.getGeneratedColumns().add(obj2);
+
+			java.lang.String name = rs.getString("name");
+			int id = rs.getInt("id");
+			int phoneCode = rs.getInt("PhoneCode");
+			float density = 0.0f;
+			double squareMeters = 0.0;
+			long someBigNumber = 0L;
+			java.util.List<org.acme.domain.Person> listPerson = null;
+
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			records.getListCountry().add(obj3);
+
+			obj1.setCountry(obj3);
 		}
 
 		return records;

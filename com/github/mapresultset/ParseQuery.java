@@ -29,7 +29,7 @@ public class ParseQuery {
 	 * 
 	 * If there's no alias, then table name will be the alias too.
 	 */
-	private Map<String, String> tables = new HashMap<>();
+	private Map<String, ParsedTable> tables = new HashMap<>();
 	private int fromIndex = -1;
 	private static final int MINIMUM_QUERY_SIZE = 15; // SELECT 1 FROM A
 	private static final int INDEX_AFTER_SELECT = 7; // 'SELECT '
@@ -54,7 +54,7 @@ public class ParseQuery {
 	 * 
 	 * @return map: alias -> table name
 	 */
-	public Map<String, String> getTables() {
+	public Map<String, ParsedTable> getTables() {
 		return tables;
 	}
 
@@ -195,8 +195,10 @@ public class ParseQuery {
 				i += 5; // Skip 'oin '
 
 				// It might be joining with a temporary table
+				boolean isTemporaryTable = false;
 				if (fromContent.charAt(i) == '(') {
 					i = getClosingCharIndex(fromContent, i, '(', ')') + 5; // skip ') AS '
+					isTemporaryTable = true;
 				}
 
 				String joinTable = "";
@@ -211,7 +213,7 @@ public class ParseQuery {
 					while (fromContent.charAt(i) != ' ') alias += fromContent.charAt(i++);
 				}
 				// dbg("joinTable: " + joinTable);
-				tables.put(alias, tableName);
+				tables.put(alias, new ParsedTable(tableName, alias, isTemporaryTable));
 
 				// skip join columns
 				while (true) {
@@ -242,7 +244,7 @@ public class ParseQuery {
 					tableName += fromContent.charAt(i++);
 				}
 				if (tableName.isEmpty()) throw new RuntimeException("alias not found");
-				tables.put(tableName, tableName);
+				tables.put(tableName, new ParsedTable(tableName, tableName, true));
 				findJoin = true;
 			} else if (fromContent.charAt(i) == ' ') {
 				String tableName = currTable;
@@ -253,14 +255,14 @@ public class ParseQuery {
 					alias = "";
 					while (i < len && fromContent.charAt(i) != ' ') alias += fromContent.charAt(i++);
 				}
-				tables.put(alias, tableName);
+				tables.put(alias, new ParsedTable(tableName, alias, false));
 				currTable = "";
 				findJoin = true;
 			} else {
 				currTable += fromContent.charAt(i);
 			}
 		}
-		if (!currTable.isEmpty()) tables.put(currTable, currTable);
+		if (!currTable.isEmpty()) tables.put(currTable, new ParsedTable(currTable, currTable, false));
 
 		dbg("tables.: " + tables);
 	}
@@ -668,7 +670,10 @@ public class ParseQuery {
 
 		var p = new ParseQuery(sql);
 		p.parse();
-		assertMapEq(p.getTables(), Map.of("ABC", "ABC", "A", "A", "B", "B", "u3", "uu"));
+		assertParsedTablesEq(p.getTables(), Map.of("ABC", new ParsedTable("ABC", "ABC", false),
+		                                  "A", new ParsedTable("A", "A", true),
+										  "B", new ParsedTable("B", "B", true),
+										  "u3", new ParsedTable("uu", "u3", false)));
 		pl(p.getTables());
 	}
 
@@ -695,7 +700,7 @@ public class ParseQuery {
 
 		var p = new ParseQuery(sql);
 		p.parse();
-		assertMapEq(p.getTables(), Map.of("Y", "x"));
+		assertEq(p.getTables().toString(), Map.of("Y", new ParsedTable("x", "Y", false)).toString());
 		assertListEq(p.getColumns(), List.of(
 			new ColumnRecord(null, null, "strange_id", true),
 			new ColumnRecord(null, "name", "nice_name", false),
@@ -709,6 +714,19 @@ public class ParseQuery {
 		var list = new ArrayList<String>(set);
 		Collections.sort(list);
 		return list;
+	}
+
+	static void assertParsedTablesEq(Map<String, ParsedTable> actual, Map<String, ParsedTable> expected) {
+		var actualKeys = collectionToSortedList(actual.keySet());
+		var expectedKeys = collectionToSortedList(expected.keySet());
+		assertListEq(actualKeys, expectedKeys);
+
+		var actualValues = actual.values().toArray();
+		Arrays.sort(actualValues);
+		var expectedValues = expected.values().toArray();
+		Arrays.sort(expectedValues);
+		for (int i = 0; i < actualValues.length; i++)
+			assertEq(actualValues[i], expectedValues[i]);
 	}
 
 	static void assertMapEq(Map<String, String> actual, Map<String, String> expected) {
@@ -731,7 +749,7 @@ public class ParseQuery {
 			assert actual.get(i).equals(expected.get(i)) : "Actual: '" + actual + "', expected: '" + expected + "'";
 	}
 
-	static void assertEq(String actual, String expected) {
+	static void assertEq(Object actual, Object expected) {
 		assert actual.equals(expected) : "Actual: '" + actual + "', expected: '" + expected + "'";
 	}
 
@@ -755,6 +773,12 @@ public class ParseQuery {
 
 	static boolean dbg1(Object o) {
 		pl(o); return true;
+	}
+
+	@Override
+	public String toString() {
+		return "ParseQuery [cleanedQuery=" + cleanedQuery + ", columns=" + columns + ", fromContent=" + fromContent
+				+ ", query=" + query + ", tables=" + tables + "]";
 	}
 
 }
