@@ -31,8 +31,6 @@ public class PersonDao {
               p.country_id = c.id
             """;
 
-    // FIXME can't use result with label name because there's more
-    // than one ...
     @Query
     private static final String listPersonNameCountryName = """
             select p.name, c.name, c.phone_code as PhoneCode

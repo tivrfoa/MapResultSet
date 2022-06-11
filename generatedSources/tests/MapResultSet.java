@@ -13,11 +13,11 @@ public class MapResultSet {
 
 		while (rs.next()) {
 			Company obj1 = new Company();
-			obj1.setName(rs.getString("name"));
+			obj1.setName(rs.getString("c.name"));
 			records.getListCompany().add(obj1);
 
 			Phone obj2 = new Phone();
-			obj2.setId(rs.getInt("id"));
+			obj2.setId(rs.getInt("phone.id"));
 			records.getListPhone().add(obj2);
 
 		}

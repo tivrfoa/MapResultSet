@@ -15,17 +15,17 @@ public class MapResultSet {
 
 		while (rs.next()) {
 			Person obj1 = new Person();
-			obj1.setName(rs.getString("name"));
-			obj1.setId(rs.getInt("id"));
+			obj1.setName(rs.getString("p.name"));
+			obj1.setId(rs.getInt("p.id"));
 			records.getListPerson().add(obj1);
 
 			ListPersonCountryPhoneCodeSubQueryGeneratedColumns obj2 = new ListPersonCountryPhoneCodeSubQueryGeneratedColumns();
 			obj2.setTable_plus_phone_code(rs.getObject("table_plus_phone_code"));
 			records.getGeneratedColumns().add(obj2);
 
-			java.lang.String name = rs.getString("name");
-			int id = rs.getInt("id");
-			int phoneCode = rs.getInt("PhoneCode");
+			java.lang.String name = rs.getString("c.name");
+			int id = rs.getInt("c.id");
+			int phoneCode = rs.getInt("c.PhoneCode");
 			float density = 0.0f;
 			double squareMeters = 0.0;
 			long someBigNumber = 0L;
@@ -47,17 +47,17 @@ public class MapResultSet {
 
 		while (rs.next()) {
 			Person obj1 = new Person();
-			obj1.setName(rs.getString("name"));
-			obj1.setId(rs.getInt("id"));
+			obj1.setName(rs.getString("p.name"));
+			obj1.setId(rs.getInt("p.id"));
 			records.getListPerson().add(obj1);
 
 			ListPersonCountryGeneratedColumns obj2 = new ListPersonCountryGeneratedColumns();
 			obj2.setPlus_sign_phone_code(rs.getObject("plus_sign_phone_code"));
 			records.getGeneratedColumns().add(obj2);
 
-			java.lang.String name = rs.getString("name");
-			int id = rs.getInt("id");
-			int phoneCode = rs.getInt("PhoneCode");
+			java.lang.String name = rs.getString("c.name");
+			int id = rs.getInt("c.id");
+			int phoneCode = rs.getInt("c.PhoneCode");
 			float density = 0.0f;
 			double squareMeters = 0.0;
 			long someBigNumber = 0L;
@@ -79,11 +79,11 @@ public class MapResultSet {
 
 		while (rs.next()) {
 			Person obj1 = new Person();
-			obj1.setName(rs.getString("name"));
+			obj1.setName(rs.getString("p.name"));
 			records.getListPerson().add(obj1);
 
-			java.lang.String name = rs.getString("name");
-			int phoneCode = rs.getInt("PhoneCode");
+			java.lang.String name = rs.getString("c.name");
+			int phoneCode = rs.getInt("c.PhoneCode");
 			int id = 0;
 			float density = 0.0f;
 			double squareMeters = 0.0;
@@ -135,8 +135,8 @@ public class MapResultSet {
 
 		while (rs.next()) {
 			Company obj1 = new Company();
-			obj1.setName(rs.getString("name"));
-			obj1.setId(rs.getInt("id"));
+			obj1.setName(rs.getString("c.name"));
+			obj1.setId(rs.getInt("c.id"));
 			records.getListCompany().add(obj1);
 
 			SumValuesGroupedByCompanyGeneratedColumns obj2 = new SumValuesGroupedByCompanyGeneratedColumns();

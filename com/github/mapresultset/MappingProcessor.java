@@ -135,20 +135,20 @@ public class MappingProcessor extends AbstractProcessor {
 			// System.out.println("p.getTables() = " + p.getTables());
 			System.out.println(p);
 
-			for (var column : p.getColumns()) {
-				System.out.println("---> Handling column: " + column);
+			for (ColumnRecord columnRecord : p.getColumns()) {
+				System.out.println("---> Handling column: " + columnRecord);
 				boolean isTemporaryTable = false;
-				if (column.table() != null) {
-					isTemporaryTable = p.getTables().get(column.table()).isTemporaryTable();
+				if (columnRecord.table() != null) {
+					isTemporaryTable = p.getTables().get(columnRecord.table()).isTemporaryTable();
 				}
-				if (column.isGeneratedValue() || isTemporaryTable) {
+				if (columnRecord.isGeneratedValue() || isTemporaryTable) {
 					System.out.println("---> It is a generated column");
-					String alias = column.alias();
+					String alias = columnRecord.alias();
 					if (alias == null) {
 						if (!isTemporaryTable) {
 							throw new RuntimeException("Invalid state");
 						}
-						alias = column.table();
+						alias = columnRecord.table();
 					}
 					generatedColumns.add(alias);
 					var m = queryStructures.get(generatedColumnsFullClassName);
@@ -160,8 +160,8 @@ public class MappingProcessor extends AbstractProcessor {
 					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
 				} else {
 					System.out.println("---> It's a real column from a table");
-					String table = column.table();
-					System.out.println("table = " + table);
+					String table = columnRecord.table();
+					System.out.println("---> table = " + table);
 					if (table == null) {
 						// if it's not a generated column and table is null
 						// then it means the from clause must have a single table
@@ -195,17 +195,18 @@ public class MappingProcessor extends AbstractProcessor {
 						queryStructures.put(fullClassName, m);
 					}
 					
-					var fieldName = new FieldName(column.name());
+					var fieldName = new FieldName(columnRecord.name());
 					var classFieldType = structure.fields.get(fieldName);
 					if (classFieldType == null) {
-						fieldName = classMappedColumns.get(fullClassName).get(new ColumnName(column.name()));
+						fieldName = classMappedColumns.get(fullClassName).get(new ColumnName(columnRecord.name()));
 						if (fieldName == null)
-							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + column.name());
+							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
 						classFieldType = structure.fields.get(fieldName);
 					}
-					String alias = column.alias();
-					if (alias == null) alias = column.name();
-					m.fields.put(new ColumnName(column.name()), new ColumnField(alias, new Field(fieldName.name(), classFieldType.name())));
+					String alias = columnRecord.alias();
+					if (alias == null) alias = columnRecord.name();
+					if (columnRecord.table() != null) alias = columnRecord.table() + "." + alias;
+					m.fields.put(new ColumnName(columnRecord.name()), new ColumnField(alias, new Field(fieldName.name(), classFieldType.name())));
 				}
 			}
 
