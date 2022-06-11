@@ -17,4 +17,6 @@ public class ListNotebooksRecords {
 	public List<ListNotebooksGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;
 	}
+
+	//##end##
 }

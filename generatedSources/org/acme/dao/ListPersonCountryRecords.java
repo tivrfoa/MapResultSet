@@ -22,4 +22,6 @@ public class ListPersonCountryRecords {
 	public List<ListPersonCountryGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;
 	}
+
+	//##end##
 }

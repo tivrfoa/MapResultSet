@@ -18,4 +18,6 @@ public class ListPhonesRecords {
 	public List<Company> getListCompany() {
 		return listCompany;
 	}
+
+	//##end##
 }

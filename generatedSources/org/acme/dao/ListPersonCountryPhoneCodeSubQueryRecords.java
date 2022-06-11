@@ -22,4 +22,6 @@ public class ListPersonCountryPhoneCodeSubQueryRecords {
 	public List<ListPersonCountryPhoneCodeSubQueryGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;
 	}
+
+	//##end##
 }

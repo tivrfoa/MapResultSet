@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -102,7 +103,8 @@ public class MappingProcessor extends AbstractProcessor {
 		// It will create one MapResultSet class in each package that
 		// contains a @Query
 		// map: package -> list of methods ?
-		Map<String, QueryMethodsAndImports> packageMethods = new HashMap<>();
+		final Map<String, QueryMethodsAndImports> packageMethods = new HashMap<>();
+		final Map<String, ClassToCreate> queryClassesToCreate = new HashMap<>();
 		
 		// Parse all queries
 		for (var queryElement : queries) {
@@ -219,10 +221,11 @@ public class MappingProcessor extends AbstractProcessor {
 					""".formatted(generatedColumnsClassName, generatedColumnsClassName);
 			}
 
-			queryClassToCreate.content += "}";
+			queryClassToCreate.content += "\n\t//##end##\n}";
 			queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
 
-			writeBuilderFile(queryClassToCreate);
+			// writeBuilderFile(queryClassToCreate);
+			queryClassesToCreate.put(queryClassName, queryClassToCreate);
 
 			System.out.println("-------- Query Structures ------------");
 			System.out.println(queryStructures);
@@ -247,6 +250,10 @@ public class MappingProcessor extends AbstractProcessor {
 			final QueryMethodsAndImports qmi = pm.getValue();
 			final String content = createMapResultSetClassForQuery(packageName, qmi.imports, qmi.methods);
 			writeBuilderFile(packageName, "MapResultSet", content);
+		}
+
+		for (ClassToCreate classToCreate : queryClassesToCreate.values()) {
+			writeBuilderFile(classToCreate);
 		}
 	}
 
@@ -453,7 +460,7 @@ public class MappingProcessor extends AbstractProcessor {
 				}	
 			}
 		}
-		
+
 		methodBody += """
 				}
 
@@ -470,24 +477,30 @@ public class MappingProcessor extends AbstractProcessor {
 		
 		// If there's a OneToMany or ManyToMany relationship, then create
 		// a groupedBy method, eg: groupedByPerson
-		/*for (var queryStructure : queryStructures.entrySet()) {
+		for (var queryStructure : queryStructures.entrySet()) {
 			FullClassName fcn = queryStructure.getKey();
-		}
-		for (var rel : relationships) {
-			var owner = objects.get(rel.javaStructWithMappingAnnotation());
-			var partner = objects.get(rel.partner());
-			if (owner == null || partner == null) continue;
-			switch (rel.type()) {
-				case OneToMany, ManyToMany:
-					ret += createManyRelationshipGrupedByMethod();
-					break;
+			var owner = relationships.get(fcn);
+			if (owner == null) continue;
+			for (var partner : owner) {
+				var partnerObj = queryStructures.get(partner.partner());
+				if (partnerObj == null) continue;
+				switch (partner.type()) {
+					case OneToOne, ManyToOne:
+						ret += createManyRelationshipGrupedByMethod(owner, queryStructure);
+						break;
+				}	
 			}
-		}*/
+		}
+
 		return ret;
 	}
 
-	private String createManyRelationshipGrupedByMethod() {
-		return null;
+	private String createManyRelationshipGrupedByMethod(List<Relationship> owner, Entry<FullClassName, QueryStructure> queryStructure) {
+		System.out.println("owner relationships: " + owner);
+		/*return """
+				public stat
+				""";*/
+				return "";
 	}
 
 	private String createMapResultSetClassForQuery(String packageName,

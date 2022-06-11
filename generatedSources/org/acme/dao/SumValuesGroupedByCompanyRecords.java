@@ -17,4 +17,6 @@ public class SumValuesGroupedByCompanyRecords {
 	public List<SumValuesGroupedByCompanyGeneratedColumns> getGeneratedColumns() {
 		return generatedColumns;
 	}
+
+	//##end##
 }

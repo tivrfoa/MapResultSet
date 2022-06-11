@@ -18,4 +18,6 @@ public class ListPersonNameCountryNameRecords {
 	public List<Country> getListCountry() {
 		return listCountry;
 	}
+
+	//##end##
 }
