@@ -27,7 +27,7 @@ import com.github.mapresultset.JavaStructure.Type;
 
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
 		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne",
-		"com.github.mapresultset.api.OneToMany"})
+		"com.github.mapresultset.api.OneToOne", "com.github.mapresultset.api.OneToMany"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
@@ -36,7 +36,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private List<Element> queries = new ArrayList<>();
 	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
 	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
-	private List<Relationship> relationships = new ArrayList<>();
+	private Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
 	private Map<FullClassName, List<FieldName>> primaryKeys = new HashMap<>();
 
 	@Override
@@ -435,36 +435,59 @@ public class MappingProcessor extends AbstractProcessor {
 			}
 		}
 
-		// Check relationships
-		for (var rel : relationships) {
-			var owner = objects.get(rel.javaStructWithMappingAnnotation());
-			var partner = objects.get(rel.partner());
-			if (owner == null || partner == null) continue;
-			switch (rel.type()) {
-				case ManyToOne:
-					String set = "set" + uppercaseFirstLetter(rel.partnerFieldName().name());
-					methodBody += """
-								%s.%s(%s);
-					""".formatted(owner, set, partner);
-					// methodBody += owner + "." + set + "(" + partner + ");";
-					break;
-				default: throw new RuntimeException(rel.type() + " is not implemented yet.");
+		// ===== Check relationships - ManyToOne and OneToOne
+		for (var obj : objects.entrySet()) {
+			var owner = relationships.get(obj.getKey());
+			if (owner == null) continue;
+			String ownerObj = obj.getValue();
+			for (var partner : owner) {
+				var partnerObj = objects.get(partner.partner());
+				if (partnerObj == null) continue;
+				switch (partner.type()) {
+					case OneToOne, ManyToOne:
+						String set = "set" + uppercaseFirstLetter(partner.partnerFieldName().name());
+						methodBody += """
+									%s.%s(%s);
+						""".formatted(ownerObj, set, partnerObj);
+						break;
+				}	
 			}
 		}
-
+		
 		methodBody += """
 				}
 
 				return records;
 		""";
 	
-		return """
+		String ret = """
 
 					public static %s %s(ResultSet rs) throws SQLException {
 						%s
 					}
 
 				""".formatted(queryClassName, queryName, methodBody);
+		
+		// If there's a OneToMany or ManyToMany relationship, then create
+		// a groupedBy method, eg: groupedByPerson
+		/*for (var queryStructure : queryStructures.entrySet()) {
+			FullClassName fcn = queryStructure.getKey();
+		}
+		for (var rel : relationships) {
+			var owner = objects.get(rel.javaStructWithMappingAnnotation());
+			var partner = objects.get(rel.partner());
+			if (owner == null || partner == null) continue;
+			switch (rel.type()) {
+				case OneToMany, ManyToMany:
+					ret += createManyRelationshipGrupedByMethod();
+					break;
+			}
+		}*/
+		return ret;
+	}
+
+	private String createManyRelationshipGrupedByMethod() {
+		return null;
 	}
 
 	private String createMapResultSetClassForQuery(String packageName,
@@ -587,7 +610,12 @@ public class MappingProcessor extends AbstractProcessor {
 	private void processManyRelationship(String elementName, Element e, Relationship.Type type) {
 		FullClassName fcn = new FullClassName(e.getEnclosingElement().toString());
 		FullClassName partner = new FullClassName(e.asType().toString());
-		relationships.add(new Relationship(fcn, partner, new FieldName(elementName), type));
+		List<Relationship> list = relationships.get(fcn);
+		if (list == null) {
+			list = new ArrayList<>();
+			relationships.put(fcn, list);
+		}
+		list.add(new Relationship(fcn, partner, new FieldName(elementName), type));
 	}
 
 	private void processQuery(String elementName, Element e) {

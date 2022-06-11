@@ -15,7 +15,7 @@ public record Country(int id, float density, String name,
         // It's just for testing.
         @OneToMany (createWith = "newLinkedList", addWith = "add") List<Person> listPerson) {
     
-                public static List<Person> newLinkedList() {
-                        return new LinkedList<Person>();
-                }
+        public static List<Person> newLinkedList() {
+                return new LinkedList<Person>();
+        }
 }

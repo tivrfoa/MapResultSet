@@ -7,7 +7,9 @@ public record Relationship (
     Type type) {
 
     public static enum Type {
+        OneToOne,
         OneToMany,
-        ManyToOne
+        ManyToOne,
+        ManyToMany
     }
 }
