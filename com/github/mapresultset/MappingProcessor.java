@@ -25,6 +25,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 import com.github.mapresultset.JavaStructure.Type;
+import com.github.mapresultset.api.Query;
 
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
 		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne",
@@ -38,7 +39,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
 	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
 	private Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
-	private Map<FullClassName, List<FieldName>> primaryKeys = new HashMap<>();
+	private Map<FullClassName, List<Field>> primaryKeys = new HashMap<>();
 	/**
 	 * key: query class name
 	 * value: list of grouped by methods
@@ -521,22 +522,67 @@ public class MappingProcessor extends AbstractProcessor {
 		String ownerClass = fcn.getClassName();
 		// TODO can't group by if there's no @Id for this class ...
 		// also one of the columns in the query must be the id
-		QueryClassStructure queryClassStructure = queryStructures.get(fcn);
+		System.out.println("-------------- PRIMARY KEYS ---------------");
+		List<Field> keyFields = primaryKeys.get(fcn);
+		if (keyFields == null) {
+			System.err.println(ownerClass + " does not have a field annotated with @Id");
+			System.err.println("!!!!!! Can't create groupedBy method without knowing the @Id");
+		}
+		String params = "";
+		String getKeys = "";
+		int keyCounter = 0;
+		String newKeyRecord = "new " + ownerClass + "Id(";
+		for (var f : keyFields) {
+			params += f.type() + " " + f.name() + ", ";
+			String getMethod = "get" + uppercaseFirstLetter(f.name());
+			getKeys += """
+					var key%s = curr.%s();
+					""".formatted(keyCounter, getMethod);
+			newKeyRecord += "key" + keyCounter + ", ";
+		}
+		params = params.substring(0, params.length() - 2);
+		newKeyRecord = newKeyRecord.substring(0, newKeyRecord.length() - 2) + ")";
+		
 		String methodBody = "";
 
 		for (var rel : ownerRelationships) {
-			var partnerObj = queryStructures.get(rel.partner());
+			if (rel.type() != Relationship.Type.OneToMany &&
+					rel.type() != Relationship.Type.ManyToMany) continue;
+			QueryClassStructure partnerObj = queryStructures.get(rel.partner());
 			if (partnerObj == null) continue;
+			System.out.println("############## PARTNER OBJ ###########");
+			System.out.println(partnerObj);
 		}
 
 		return """
-			private static record %sId() {}
+			private static record %sId(%s) {}
 				public List<%s> groupedBy%s() {
-					// Map<%sId, %s> map = new HashMap<>();
+					Map<%sId, %s> map = new HashMap<>();
+					List<%s> join = new ArrayList<>();
+					int len = getList%s().size();
+					for (int i = 0; i < len; i++) {
+						var curr = getList%s().get(i);
+						%s
+						var key = %s;
+						var obj = map.get(key);
+						if (obj == null) {
+							map.put(key, curr);
+							obj = curr;
+							join.add(obj);
+						}
+					}
 					%s
 					return null;
 				}
-			""".formatted(ownerClass, ownerClass, ownerClass, ownerClass, ownerClass, methodBody);
+			""".formatted(ownerClass, params,
+				ownerClass, ownerClass,
+				ownerClass, ownerClass,
+				ownerClass,
+				ownerClass,
+				ownerClass,
+				getKeys,
+				newKeyRecord,
+				methodBody);
 	}
 
 	private String createMapResultSetClassForQuery(String packageName,
@@ -653,7 +699,7 @@ public class MappingProcessor extends AbstractProcessor {
 			fields = new ArrayList<>();
 			primaryKeys.put(fcn, fields);
 		}
-		fields.add(new FieldName(elementName));
+		fields.add(new Field(elementName, e.asType().toString()));
 	}
 
 	private void processManyRelationship(String elementName, Element e, Relationship.Type type) {
