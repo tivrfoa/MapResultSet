@@ -40,6 +40,18 @@ Current *known* limitations (ps: please open an issue if you find others =))
  - it doesn't handle 'USING' in joins. MySQL only?
 
 
+## Generated Classes Structure
+
+### Package
+
+Generated classes will be in the same package that contains the @Query.
+
+### Class Name
+
+There will be one Generated class per @Query.
+It will be the name of the query with the first letter in uppercase,
+followed by Records.
+
 ## Databases Java Connectors
 
 

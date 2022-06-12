@@ -1,5 +1,12 @@
 # TODO
 
+
+|| Think about ManyToMany
+|| Handle createWith and addWith for OneToMany and ManyToMany
+
+|| Test array column. Does Mysql support it?
+
+
 |x| Parse query to get columns and tables;
 |x| Generate the classes that receive ResultSet and return the objects;
 || Change generated source location?
@@ -14,64 +21,5 @@
 || Handle Java modules;
 || Make it available on Maven;
 
-# Generated Classes Structure
-
-## Package
-
-Generated classes will be in the same package that contains the @Query.
-
-## Class Name
-
-There will be one Generated class per @Query.
-It will be the name of the query with the first letter in uppercase,
-followed by Records.
-
-For each 
 
 
-Example:
-
-```Java
-@Query
-final String listNotebooks = """
-    select id, name, id + name as idName
-    from notebook
-""";
-
-public class ListNotebooksGeneratedColumns {
-    public Object idName;
-}
-
-public class ListNotebooksRecords {
-    private List<Notebook> listNotebook = new ArrayList<>();
-    private List<ListNotebooksGeneratedColumns> generatedColumns = new ArrayList<>();
-
-    public List<Notebook> getListNotebook() {
-        return listNotebook;
-    }
-
-    public List<ListNotebooksGeneratedColumns> getGeneratedColumns() {
-        return generatedColumns;
-    }
-}
-
-public class MapResultSet {
-    public static ListNotebooksRecords listNotebooks(ResultSet rs) {
-        ListNotebooksRecords records = new ListNotebooksRecords();
-        while (rs.next()) {
-            Notebook n = new Notebook();
-            n.setId(rs.getInt(1));
-            n.setName(rs.getString(2));
-
-            records.getListNotebook().add(n);
-
-            ListNotebooksGeneratedColumns c = new ListNotebooksGeneratedColumns();
-            c.idName = rs.getString(3);
-
-            records.getGeneratedColumns().add(c);
-        }
-
-        return records;
-    }
-}
-```
