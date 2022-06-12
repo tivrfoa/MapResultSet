@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -25,7 +24,6 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 import com.github.mapresultset.JavaStructure.Type;
-import com.github.mapresultset.api.Query;
 
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
 		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne",
@@ -44,7 +42,7 @@ public class MappingProcessor extends AbstractProcessor {
 	 * key: query class name
 	 * value: list of grouped by methods
 	 */
-	final Map<String, List<String>> queryGroupedByMethods = new HashMap<>();
+	final Map<String, List<String>> queryGroupedByMethodsMap = new HashMap<>();
 
 	@Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -60,7 +58,7 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			processLastRound(annotations, roundEnvironment);
-			System.out.println("\n---------- Query Grouped By Methods -----------\n" + queryGroupedByMethods);
+			System.out.println("\n---------- Query Grouped By Methods -----------\n" + queryGroupedByMethodsMap);
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -104,8 +102,8 @@ public class MappingProcessor extends AbstractProcessor {
 			tableMap.put(tableName, packageAndClass);
 		}
 
-		System.out.println("------ map: Table -> Class -------");
-		System.out.println(tableMap);
+		// System.out.println("------ map: Table -> Class -------");
+		// System.out.println(tableMap);
 
 		// It will create one MapResultSet class in each package that
 		// contains a @Query
@@ -146,7 +144,7 @@ public class MappingProcessor extends AbstractProcessor {
 			var p = new ParseQuery(query);
 			p.parse();
 			// System.out.println("p.getTables() = " + p.getTables());
-			System.out.println(p);
+			// System.out.println(p);
 
 			for (ColumnRecord columnRecord : p.getColumns()) {
 				System.out.println("---> Handling column: " + columnRecord);
@@ -262,10 +260,10 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		for (ClassToCreate classToCreate : queryClassesToCreate.values()) {
-			List<String> queryGroupByMethods = queryGroupedByMethods.get(classToCreate.className);
-			if (queryGroupByMethods != null) {
+			List<String> queryGroupedByMethods = queryGroupedByMethodsMap.get(classToCreate.className);
+			if (queryGroupedByMethods != null) {
 				String methods = "";
-				for (String s: queryGroupByMethods) methods += s;
+				for (String s: queryGroupedByMethods) methods += s;
 				classToCreate.content = classToCreate.content.replace("//##end##\n", methods);
 			}
 			writeBuilderFile(classToCreate);
@@ -319,7 +317,6 @@ public class MappingProcessor extends AbstractProcessor {
 			generatedColumnsClassToCreate.content += content;
 		}
 		generatedColumnsClassToCreate.content += "}";
-		System.out.println(generatedColumnsClassToCreate.content);
 		writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
 	}
 
@@ -492,28 +489,45 @@ public class MappingProcessor extends AbstractProcessor {
 		
 		// If there's a OneToMany or ManyToMany relationship, then create
 		// a groupedBy method, eg: groupedByPerson
+		System.out.println("--------------- CHECKING MANY RELATIONSHIPS ----------------");
 		for (var queryStructure : queryStructures.entrySet()) {
 			FullClassName fcn = queryStructure.getKey();
-			var owner = relationships.get(fcn);
-			if (owner == null) continue;
-			relLoop:
-			for (var partner : owner) {
-				var partnerObj = queryStructures.get(partner.partner());
+			var ownerRelationships = relationships.get(fcn);
+			if (ownerRelationships == null) {
+				System.out.println(fcn + " does not have any relationship mapped in it's class.");
+				continue;
+			} else {
+				System.out.println(fcn + " relationships are: " + ownerRelationships);
+			}
+
+			for (var rel : ownerRelationships) {
+				if (rel.type() != Relationship.Type.OneToMany && rel.type() != Relationship.Type.ManyToMany) {
+					continue;
+				}
+				FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
+				var partnerObj = queryStructures.get(partnerClass);
+				System.out.println("partnerObj = " + partnerObj);
 				if (partnerObj == null) continue;
-				switch (partner.type()) {
-					case OneToOne, ManyToOne:
-						List<String> groupedByMethods = queryGroupedByMethods.get(queryClassName);
-						if (groupedByMethods == null) {
-							groupedByMethods = new ArrayList<>();
-							queryGroupedByMethods.put(queryClassName, groupedByMethods);
-						}
-						groupedByMethods.add(createManyRelationshipGrupedByMethod(fcn, owner, queryStructures));
-						break relLoop;
-				}	
+				System.out.println("partner.type() = " + rel.type());
+				List<String> groupedByMethods = queryGroupedByMethodsMap.get(queryClassName);
+				if (groupedByMethods == null) {
+					groupedByMethods = new ArrayList<>();
+					queryGroupedByMethodsMap.put(queryClassName, groupedByMethods);
+				}
+				groupedByMethods.add(createManyRelationshipGrupedByMethod(fcn, ownerRelationships,
+						queryStructures));
+				break;
 			}
 		}
 
 		return ret;
+	}
+
+	private FullClassName getClassInGenericDeclaration(FullClassName genericDeclaration) {
+		String str = genericDeclaration.name();
+		int lessSign = str.indexOf("<");
+		int greaterSign = str.indexOf(">");
+		return new FullClassName(str.substring(lessSign + 1, greaterSign));
 	}
 
 	private String createManyRelationshipGrupedByMethod(FullClassName fcn, List<Relationship> ownerRelationships,
@@ -525,8 +539,9 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println("-------------- PRIMARY KEYS ---------------");
 		List<Field> keyFields = primaryKeys.get(fcn);
 		if (keyFields == null) {
-			System.err.println(ownerClass + " does not have a field annotated with @Id");
-			System.err.println("!!!!!! Can't create groupedBy method without knowing the @Id");
+			System.err.println("WARNING!!! " + ownerClass + " does not have a field annotated with @Id");
+			System.err.println("WARNING!!! Can't create groupedBy method without knowing the @Id");
+			return "";
 		}
 		String params = "";
 		String getKeys = "";
@@ -543,15 +558,26 @@ public class MappingProcessor extends AbstractProcessor {
 		params = params.substring(0, params.length() - 2);
 		newKeyRecord = newKeyRecord.substring(0, newKeyRecord.length() - 2) + ")";
 		
-		String methodBody = "";
+		String createPartners = "";
+		String addToPartners = "";
 
 		for (var rel : ownerRelationships) {
-			if (rel.type() != Relationship.Type.OneToMany &&
-					rel.type() != Relationship.Type.ManyToMany) continue;
-			QueryClassStructure partnerObj = queryStructures.get(rel.partner());
+			if (rel.type() != Relationship.Type.OneToMany && rel.type() != Relationship.Type.ManyToMany) {
+				continue;
+			}
+			System.out.println("######### checking relationship: " + rel);
+			System.out.println("rel partner: " + rel.partner());
+			FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
+			System.out.println("---------- partnerClass = " + partnerClass);
+			QueryClassStructure partnerObj = queryStructures.get(partnerClass);
 			if (partnerObj == null) continue;
-			System.out.println("############## PARTNER OBJ ###########");
-			System.out.println(partnerObj);
+			final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
+			createPartners += """
+					obj.set%s(new ArrayList<>());
+					""".formatted(PartnerFieldName);
+			addToPartners += """
+					obj.get%s().add(getList%s().get(i));
+					""".formatted(PartnerFieldName, partnerClass.getClassName());
 		}
 
 		return """
@@ -569,10 +595,11 @@ public class MappingProcessor extends AbstractProcessor {
 							map.put(key, curr);
 							obj = curr;
 							join.add(obj);
+							%s
 						}
+						%s
 					}
-					%s
-					return null;
+					return join;
 				}
 			""".formatted(ownerClass, params,
 				ownerClass, ownerClass,
@@ -582,7 +609,8 @@ public class MappingProcessor extends AbstractProcessor {
 				ownerClass,
 				getKeys,
 				newKeyRecord,
-				methodBody);
+				createPartners,
+				addToPartners);
 	}
 
 	private String createMapResultSetClassForQuery(String packageName,
@@ -664,9 +692,9 @@ public class MappingProcessor extends AbstractProcessor {
 				Element enclosingElement = e.getEnclosingElement();
 				System.out.println("element enclosingElement: " + enclosingElement);
 				System.out.println("element enclosedElements: " + e.getEnclosedElements());
-				for (var enclosed : e.getEnclosedElements()) {
+				/*for (var enclosed : e.getEnclosedElements()) {
 					System.out.println(enclosed + " kind is: " + enclosed.getKind());
-				}
+				}*/
 
 				switch (annotation.toString()) {
 					case "com.github.mapresultset.api.Column":
@@ -780,7 +808,6 @@ public class MappingProcessor extends AbstractProcessor {
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
 				"Creating map file ... className = " + className);
 
-	    System.out.println("filer options: " + processingEnv.getOptions());
 	    JavaFileObject builderFile;
 		try {
 			builderFile = processingEnv.getFiler().createSourceFile(packageName + "." + className);

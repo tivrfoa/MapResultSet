@@ -27,24 +27,4 @@ public class ListPersonCountryRecords {
 		return generatedColumns;
 	}
 
-	private static record PersonId(int id) {}
-	public List<Person> groupedByPerson() {
-		Map<PersonId, Person> map = new HashMap<>();
-		List<Person> join = new ArrayList<>();
-		int len = getListPerson().size();
-		for (int i = 0; i < len; i++) {
-			var curr = getListPerson().get(i);
-			var key0 = curr.getId();
-
-			var key = new PersonId(key0);
-			var obj = map.get(key);
-			if (obj == null) {
-				map.put(key, curr);
-				obj = curr;
-				join.add(obj);
-			}
-		}
-		
-		return null;
 	}
-}

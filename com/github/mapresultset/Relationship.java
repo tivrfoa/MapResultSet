@@ -1,7 +1,7 @@
 package com.github.mapresultset;
 
 public record Relationship (
-    FullClassName javaStructWithMappingAnnotation,
+    FullClassName owner,
     FullClassName partner, // change this variable name?! xD
     FieldName partnerFieldName,
     Type type) {

@@ -6,6 +6,7 @@ import org.acme.domain.Person;
 import org.acme.domain.Notebook;
 import org.acme.domain.Company;
 import org.acme.domain.Country;
+import org.acme.domain.Phone;
 
 
 public class MapResultSet {
@@ -94,6 +95,58 @@ public class MapResultSet {
 			records.getListCountry().add(obj2);
 
 			obj1.setCountry(obj2);
+		}
+
+		return records;
+
+	}
+
+
+	public static ListPersonPhonesRecords listPersonPhones(ResultSet rs) throws SQLException {
+		ListPersonPhonesRecords records = new ListPersonPhonesRecords();
+
+		while (rs.next()) {
+			Person obj1 = new Person();
+			obj1.setName(rs.getString("p.name"));
+			obj1.setId(rs.getInt("p.id"));
+			records.getListPerson().add(obj1);
+
+			Phone obj2 = new Phone();
+			obj2.setNumber(rs.getInt("phone.number"));
+			records.getListPhone().add(obj2);
+
+		}
+
+		return records;
+
+	}
+
+
+	public static ListPersonPhonesAndCountryRecords listPersonPhonesAndCountry(ResultSet rs) throws SQLException {
+		ListPersonPhonesAndCountryRecords records = new ListPersonPhonesAndCountryRecords();
+
+		while (rs.next()) {
+			Person obj1 = new Person();
+			obj1.setName(rs.getString("p.name"));
+			obj1.setId(rs.getInt("p.id"));
+			records.getListPerson().add(obj1);
+
+			Phone obj2 = new Phone();
+			obj2.setNumber(rs.getInt("phone.number"));
+			records.getListPhone().add(obj2);
+
+			java.lang.String name = rs.getString("c.name");
+			int id = 0;
+			float density = 0.0f;
+			double squareMeters = 0.0;
+			int phoneCode = 0;
+			long someBigNumber = 0L;
+			java.util.List<org.acme.domain.Person> listPerson = null;
+
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			records.getListCountry().add(obj3);
+
+			obj1.setCountry(obj3);
 		}
 
 		return records;

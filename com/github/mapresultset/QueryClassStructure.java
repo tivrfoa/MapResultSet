@@ -18,4 +18,10 @@ public class QueryClassStructure {
         this.fullClassName = fullClassName;
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "QueryClassStructure [fields=" + fields + ", fullClassName=" + fullClassName + ", type=" + type + "]";
+    }
+    
 }

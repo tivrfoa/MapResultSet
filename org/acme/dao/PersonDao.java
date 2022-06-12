@@ -38,11 +38,49 @@ public class PersonDao {
               p.country_id = c.id
             """;
     
+    @Query
+    private static final String listPersonPhones = """
+            select p.id, p.name, phone.number
+            from person as p join Phone as phone on
+              p.id = phone.person_id
+            """;
+    
+    @Query
+    private static final String listPersonPhonesAndCountry = """
+            select p.id, p.name, phone.number, c.name
+            from person as p join Phone as phone on
+              p.id = phone.person_id join
+                 country as c on
+              p.country_id = c.id
+            """;
+    
     public static List<Person> listPersonCountry() {
         try {
             var list = MapResultSet.listPersonCountry(executeQuery(listPersonCountry));
             System.out.println(list.getListCountry());
             return list.getListPerson();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+    
+    public static List<Person> listPersonPhones() {
+        try {
+            var list = MapResultSet.listPersonPhones(executeQuery(listPersonPhones));
+            System.out.println(list.getListPhone());
+            System.out.println(list.groupedByPerson());
+            return list.getListPerson();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+    
+    public static List<Person> listPersonPhonesAndCountry() {
+        try {
+            return MapResultSet.listPersonPhonesAndCountry(executeQuery(listPersonPhonesAndCountry))
+                    .groupedByPerson();
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

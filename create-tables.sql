@@ -1,6 +1,8 @@
 drop table if exists notebook;
 drop table if exists company;
+drop table if exists Phone;
 drop table if exists person;
+drop table if exists address;
 drop table if exists country;
 
 create table company (
@@ -35,8 +37,6 @@ values
 ('aspire 5', 2000, 'S', true, true, 4000.1, 600.52, 2);
 
 
-
-
 create table country (
     id int primary key,
     name varchar(30),
@@ -60,6 +60,19 @@ insert into person (id, name, country_id) values
 (1, 'Leandro', 2),
 (2, 'Guilherme', 4),
 (3, 'Marcos', 1);
+
+create table Phone (
+    id int primary key,
+    number int,
+    person_id int,
+    foreign key(person_id) references person(id)
+);
+
+insert into Phone values
+(1, 1111, 1),
+(2, 1112, 1),
+(3, 2222, 2),
+(4, 3333, 3);
 
 
 -------------- QUERIES ------------

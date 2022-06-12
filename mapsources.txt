@@ -1,4 +1,5 @@
 com/github/mapresultset/api/Query.java
+com/github/mapresultset/api/ManyToMany.java
 com/github/mapresultset/api/ManyToOne.java
 com/github/mapresultset/api/Table.java
 com/github/mapresultset/api/OneToOne.java

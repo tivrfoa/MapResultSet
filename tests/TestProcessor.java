@@ -33,6 +33,8 @@ public class TestProcessor {
 		System.out.println(NotebookDao.listNotebooks());
 		System.out.println(NotebookDao.sumValuesGroupedByCompany());
 		System.out.println(PersonDao.listPersonCountry());
+		System.out.println(PersonDao.listPersonPhones());
+		System.out.println(PersonDao.listPersonPhonesAndCountry());
 	}
 
 	@Table(name = "phone")
