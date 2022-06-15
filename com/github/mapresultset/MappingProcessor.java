@@ -26,8 +26,9 @@ import javax.tools.JavaFileObject;
 import com.github.mapresultset.JavaStructure.Type;
 
 @SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
-		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id", "com.github.mapresultset.api.ManyToOne",
-		"com.github.mapresultset.api.OneToOne", "com.github.mapresultset.api.OneToMany"})
+		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id",
+		"com.github.mapresultset.api.OneToOne", "com.github.mapresultset.api.OneToMany",
+		"com.github.mapresultset.api.ManyToOne", "com.github.mapresultset.api.ManyToMany"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
@@ -176,7 +177,7 @@ public class MappingProcessor extends AbstractProcessor {
 					if (table == null) {
 						// if it's not a generated column and table is null
 						// then it means the from clause must have a single table
-						if (p.getTables().size() > 1) {
+						if (p.getTables().size() != 1) {
 							throw new RuntimeException("Columns must be preceded by the table name " +
 									"when there are more than one table in the 'from' clause.");
 						}
@@ -185,7 +186,13 @@ public class MappingProcessor extends AbstractProcessor {
 						table = p.getTables().get(table).tableName();
 					}
 					String fullClassNameStr = tableMap.get(table);
-					var fullClassName = new FullClassName(tableMap.get(table));
+					if (fullClassNameStr == null) {
+						table = p.getTables().get(columnRecord.table()).tableName();
+						throw new RuntimeException("Table '" + table + "' is not mapped to class, " +
+						     	"so no value from this table can be in the 'SELECT' clause.\n" +
+								"You might want to annotate it with: @Table (name = \"" + table + "\")");
+					}
+					var fullClassName = new FullClassName(fullClassNameStr);
 					System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassName);
 					if (queryImports.add(fullClassNameStr)) {
 						queryImportsStr += "import " + fullClassName.name() + ";\n";

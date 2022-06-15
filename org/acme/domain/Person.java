@@ -3,6 +3,7 @@ package org.acme.domain;
 import java.util.List;
 
 import com.github.mapresultset.api.Id;
+import com.github.mapresultset.api.ManyToMany;
 import com.github.mapresultset.api.ManyToOne;
 import com.github.mapresultset.api.OneToMany;
 import com.github.mapresultset.api.Table;
@@ -16,6 +17,8 @@ public class Person {
 	private List<Phone> phones;
 	@ManyToOne
 	private Country country;
+	@ManyToMany
+	private List<Address> addresses;
 
 	public int getId() {
 		return id;
@@ -51,7 +54,8 @@ public class Person {
 
 	@Override
 	public String toString() {
-		return "Person [id=" + id + ", name=" + name + ", phones=" + phones + ", country=" + country + "]";
+		return "Person [addresses=" + addresses + ", country=" + country + ", id=" + id + ", name=" + name + ", phones="
+				+ phones + "]";
 	}
 
 }

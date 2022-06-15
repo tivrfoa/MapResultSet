@@ -54,6 +54,25 @@ public class PersonDao {
               p.country_id = c.id
             """;
     
+    @Query
+    private static final String listPersonAdresses = """
+            select p.id, p.name, a.street
+            from person as p join person_address as pa on
+              p.id = pa.person_id join address as a on
+              a.id = pa.address_id
+            """;
+            
+    public static List<Person> listPersonAdresses() {
+        try {
+            var list = MapResultSet.listPersonAdresses(executeQuery(listPersonAdresses));
+            System.out.println(list.groupedByAdress());
+            return list.groupedByPerson();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
     public static List<Person> listPersonCountry() {
         try {
             var list = MapResultSet.listPersonCountry(executeQuery(listPersonCountry));
