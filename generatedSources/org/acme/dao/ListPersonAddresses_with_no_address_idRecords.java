@@ -37,10 +37,10 @@ public class ListPersonAddresses_with_no_address_idRecords {
 			var obj = map.get(key);
 			if (obj == null) {
 				obj = curr;
-				map.put(key, obj);
-				join.add(obj);
 				obj.setAddresses(new ArrayList<>());
 
+				map.put(key, obj);
+				join.add(obj);
 			}
 			obj.getAddresses().add(getListAddress().get(i));
 

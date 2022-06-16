@@ -37,10 +37,10 @@ public class ListPersonPhonesRecords {
 			var obj = map.get(key);
 			if (obj == null) {
 				obj = curr;
-				map.put(key, obj);
-				join.add(obj);
 				obj.setPhones(new ArrayList<>());
 
+				map.put(key, obj);
+				join.add(obj);
 			}
 			obj.getPhones().add(getListPhone().get(i));
 

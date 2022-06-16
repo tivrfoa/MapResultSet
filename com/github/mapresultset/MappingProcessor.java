@@ -590,8 +590,6 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println("owner relationships: " + ownerRelationships);
 		final String ownerClass = fcn.getClassName();
 		final QueryClassStructure queryClassStructure = queryStructures.get(fcn);
-		// TODO can't group by if there's no @Id for this class ...
-		// also one of the columns in the query must be the id
 		
 		List<Field> keyFields = primaryKeys.get(fcn);
 		if (keyFields == null) {
@@ -609,26 +607,8 @@ public class MappingProcessor extends AbstractProcessor {
 				return "";
 			}
 		}
-		String params = "";
-		String getKeys = "";
-		int keyCounter = 0;
-		String newKeyRecord = "new " + ownerClass + "Id(";
-		for (var f : keyFields) {
-			params += f.type() + " " + f.name() + ", ";
-			if (queryClassStructure.type == Type.CLASS) {
-				String getMethod = "get" + uppercaseFirstLetter(f.name());
-				getKeys += """
-						var key%s = curr.%s();
-						""".formatted(keyCounter, getMethod);
-			} else {
-				getKeys += """
-						var key%s = curr.%s();
-						""".formatted(keyCounter, f.name());
-			}
-			newKeyRecord += "key" + keyCounter + ", ";
-		}
-		params = params.substring(0, params.length() - 2);
-		newKeyRecord = newKeyRecord.substring(0, newKeyRecord.length() - 2) + ")";
+
+		var newKeyRecord = new NewKeyRecord(ownerClass, queryClassStructure, keyFields);
 		
 		String createPartners = "";
 		String addToPartners = "";
@@ -673,22 +653,22 @@ public class MappingProcessor extends AbstractProcessor {
 							var obj = map.get(key);
 							if (obj == null) {
 								obj = curr;
+								%s
 								map.put(key, obj);
 								join.add(obj);
-								%s
 							}
 							%s
 						}
 						return join;
 					}
-				""".formatted(ownerClass, params,
+				""".formatted(ownerClass, newKeyRecord.params,
 					ownerClass, ownerClass,
 					ownerClass, ownerClass,
 					ownerClass,
 					ownerClass,
 					ownerClass,
-					getKeys,
-					newKeyRecord,
+					newKeyRecord.getKeys,
+					newKeyRecord.constructor,
 					createPartners,
 					addToPartners);
 		} else {
@@ -714,16 +694,44 @@ public class MappingProcessor extends AbstractProcessor {
 						}
 						return join;
 					}
-				""".formatted(ownerClass, params,
+				""".formatted(ownerClass, newKeyRecord.params,
 					ownerClass, ownerClass,
 					ownerClass, ownerClass,
 					ownerClass,
 					ownerClass,
 					ownerClass,
-					getKeys,
-					newKeyRecord,
+					newKeyRecord.getKeys,
+					newKeyRecord.constructor,
 					createPartners,
 					addToPartners);
+		}
+	}
+
+	private static class NewKeyRecord {
+		String params = "";
+		String getKeys = "";
+		String constructor = "";
+
+		NewKeyRecord(String ownerClass, QueryClassStructure queryClassStructure, List<Field> keyFields) {
+			int keyCounter = 0;
+			String newKeyRecord = "new " + ownerClass + "Id(";
+			for (var f : keyFields) {
+				params += f.type() + " " + f.name() + ", ";
+				if (queryClassStructure.type == Type.CLASS) {
+					String getMethod = "get" + uppercaseFirstLetter(f.name());
+					getKeys += """
+							var key%s = curr.%s();
+							""".formatted(keyCounter, getMethod);
+				} else {
+					getKeys += """
+							var key%s = curr.%s();
+							""".formatted(keyCounter, f.name());
+				}
+				newKeyRecord += "key" + keyCounter + ", ";
+				keyCounter++;
+			}
+			params = params.substring(0, params.length() - 2);
+			constructor = newKeyRecord.substring(0, newKeyRecord.length() - 2) + ")";
 		}
 	}
 
@@ -773,7 +781,7 @@ public class MappingProcessor extends AbstractProcessor {
 		return uppercaseFirstLetter(queryName) + "Records";
 	}
 
-	private String uppercaseFirstLetter(final String str) {
+	public static String uppercaseFirstLetter(final String str) {
 		// System.out.println("---> uppercaseFirstLetter. param = " + str);
 		String Up = str.substring(0, 1).toUpperCase();
 		if (str.length() > 1) {
