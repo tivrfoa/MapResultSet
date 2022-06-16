@@ -713,7 +713,7 @@ public class MappingProcessor extends AbstractProcessor {
 	private static class CollectionCreateAndAddMethods {
 		String createPartners = "";
 		String addToPartners = "";
-		
+
 		public CollectionCreateAndAddMethods(FullClassName fcn, String ownerClass,
 				List<Relationship> ownerRelationships, QueryClassStructure queryClassStructure,
 				Map<FullClassName, QueryClassStructure> queryStructures, Map<FullClassName, JavaStructure> javaStructures) {
@@ -735,11 +735,13 @@ public class MappingProcessor extends AbstractProcessor {
 							obj.get%s().add(getList%s().get(i));
 							""".formatted(PartnerFieldName, partnerClass.getClassName());
 				} else {
-					createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields, javaStructures);
 					addToPartners += """
 							obj.%s().add(getList%s().get(i));
 							""".formatted(rel.partnerFieldName().name(), partnerClass.getClassName());
 				}
+			}
+			if (queryClassStructure.type == Type.RECORD) {
+				createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields, javaStructures);
 			}
 		}
 	}

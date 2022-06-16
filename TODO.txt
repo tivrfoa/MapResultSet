@@ -1,6 +1,9 @@
 # TODO
 
+
 || Handle createWith and addWith for OneToMany and ManyToMany
+
+|| Test composite primary key
 
 || Test array column. Does Mysql support it?
 

@@ -4,6 +4,7 @@ drop table if exists Phone;
 drop table if exists person_address;
 drop table if exists person;
 drop table if exists address;
+drop table if exists state;
 drop table if exists country;
 
 create table company (
@@ -37,7 +38,6 @@ values
 ('aspire 3', 1000, 'N', false, true, 2000.1, 500.52, 2),
 ('aspire 5', 2000, 'S', true, true, 4000.1, 600.52, 2);
 
-
 create table country (
     id int primary key,
     name varchar(30),
@@ -51,6 +51,20 @@ insert into country values
 (2, 'Vietnam', 84, 11111111111113, 1111111111111311111111111113),
 (3, 'Switzerland', 41, 11111111111114, 1111111111111411111111111114),
 (4, 'Germany', 49, 11111111111115, 1111111111111511111111111115);
+
+create table state (
+    id int primary key,
+    name varchar(30),
+    country_id int not null,
+    foreign key(country_id) references country(id)
+);
+
+insert into state values
+(1, 'Minas Gerais', 1),
+(2, 'Acre', 1),
+(3, 'aksd adkfj', 2),
+(4, 'Swais Swais', 3),
+(5, 'Prost', 4);
 
 create table person (
     id int primary key,

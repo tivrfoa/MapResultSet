@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 import org.acme.domain.Person;
 import org.acme.domain.Country;
+import org.acme.domain.State;
 
 
 public class ListPersonCountryRecords {
@@ -21,6 +22,10 @@ public class ListPersonCountryRecords {
 	private List<Country> listCountry = new ArrayList<>();
 	public List<Country> getListCountry() {
 		return listCountry;
+	}
+	private List<State> listState = new ArrayList<>();
+	public List<State> getListState() {
+		return listState;
 	}
 	private List<ListPersonCountryGeneratedColumns> generatedColumns = new ArrayList<>();
 	public List<ListPersonCountryGeneratedColumns> getGeneratedColumns() {
@@ -49,13 +54,15 @@ public class ListPersonCountryRecords {
 				long someBigNumber = curr.someBigNumber();
 				java.math.BigInteger evenBigger = curr.evenBigger();
 				java.util.List<org.acme.domain.Person> listPerson = new ArrayList<>();
+				java.util.List<org.acme.domain.State> states = new ArrayList<>();
 
-				obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
+				obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
 
 				map.put(key, obj);
 				join.add(obj);
 			}
 			obj.listPerson().add(getListPerson().get(i));
+obj.states().add(getListState().get(i));
 
 		}
 		return join;

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import org.acme.domain.Person;
 import org.acme.domain.Notebook;
 import org.acme.domain.Company;
+import org.acme.domain.State;
 import org.acme.domain.Country;
 import org.acme.domain.Phone;
 import org.acme.domain.Address;
@@ -33,8 +34,9 @@ public class MapResultSet {
 			long someBigNumber = 0L;
 			java.math.BigInteger evenBigger = null;
 			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.List<org.acme.domain.State> states = null;
 
-			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
 			records.getListCountry().add(obj3);
 
 			obj1.setCountry(obj3);
@@ -58,22 +60,27 @@ public class MapResultSet {
 			obj2.setPlus_sign_phone_code(rs.getObject("plus_sign_phone_code"));
 			records.getGeneratedColumns().add(obj2);
 
+			State obj3 = new State();
+			obj3.setName(rs.getString("s.name"));
+			records.getListState().add(obj3);
+
 			java.lang.String name = rs.getString("c.name");
 			long someBigNumber = rs.getLong("c.someBigNumber");
 			int id = rs.getInt("c.id");
-			java.math.BigDecimal evenBigger3 = rs.getBigDecimal("c.evenBigger");
+			java.math.BigDecimal evenBigger4 = rs.getBigDecimal("c.evenBigger");
 			java.math.BigInteger evenBigger = null;
-			if (evenBigger3 != null)
-				evenBigger = evenBigger3.toBigInteger();
+			if (evenBigger4 != null)
+				evenBigger = evenBigger4.toBigInteger();
 			int phoneCode = rs.getInt("c.PhoneCode");
 			float density = 0.0f;
 			double squareMeters = 0.0;
 			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.List<org.acme.domain.State> states = null;
 
-			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
-			records.getListCountry().add(obj3);
+			Country obj4 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
+			records.getListCountry().add(obj4);
 
-			obj1.setCountry(obj3);
+			obj1.setCountry(obj4);
 		}
 
 		return records;
@@ -97,8 +104,9 @@ public class MapResultSet {
 			long someBigNumber = 0L;
 			java.math.BigInteger evenBigger = null;
 			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.List<org.acme.domain.State> states = null;
 
-			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
+			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
 			records.getListCountry().add(obj2);
 
 			obj1.setCountry(obj2);
@@ -152,8 +160,9 @@ public class MapResultSet {
 			long someBigNumber = 0L;
 			java.math.BigInteger evenBigger = null;
 			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.List<org.acme.domain.State> states = null;
 
-			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
 			records.getListCountry().add(obj3);
 
 			obj1.setCountry(obj3);
