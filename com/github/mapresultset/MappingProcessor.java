@@ -839,14 +839,17 @@ public class MappingProcessor extends AbstractProcessor {
 					case "com.github.mapresultset.api.Query":
 						processQuery(elementName, e);
 						break;
+					case "com.github.mapresultset.api.OneToOne":
+						addRelationship(elementName, e, Relationship.Type.OneToOne);
+						break;
 					case "com.github.mapresultset.api.OneToMany":
-						processManyRelationship(elementName, e, Relationship.Type.OneToMany);
+						addRelationship(elementName, e, Relationship.Type.OneToMany);
 						break;
 					case "com.github.mapresultset.api.ManyToOne":
-						processManyRelationship(elementName, e, Relationship.Type.ManyToOne);
+						addRelationship(elementName, e, Relationship.Type.ManyToOne);
 						break;
 					case "com.github.mapresultset.api.ManyToMany":
-						processManyRelationship(elementName, e, Relationship.Type.ManyToMany);
+						addRelationship(elementName, e, Relationship.Type.ManyToMany);
 						break;
 					case "com.github.mapresultset.api.Id":
 						processId(elementName, e);
@@ -866,7 +869,7 @@ public class MappingProcessor extends AbstractProcessor {
 		fields.add(new Field(elementName, e.asType().toString()));
 	}
 
-	private void processManyRelationship(String elementName, Element e, Relationship.Type type) {
+	private void addRelationship(String elementName, Element e, Relationship.Type type) {
 		FullClassName fcn = new FullClassName(e.getEnclosingElement().toString());
 		FullClassName partner = new FullClassName(e.asType().toString());
 		List<Relationship> list = relationships.get(fcn);
