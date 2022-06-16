@@ -23,6 +23,7 @@ public class ListPersonAddressesRecords {
 		return listAddress;
 	}
 
+	
 	private static record PersonId(int id) {}
 	public List<Person> groupedByPerson() {
 		Map<PersonId, Person> map = new HashMap<>();
@@ -46,7 +47,8 @@ public class ListPersonAddressesRecords {
 		}
 		return join;
 	}
-private static record AddressId(int id) {}
+
+	private static record AddressId(int id) {}
 	public List<Address> groupedByAddress() {
 		Map<AddressId, Address> map = new HashMap<>();
 		List<Address> join = new ArrayList<>();

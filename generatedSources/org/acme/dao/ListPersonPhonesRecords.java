@@ -23,6 +23,7 @@ public class ListPersonPhonesRecords {
 		return listPhone;
 	}
 
+	
 	private static record PersonId(int id) {}
 	public List<Person> groupedByPerson() {
 		Map<PersonId, Person> map = new HashMap<>();

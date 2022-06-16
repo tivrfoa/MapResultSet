@@ -586,7 +586,8 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		return """
-			private static record %sId(%s) {}
+			
+				private static record %sId(%s) {}
 				public List<%s> groupedBy%s() {
 					Map<%sId, %s> map = new HashMap<>();
 					List<%s> join = new ArrayList<>();
