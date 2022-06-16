@@ -50,7 +50,7 @@ public class ListPersonCountryPhoneCodeSubQueryRecords {
 				java.math.BigInteger evenBigger = curr.evenBigger();
 				java.util.List<org.acme.domain.Person> listPerson = new ArrayList<>();
 
-						obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
+				obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
 
 				map.put(key, obj);
 				join.add(obj);

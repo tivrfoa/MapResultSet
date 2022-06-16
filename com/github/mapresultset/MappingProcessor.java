@@ -637,11 +637,10 @@ public class MappingProcessor extends AbstractProcessor {
 			if (rel.type() != Relationship.Type.OneToMany && rel.type() != Relationship.Type.ManyToMany) {
 				continue;
 			}
-			System.out.println("######### checking relationship: " + rel);
-			System.out.println("rel partner: " + rel.partner());
 			FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
-			System.out.println("---------- partnerClass = " + partnerClass);
 			QueryClassStructure partnerObj = queryStructures.get(partnerClass);
+			System.out.println("######### checking relationship: " + rel);
+			System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
 			if (partnerObj == null) continue;
 			if (queryClassStructure.type == Type.CLASS) {
 				final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
@@ -652,7 +651,6 @@ public class MappingProcessor extends AbstractProcessor {
 						obj.get%s().add(getList%s().get(i));
 						""".formatted(PartnerFieldName, partnerClass.getClassName());
 			} else {
-				// TODO need to copy all the values and initialize the lists ...
 				createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields);
 				addToPartners += """
 						obj.%s().add(getList%s().get(i));
@@ -674,8 +672,8 @@ public class MappingProcessor extends AbstractProcessor {
 							var key = %s;
 							var obj = map.get(key);
 							if (obj == null) {
-								map.put(key, curr);
 								obj = curr;
+								map.put(key, obj);
 								join.add(obj);
 								%s
 							}

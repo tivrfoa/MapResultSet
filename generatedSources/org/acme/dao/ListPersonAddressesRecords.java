@@ -36,8 +36,8 @@ public class ListPersonAddressesRecords {
 			var key = new PersonId(key0);
 			var obj = map.get(key);
 			if (obj == null) {
-				map.put(key, curr);
 				obj = curr;
+				map.put(key, obj);
 				join.add(obj);
 				obj.setAddresses(new ArrayList<>());
 
@@ -60,8 +60,8 @@ public class ListPersonAddressesRecords {
 			var key = new AddressId(key0);
 			var obj = map.get(key);
 			if (obj == null) {
-				map.put(key, curr);
 				obj = curr;
+				map.put(key, obj);
 				join.add(obj);
 				obj.setListPerson(new ArrayList<>());
 

@@ -41,8 +41,8 @@ public class ListPersonPhonesAndCountryRecords {
 			var key = new PersonId(key0);
 			var obj = map.get(key);
 			if (obj == null) {
-				map.put(key, curr);
 				obj = curr;
+				map.put(key, obj);
 				join.add(obj);
 				obj.setPhones(new ArrayList<>());
 
