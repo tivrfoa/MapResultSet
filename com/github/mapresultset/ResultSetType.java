@@ -27,6 +27,8 @@ public enum ResultSetType {
             case "int" -> INT;
             case "Object" -> OBJECT;
             case "String", "java.lang.String" -> STRING;
+            case "java.sql.Time" -> TIME;
+            case "java.sql.Timestamp" -> TIMESTAMP;
             default -> throw new RuntimeException("Type '" + strType + "' is not supported.");
         };
     }
@@ -41,6 +43,8 @@ public enum ResultSetType {
             case INT -> "getInt";
             case OBJECT -> "getObject";
             case STRING -> "getString";
+            case TIME -> "getTime";
+            case TIMESTAMP -> "getTimestamp";
             default -> throw new RuntimeException("get method not mapped for:" + this);
         };
     }

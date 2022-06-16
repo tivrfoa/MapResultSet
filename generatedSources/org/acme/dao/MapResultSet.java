@@ -128,6 +128,8 @@ public class MapResultSet {
 
 		while (rs.next()) {
 			Person obj1 = new Person();
+			obj1.setBornTimestamp(rs.getTimestamp("p.born_timestamp"));
+			obj1.setWakeUpTime(rs.getTime("p.wakeup_time"));
 			obj1.setName(rs.getString("p.name"));
 			obj1.setId(rs.getInt("p.id"));
 			records.getListPerson().add(obj1);

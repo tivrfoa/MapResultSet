@@ -1,9 +1,9 @@
 drop table if exists notebook;
 drop table if exists company;
 drop table if exists Phone;
+drop table if exists person_address;
 drop table if exists person;
 drop table if exists address;
-drop table if exists person_address;
 drop table if exists country;
 
 create table company (
@@ -44,23 +44,26 @@ create table country (
     phone_code int
 );
 
-create table person (
-    id int primary key,
-    name varchar(30),
-    country_id int not null,
-    foreign key(country_id) references country(id)
-);
-
 insert into country(id, name, phone_code) values
 (1, 'Brazil', 55),
 (2, 'Vietnam', 84),
 (3, 'Switzerland', 41),
 (4, 'Germany', 49);
 
-insert into person (id, name, country_id) values
-(1, 'Leandro', 2),
-(2, 'Guilherme', 4),
-(3, 'Marcos', 1);
+create table person (
+    id int primary key,
+    name varchar(30),
+    born_timestamp timestamp,
+    wakeup_time time,
+    country_id int not null,
+    foreign key(country_id) references country(id)
+);
+
+
+insert into person values
+(1, 'Leandro', current_timestamp, current_time + 3, 2),
+(2, 'Guilherme', '1989-07-03 08:09:10', current_time + 1, 4),
+(3, 'Marcos', '1985-03-04 05:06:07', current_time + 2, 1);
 
 create table Phone (
     id int primary key,
@@ -101,9 +104,9 @@ insert into person_address values
 -------------- QUERIES ------------
 
 select * from notebook;
+select * from person;
 
-select id, name
-from notebook;
+select id, name from notebook;
 
 
 -- List company's notebooks

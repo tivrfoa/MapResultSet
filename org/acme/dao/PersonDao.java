@@ -47,7 +47,8 @@ public class PersonDao {
     
     @Query
     private static final String listPersonPhonesAndCountry = """
-            select p.id, p.name, phone.number, c.name
+            select p.id, p.name, phone.number, c.name,
+                   p.born_timestamp, p.wakeup_time
             from person as p join Phone as phone on
               p.id = phone.person_id join
                  country as c on

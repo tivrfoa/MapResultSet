@@ -1,7 +1,10 @@
 package org.acme.domain;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
+import com.github.mapresultset.api.Column;
 import com.github.mapresultset.api.Id;
 import com.github.mapresultset.api.ManyToMany;
 import com.github.mapresultset.api.ManyToOne;
@@ -13,6 +16,10 @@ public class Person {
 	@Id
 	private int id;
 	private String name;
+	@Column (name = "born_timestamp")
+	private Timestamp bornTimestamp;
+	@Column (name = "wakeup_time")
+	private Time wakeUpTime;
 	@OneToMany
 	private List<Phone> phones;
 	@ManyToOne
@@ -34,6 +41,22 @@ public class Person {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Timestamp getBornTimestamp() {
+		return bornTimestamp;
+	}
+
+	public void setBornTimestamp(Timestamp bornTimestamp) {
+		this.bornTimestamp = bornTimestamp;
+	}
+
+	public Time getWakeUpTime() {
+		return wakeUpTime;
+	}
+
+	public void setWakeUpTime(Time wakeUpTime) {
+		this.wakeUpTime = wakeUpTime;
 	}
 
 	public Country getCountry() {
@@ -62,8 +85,9 @@ public class Person {
 
 	@Override
 	public String toString() {
-		return "Person [addresses=" + addresses + ", country=" + country + ", id=" + id + ", name=" + name + ", phones="
-				+ phones + "]";
+		return "Person [id=" + id + ", name=" + name + ", bornTimestamp=" + bornTimestamp +
+				", wakeUpTime=" + wakeUpTime + ", country=" + country +
+				", addresses=" + addresses + ", phones=" + phones +  "]";
 	}
 
 }
