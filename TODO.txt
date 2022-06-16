@@ -1,7 +1,5 @@
 # TODO
 
-
-|| Think about ManyToMany
 || Handle createWith and addWith for OneToMany and ManyToMany
 
 || Test array column. Does Mysql support it?
@@ -12,7 +10,6 @@
 || Change generated source location?
 |x| Handle table name;
 |x| Handle Java Record
-|| Handle query paramater oneToMany = true, one = SomeClass;
 || Make it a Maven project;
 || Use spotless to format code;
 || Use JUnit

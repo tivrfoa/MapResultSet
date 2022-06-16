@@ -6,7 +6,7 @@ import com.github.mapresultset.api.Id;
 import com.github.mapresultset.api.ManyToMany;
 import com.github.mapresultset.api.Table;
 
-@Table
+@Table (name = "address")
 public class Address {
 	@Id
 	private int id;
@@ -30,6 +30,11 @@ public class Address {
 	}
 	public void setListPerson(List<Person> listPerson) {
 		this.listPerson = listPerson;
+	}
+	@Override
+	public String toString() {
+		var names = listPerson == null ? List.of() : listPerson.stream().map(p -> p.getName()).toList();
+		return "Address [id=" + id + ", street=" + street + ", listPerson names=" + names + "]";
 	}
 
 }

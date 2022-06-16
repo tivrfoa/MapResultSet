@@ -52,6 +52,14 @@ public class Person {
 		this.phones = phones;
 	}
 
+	public List<Address> getAddresses() {
+		return addresses;
+	}
+
+	public void setAddresses(List<Address> addresses) {
+		this.addresses = addresses;
+	}
+
 	@Override
 	public String toString() {
 		return "Person [addresses=" + addresses + ", country=" + country + ", id=" + id + ", name=" + name + ", phones="

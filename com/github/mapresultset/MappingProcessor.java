@@ -154,7 +154,7 @@ public class MappingProcessor extends AbstractProcessor {
 					isTemporaryTable = p.getTables().get(columnRecord.table()).isTemporaryTable();
 				}
 				if (columnRecord.isGeneratedValue() || isTemporaryTable) {
-					System.out.println("---> It is a generated column");
+					// Add to generated columns
 					String alias = columnRecord.alias();
 					if (alias == null) {
 						if (!isTemporaryTable) {
@@ -171,9 +171,7 @@ public class MappingProcessor extends AbstractProcessor {
 					// TODO let user specify a type
 					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
 				} else {
-					System.out.println("---> It's a real column from a table");
 					String table = columnRecord.table();
-					System.out.println("---> table = " + table);
 					if (table == null) {
 						// if it's not a generated column and table is null
 						// then it means the from clause must have a single table
@@ -192,8 +190,8 @@ public class MappingProcessor extends AbstractProcessor {
 						     	"so no value from this table can be in the 'SELECT' clause.\n" +
 								"You might want to annotate it with: @Table (name = \"" + table + "\")");
 					}
+					System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassNameStr);
 					var fullClassName = new FullClassName(fullClassNameStr);
-					System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassName);
 					if (queryImports.add(fullClassNameStr)) {
 						queryImportsStr += "import " + fullClassName.name() + ";\n";
 						String classTableName = splitPackageClass(fullClassNameStr)[1];
@@ -667,7 +665,7 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private String uppercaseFirstLetter(final String str) {
-		System.out.println("---> uppercaseFirstLetter. param = " + str);
+		// System.out.println("---> uppercaseFirstLetter. param = " + str);
 		String Up = str.substring(0, 1).toUpperCase();
 		if (str.length() > 1) {
 			Up += str.substring(1);
@@ -718,6 +716,9 @@ public class MappingProcessor extends AbstractProcessor {
 						break;
 					case "com.github.mapresultset.api.ManyToOne":
 						processManyRelationship(elementName, e, Relationship.Type.ManyToOne);
+						break;
+					case "com.github.mapresultset.api.ManyToMany":
+						processManyRelationship(elementName, e, Relationship.Type.ManyToMany);
 						break;
 					case "com.github.mapresultset.api.Id":
 						processId(elementName, e);

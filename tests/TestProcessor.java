@@ -35,7 +35,7 @@ public class TestProcessor {
 		System.out.println(PersonDao.listPersonCountry());
 		System.out.println(PersonDao.listPersonPhones());
 		System.out.println(PersonDao.listPersonPhonesAndCountry());
-		System.out.println(PersonDao.listPersonAdresses());
+		System.out.println(PersonDao.listPersonAddresses());
 	}
 
 	@Table(name = "phone")

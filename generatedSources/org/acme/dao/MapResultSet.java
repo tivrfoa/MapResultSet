@@ -7,6 +7,7 @@ import org.acme.domain.Notebook;
 import org.acme.domain.Company;
 import org.acme.domain.Country;
 import org.acme.domain.Phone;
+import org.acme.domain.Address;
 
 
 public class MapResultSet {
@@ -147,6 +148,26 @@ public class MapResultSet {
 			records.getListCountry().add(obj3);
 
 			obj1.setCountry(obj3);
+		}
+
+		return records;
+
+	}
+
+
+	public static ListPersonAddressesRecords listPersonAddresses(ResultSet rs) throws SQLException {
+		ListPersonAddressesRecords records = new ListPersonAddressesRecords();
+
+		while (rs.next()) {
+			Person obj1 = new Person();
+			obj1.setName(rs.getString("p.name"));
+			obj1.setId(rs.getInt("p.id"));
+			records.getListPerson().add(obj1);
+
+			Address obj2 = new Address();
+			obj2.setStreet(rs.getString("a.street"));
+			records.getListAddress().add(obj2);
+
 		}
 
 		return records;

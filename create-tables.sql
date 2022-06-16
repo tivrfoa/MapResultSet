@@ -3,6 +3,7 @@ drop table if exists company;
 drop table if exists Phone;
 drop table if exists person;
 drop table if exists address;
+drop table if exists person_address;
 drop table if exists country;
 
 create table company (
@@ -73,6 +74,28 @@ insert into Phone values
 (2, 1112, 1),
 (3, 2222, 2),
 (4, 3333, 3);
+
+create table address (
+    id int primary key,
+    street varchar(30)
+);
+
+insert into address values
+(1, 'Halong Bay'),
+(2, 'Xie Xie'),
+(3, 'Arigato');
+
+create table person_address (
+    person_id int,
+    address_id int,
+    foreign key (person_id) references person(id),
+    foreign key (address_id) references address(id)
+);
+
+insert into person_address values
+(1, 1),
+(2, 2),
+(3, 3);
 
 
 -------------- QUERIES ------------

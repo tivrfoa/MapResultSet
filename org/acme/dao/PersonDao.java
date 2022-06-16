@@ -55,17 +55,17 @@ public class PersonDao {
             """;
     
     @Query
-    private static final String listPersonAdresses = """
+    private static final String listPersonAddresses = """
             select p.id, p.name, a.street
             from person as p join person_address as pa on
               p.id = pa.person_id join address as a on
               a.id = pa.address_id
             """;
             
-    public static List<Person> listPersonAdresses() {
+    public static List<Person> listPersonAddresses() {
         try {
-            var list = MapResultSet.listPersonAdresses(executeQuery(listPersonAdresses));
-            System.out.println(list.groupedByAdress());
+            var list = MapResultSet.listPersonAddresses(executeQuery(listPersonAddresses));
+            System.out.println(list.groupedByAddress());
             return list.groupedByPerson();
         } catch (Exception ex) {
             ex.printStackTrace();
