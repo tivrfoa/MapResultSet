@@ -27,4 +27,27 @@ public class ListPersonCountryPhoneCodeSubQueryRecords {
 		return generatedColumns;
 	}
 
+	
+	private static record CountryId(int id) {}
+	public List<Country> groupedByCountry() {
+		Map<CountryId, Country> map = new HashMap<>();
+		List<Country> join = new ArrayList<>();
+		int len = getListCountry().size();
+		for (int i = 0; i < len; i++) {
+			var curr = getListCountry().get(i);
+			var key0 = curr.id();
+
+			var key = new CountryId(key0);
+			var obj = map.get(key);
+			if (obj == null) {
+				map.put(key, curr);
+				obj = curr;
+				join.add(obj);
+				
+			}
+			obj.listPerson().add(getListPerson().get(i));
+
+		}
+		return join;
 	}
+}

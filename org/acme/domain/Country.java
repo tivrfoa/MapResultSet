@@ -11,7 +11,7 @@ import com.github.mapresultset.api.Table;
 
 @Table (name = "country")
 // TODO test @Id with record
-public record Country(int id, float density, String name,
+public record Country(@Id int id, float density, String name,
         double squareMeters, @Column (name = "phone_code") int phoneCode,
         long someBigNumber, BigInteger evenBigger,
         // It doesn't make sense for Country to have a list of Person ...

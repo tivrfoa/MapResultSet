@@ -563,7 +563,8 @@ public class MappingProcessor extends AbstractProcessor {
 	private String createManyRelationshipGrupedByMethod(FullClassName fcn, List<Relationship> ownerRelationships,
 			Map<FullClassName, QueryClassStructure> queryStructures) {
 		System.out.println("owner relationships: " + ownerRelationships);
-		String ownerClass = fcn.getClassName();
+		final String ownerClass = fcn.getClassName();
+		final QueryClassStructure queryClassStructure = queryStructures.get(fcn);
 		// TODO can't group by if there's no @Id for this class ...
 		// also one of the columns in the query must be the id
 		
@@ -575,7 +576,7 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 		// System.out.println("-------------- PRIMARY KEYS ---------------");
 		// System.out.println(keyFields);
-		var queryFields = queryStructures.get(fcn).fields;
+		var queryFields = queryClassStructure.fields;
 		for (var keyField : keyFields) {
 			if (!queryFields.containsKey(new ColumnName(keyField.name()))) {
 				System.out.println("WARNING!!! Can't create groupedBy for class " + ownerClass +
@@ -589,10 +590,16 @@ public class MappingProcessor extends AbstractProcessor {
 		String newKeyRecord = "new " + ownerClass + "Id(";
 		for (var f : keyFields) {
 			params += f.type() + " " + f.name() + ", ";
-			String getMethod = "get" + uppercaseFirstLetter(f.name());
-			getKeys += """
-					var key%s = curr.%s();
-					""".formatted(keyCounter, getMethod);
+			if (queryClassStructure.type == Type.CLASS) {
+				String getMethod = "get" + uppercaseFirstLetter(f.name());
+				getKeys += """
+						var key%s = curr.%s();
+						""".formatted(keyCounter, getMethod);
+			} else {
+				getKeys += """
+						var key%s = curr.%s();
+						""".formatted(keyCounter, f.name());
+			}
 			newKeyRecord += "key" + keyCounter + ", ";
 		}
 		params = params.substring(0, params.length() - 2);
@@ -611,13 +618,19 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println("---------- partnerClass = " + partnerClass);
 			QueryClassStructure partnerObj = queryStructures.get(partnerClass);
 			if (partnerObj == null) continue;
-			final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
-			createPartners += """
-					obj.set%s(new ArrayList<>());
-					""".formatted(PartnerFieldName);
-			addToPartners += """
-					obj.get%s().add(getList%s().get(i));
-					""".formatted(PartnerFieldName, partnerClass.getClassName());
+			if (queryClassStructure.type == Type.CLASS) {
+				final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
+				createPartners += """
+						obj.set%s(new ArrayList<>());
+						""".formatted(PartnerFieldName);
+				addToPartners += """
+						obj.get%s().add(getList%s().get(i));
+						""".formatted(PartnerFieldName, partnerClass.getClassName());
+			} else {
+				addToPartners += """
+						obj.%s().add(getList%s().get(i));
+						""".formatted(rel.partnerFieldName().name(), partnerClass.getClassName());
+			}
 		}
 
 		return """
