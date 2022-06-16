@@ -341,21 +341,7 @@ public class MappingProcessor extends AbstractProcessor {
 				}
 			}
 			fieldsInQuery.add(fieldName);
-			var resultSetType = ResultSetType.fromString(field.type());
-			if (resultSetType == ResultSetType.CHAR) {
-				String fieldString = fieldName + "String";
-				fieldsInitialization += """
-							%s %s = rs.getString("%s");
-							var %s = ' ';
-							if (%s != null && %s.length() >= 1)
-								%s = %s.charAt(0);
-				""".formatted(field.type(), fieldString, columnAlias, fieldName, fieldString, fieldString,
-						fieldName, fieldString);
-			} else {
-				fieldsInitialization += """
-							%s %s = rs.%s("%s");
-				""".formatted(field.type(), fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
-			}
+			fieldsInitialization += getResultSetForFieldTypeForRecord(field.type(), columnAlias, fieldName, objCounter);
 		}
 		
 		String constructorParameters = "";
@@ -429,19 +415,7 @@ public class MappingProcessor extends AbstractProcessor {
 					}
 
 					String fieldSetMethod = getFieldSetMethod(fieldName, field);
-					var resultSetType = ResultSetType.fromString(field.type());
-					if (resultSetType == ResultSetType.CHAR) {
-						setFields += """
-									var str = rs.getString("%s");
-									if (str != null && str.length() >= 1)
-										obj%s.%s(str.charAt(0));
-						""".formatted(columnAlias, objCounter, fieldSetMethod);
-					} else {
-						String resultSetGetMethod = resultSetType.getResultSetGetMethod();
-						setFields += """
-									obj%s.%s(rs.%s("%s"));
-						""".formatted(objCounter, fieldSetMethod, resultSetGetMethod, columnAlias);
-					}
+					setFields += getResultSetFieldBasedOnType(field.type(), columnAlias, objCounter, fieldSetMethod);
 				}
 				methodBody += setFields;
 			}
@@ -526,6 +500,57 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		return ret;
+	}
+
+	private String getResultSetFieldBasedOnType(String type, String columnAlias, int objCounter,
+			String fieldSetMethod) {
+		var resultSetType = ResultSetType.fromString(type);
+		switch (resultSetType) {
+			case CHAR:
+				return """
+							var str = rs.getString("%s");
+							if (str != null && str.length() >= 1)
+								obj%s.%s(str.charAt(0));
+				""".formatted(columnAlias, objCounter, fieldSetMethod);
+			case BIG_INTEGER:
+				return """
+							java.math.BigDecimal dec = rs.getBigDecimal("%s");
+							if (dec != null)
+								obj%s.%s(dec.toBigInteger());
+				""".formatted(columnAlias, objCounter, fieldSetMethod);
+			default:
+				String resultSetGetMethod = resultSetType.getResultSetGetMethod();
+				return """
+							obj%s.%s(rs.%s("%s"));
+				""".formatted(objCounter, fieldSetMethod, resultSetGetMethod, columnAlias);
+		}
+	}
+
+	private String getResultSetForFieldTypeForRecord(String type, String columnAlias, String fieldName, int objCounter) {
+		var resultSetType = ResultSetType.fromString(type);
+		final String tmpField = fieldName + objCounter;
+		switch (resultSetType) {
+			case CHAR:
+				String fieldString = fieldName + "String";
+				return """
+							%s %s = rs.getString("%s");
+							var %s = ' ';
+							if (%s != null && %s.length() >= 1)
+							%s = %s.charAt(0);
+				""".formatted(type, fieldString, columnAlias, fieldName, fieldString, fieldString,
+						fieldName, fieldString);
+			case BIG_INTEGER:
+				return """
+							java.math.BigDecimal %s = rs.getBigDecimal("%s");
+							java.math.BigInteger %s = null;
+							if (%s != null)
+								%s = %s.toBigInteger();
+				""".formatted(tmpField, columnAlias, fieldName, tmpField, fieldName, tmpField);
+			default:
+				return """
+							%s %s = rs.%s("%s");
+				""".formatted(type, fieldName, resultSetType.getResultSetGetMethod(), columnAlias);
+		}
 	}
 
 	private FullClassName getClassInGenericDeclaration(FullClassName genericDeclaration) {

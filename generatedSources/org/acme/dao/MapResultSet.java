@@ -31,9 +31,10 @@ public class MapResultSet {
 			float density = 0.0f;
 			double squareMeters = 0.0;
 			long someBigNumber = 0L;
+			java.math.BigInteger evenBigger = null;
 			java.util.List<org.acme.domain.Person> listPerson = null;
 
-			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
 			records.getListCountry().add(obj3);
 
 			obj1.setCountry(obj3);
@@ -58,14 +59,18 @@ public class MapResultSet {
 			records.getGeneratedColumns().add(obj2);
 
 			java.lang.String name = rs.getString("c.name");
+			long someBigNumber = rs.getLong("c.someBigNumber");
 			int id = rs.getInt("c.id");
+			java.math.BigDecimal evenBigger3 = rs.getBigDecimal("c.evenBigger");
+			java.math.BigInteger evenBigger = null;
+			if (evenBigger3 != null)
+				evenBigger = evenBigger3.toBigInteger();
 			int phoneCode = rs.getInt("c.PhoneCode");
 			float density = 0.0f;
 			double squareMeters = 0.0;
-			long someBigNumber = 0L;
 			java.util.List<org.acme.domain.Person> listPerson = null;
 
-			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
 			records.getListCountry().add(obj3);
 
 			obj1.setCountry(obj3);
@@ -90,9 +95,10 @@ public class MapResultSet {
 			float density = 0.0f;
 			double squareMeters = 0.0;
 			long someBigNumber = 0L;
+			java.math.BigInteger evenBigger = null;
 			java.util.List<org.acme.domain.Person> listPerson = null;
 
-			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
 			records.getListCountry().add(obj2);
 
 			obj1.setCountry(obj2);
@@ -144,9 +150,10 @@ public class MapResultSet {
 			double squareMeters = 0.0;
 			int phoneCode = 0;
 			long someBigNumber = 0L;
+			java.math.BigInteger evenBigger = null;
 			java.util.List<org.acme.domain.Person> listPerson = null;
 
-			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, listPerson);
+			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
 			records.getListCountry().add(obj3);
 
 			obj1.setCountry(obj3);

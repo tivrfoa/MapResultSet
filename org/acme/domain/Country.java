@@ -1,5 +1,6 @@
 package org.acme.domain;
 
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import com.github.mapresultset.api.Table;
 // TODO test @Id with record
 public record Country(int id, float density, String name,
         double squareMeters, @Column (name = "phone_code") int phoneCode,
-        long someBigNumber,
+        long someBigNumber, BigInteger evenBigger,
         // It doesn't make sense for Country to have a list of Person ...
         // It's just for testing.
         @OneToMany (createWith = "newLinkedList", addWith = "add") List<Person> listPerson) {

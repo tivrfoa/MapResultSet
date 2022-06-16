@@ -25,7 +25,8 @@ public class PersonDao {
 
     @Query
     private static final String listPersonCountry = """
-            select p.id, p.name, c.id, c.name, c.phone_code as PhoneCode,
+            select p.id, p.name, c.id, c.name, c.someBigNumber, c.evenBigger,
+                   c.phone_code as PhoneCode,
                    concat('+', phone_code) as plus_sign_phone_code
             from person as p join country as c on
               p.country_id = c.id

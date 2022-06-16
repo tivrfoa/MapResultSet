@@ -41,14 +41,16 @@ values
 create table country (
     id int primary key,
     name varchar(30),
-    phone_code int
+    phone_code int,
+    someBigNumber BigInt,
+    evenBigger decimal(38, 0)
 );
 
-insert into country(id, name, phone_code) values
-(1, 'Brazil', 55),
-(2, 'Vietnam', 84),
-(3, 'Switzerland', 41),
-(4, 'Germany', 49);
+insert into country values
+(1, 'Brazil', 55, 11111111111112, 1111111111111211111111111112),
+(2, 'Vietnam', 84, 11111111111113, 1111111111111311111111111113),
+(3, 'Switzerland', 41, 11111111111114, 1111111111111411111111111114),
+(4, 'Germany', 49, 11111111111115, 1111111111111511111111111115);
 
 create table person (
     id int primary key,
@@ -105,6 +107,7 @@ insert into person_address values
 
 select * from notebook;
 select * from person;
+select * from country;
 
 select id, name from notebook;
 
