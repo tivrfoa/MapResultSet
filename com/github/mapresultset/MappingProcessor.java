@@ -362,7 +362,8 @@ public class MappingProcessor extends AbstractProcessor {
 		""".formatted(fieldsInitialization, recordName, objCounter, recordName, constructorParameters);
 	}
 
-	private String copyRecordObjectInitializingLists(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields) {
+	private static String copyRecordObjectInitializingLists(FullClassName fullClassName, String recordName,
+			Map<ColumnName, ColumnField> fields, Map<FullClassName, JavaStructure> javaStructures) {
 		final RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
 		String fieldsInitialization = "";
 		
@@ -390,7 +391,7 @@ public class MappingProcessor extends AbstractProcessor {
 		""".formatted(fieldsInitialization, recordName, constructorParameters);
 	}
 
-	private String getDefaultValueForType(String fieldType) {
+	public static String getDefaultValueForType(String fieldType) {
 		return switch (fieldType) {
 			case "boolean" -> "false";
 			case "char" -> "' '";
@@ -578,7 +579,7 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 	}
 
-	private FullClassName getClassInGenericDeclaration(FullClassName genericDeclaration) {
+	private static FullClassName getClassInGenericDeclaration(FullClassName genericDeclaration) {
 		String str = genericDeclaration.name();
 		int lessSign = str.indexOf("<");
 		int greaterSign = str.indexOf(">");
@@ -609,34 +610,8 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		var newKeyRecord = new NewKeyRecord(ownerClass, queryClassStructure, keyFields);
-		
-		String createPartners = "";
-		String addToPartners = "";
-
-		for (var rel : ownerRelationships) {
-			if (rel.type() != Relationship.Type.OneToMany && rel.type() != Relationship.Type.ManyToMany) {
-				continue;
-			}
-			FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
-			QueryClassStructure partnerObj = queryStructures.get(partnerClass);
-			System.out.println("######### checking relationship: " + rel);
-			System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
-			if (partnerObj == null) continue;
-			if (queryClassStructure.type == Type.CLASS) {
-				final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
-				createPartners += """
-						obj.set%s(new ArrayList<>());
-						""".formatted(PartnerFieldName);
-				addToPartners += """
-						obj.get%s().add(getList%s().get(i));
-						""".formatted(PartnerFieldName, partnerClass.getClassName());
-			} else {
-				createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields);
-				addToPartners += """
-						obj.%s().add(getList%s().get(i));
-						""".formatted(rel.partnerFieldName().name(), partnerClass.getClassName());
-			}
-		}
+		var collectionCreateAndAddMethods = new CollectionCreateAndAddMethods(fcn, ownerClass,
+				ownerRelationships, queryClassStructure, queryStructures, javaStructures);
 
 		if (queryClassStructure.type == Type.CLASS) {
 			return """
@@ -669,8 +644,8 @@ public class MappingProcessor extends AbstractProcessor {
 					ownerClass,
 					newKeyRecord.getKeys,
 					newKeyRecord.constructor,
-					createPartners,
-					addToPartners);
+					collectionCreateAndAddMethods.createPartners,
+					collectionCreateAndAddMethods.addToPartners);
 		} else {
 			return """
 
@@ -702,8 +677,8 @@ public class MappingProcessor extends AbstractProcessor {
 					ownerClass,
 					newKeyRecord.getKeys,
 					newKeyRecord.constructor,
-					createPartners,
-					addToPartners);
+					collectionCreateAndAddMethods.createPartners,
+					collectionCreateAndAddMethods.addToPartners);
 		}
 	}
 
@@ -732,6 +707,40 @@ public class MappingProcessor extends AbstractProcessor {
 			}
 			params = params.substring(0, params.length() - 2);
 			constructor = newKeyRecord.substring(0, newKeyRecord.length() - 2) + ")";
+		}
+	}
+
+	private static class CollectionCreateAndAddMethods {
+		String createPartners = "";
+		String addToPartners = "";
+		
+		public CollectionCreateAndAddMethods(FullClassName fcn, String ownerClass,
+				List<Relationship> ownerRelationships, QueryClassStructure queryClassStructure,
+				Map<FullClassName, QueryClassStructure> queryStructures, Map<FullClassName, JavaStructure> javaStructures) {
+			for (var rel : ownerRelationships) {
+				if (rel.type() != Relationship.Type.OneToMany && rel.type() != Relationship.Type.ManyToMany) {
+					continue;
+				}
+				FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
+				QueryClassStructure partnerObj = queryStructures.get(partnerClass);
+				System.out.println("######### checking relationship: " + rel);
+				System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
+				if (partnerObj == null) continue;
+				if (queryClassStructure.type == Type.CLASS) {
+					final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
+					createPartners += """
+							obj.set%s(new ArrayList<>());
+							""".formatted(PartnerFieldName);
+					addToPartners += """
+							obj.get%s().add(getList%s().get(i));
+							""".formatted(PartnerFieldName, partnerClass.getClassName());
+				} else {
+					createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields, javaStructures);
+					addToPartners += """
+							obj.%s().add(getList%s().get(i));
+							""".formatted(rel.partnerFieldName().name(), partnerClass.getClassName());
+				}
+			}
 		}
 	}
 
