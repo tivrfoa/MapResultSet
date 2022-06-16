@@ -496,15 +496,12 @@ public class MappingProcessor extends AbstractProcessor {
 		
 		// If there's a OneToMany or ManyToMany relationship, then create
 		// a groupedBy method, eg: groupedByPerson
-		System.out.println("--------------- CHECKING MANY RELATIONSHIPS ----------------");
 		for (var queryStructure : queryStructures.entrySet()) {
 			FullClassName fcn = queryStructure.getKey();
 			var ownerRelationships = relationships.get(fcn);
 			if (ownerRelationships == null) {
-				System.out.println(fcn + " does not have any relationship mapped in it's class.");
+				System.out.println(fcn + " does not have any relationship mapped in its class.");
 				continue;
-			} else {
-				System.out.println(fcn + " relationships are: " + ownerRelationships);
 			}
 
 			for (var rel : ownerRelationships) {
@@ -588,7 +585,6 @@ public class MappingProcessor extends AbstractProcessor {
 
 	private String createManyRelationshipGrupedByMethod(FullClassName fcn, List<Relationship> ownerRelationships,
 			Map<FullClassName, QueryClassStructure> queryStructures) {
-		System.out.println("owner relationships: " + ownerRelationships);
 		final String ownerClass = fcn.getClassName();
 		final QueryClassStructure queryClassStructure = queryStructures.get(fcn);
 		
@@ -602,7 +598,18 @@ public class MappingProcessor extends AbstractProcessor {
 		// System.out.println(keyFields);
 		var queryFields = queryClassStructure.fields;
 		for (var keyField : keyFields) {
-			if (!queryFields.containsKey(new ColumnName(keyField.name()))) {
+			var columnName = new ColumnName(keyField.name());
+			var mappedColumns = classMappedColumns.get(fcn);
+			if (mappedColumns != null) {
+				FieldName fieldName = new FieldName(keyField.name());
+				for (var es : mappedColumns.entrySet()) {
+					if (es.getValue().equals(fieldName)) {
+						columnName = es.getKey();
+						break;
+					}
+				}
+			}
+			if (!queryFields.containsKey(columnName)) {
 				System.out.println("WARNING!!! Can't create groupedBy for class " + ownerClass +
 						" because query does not contain key: " + keyField.name());
 				return "";

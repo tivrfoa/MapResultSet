@@ -6,6 +6,9 @@ drop table if exists person;
 drop table if exists address;
 drop table if exists state;
 drop table if exists country;
+drop table if exists book_bookstore;
+drop table if exists book;
+drop table if exists bookstore;
 
 create table company (
     id int primary key,
@@ -116,6 +119,40 @@ insert into person_address values
 (2, 2),
 (3, 3);
 
+-- bad table. It's just to test composite primary key ...
+create table book (
+    author_name varchar(30),
+    name varchar(30),
+    primary key(author_name, name)
+);
+
+insert into book values
+('George R.R. Martin', 'A Game of Thrones'),
+('Dan Brown', 'Angels & Demons');
+
+create table bookstore (
+    id int primary key auto_increment,
+    name varchar(30)
+);
+
+insert into bookstore (name) values
+('Bookstore 1'),
+('Bookstore 2'),
+('Bookstore 3');
+
+create table book_bookstore (
+    author_name varchar(30),
+    book_name varchar(30),
+    bookstore_id int,
+    primary key(author_name, book_name, bookstore_id)
+);
+
+insert into book_bookstore values
+('George R.R. Martin', 'A Game of Thrones', 1),
+('George R.R. Martin', 'A Game of Thrones', 2),
+('Dan Brown', 'Angels & Demons', 1),
+('Dan Brown', 'Angels & Demons', 2),
+('Dan Brown', 'Angels & Demons', 3);
 
 -------------- QUERIES ------------
 

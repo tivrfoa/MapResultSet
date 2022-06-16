@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import org.acme.domain.Person;
 import org.acme.domain.Notebook;
 import org.acme.domain.Company;
+import org.acme.domain.Book;
+import org.acme.domain.Bookstore;
 import org.acme.domain.State;
 import org.acme.domain.Country;
 import org.acme.domain.Phone;
@@ -255,6 +257,45 @@ public class MapResultSet {
 			SumValuesGroupedByCompanyGeneratedColumns obj2 = new SumValuesGroupedByCompanyGeneratedColumns();
 			obj2.setSum(rs.getObject("sum"));
 			records.getGeneratedColumns().add(obj2);
+
+		}
+
+		return records;
+
+	}
+
+
+	public static ListBooksRecords listBooks(ResultSet rs) throws SQLException {
+		ListBooksRecords records = new ListBooksRecords();
+
+		while (rs.next()) {
+			Book obj1 = new Book();
+			obj1.setAuthorName(rs.getString("b.author_name"));
+			obj1.setName(rs.getString("b.name"));
+			records.getListBook().add(obj1);
+
+			Bookstore obj2 = new Bookstore();
+			obj2.setName(rs.getString("bs.name"));
+			records.getListBookstore().add(obj2);
+
+		}
+
+		return records;
+
+	}
+
+
+	public static ListBooksAuthorNameOnlyRecords listBooksAuthorNameOnly(ResultSet rs) throws SQLException {
+		ListBooksAuthorNameOnlyRecords records = new ListBooksAuthorNameOnlyRecords();
+
+		while (rs.next()) {
+			Book obj1 = new Book();
+			obj1.setAuthorName(rs.getString("b.author_name"));
+			records.getListBook().add(obj1);
+
+			Bookstore obj2 = new Bookstore();
+			obj2.setName(rs.getString("bs.name"));
+			records.getListBookstore().add(obj2);
 
 		}
 

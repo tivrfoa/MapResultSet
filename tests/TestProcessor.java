@@ -3,6 +3,7 @@ package tests;
 import com.github.mapresultset.api.Query;
 import com.github.mapresultset.api.Table;
 
+import org.acme.dao.BookDao;
 import org.acme.dao.NotebookDao;
 import org.acme.dao.PersonDao;
 
@@ -42,6 +43,10 @@ public class TestProcessor {
 		System.out.println(PersonDao.listPersonPhonesAndCountry());
 		System.out.println("\n--------- listPersonAddresses ----------\n");
 		System.out.println(PersonDao.listPersonAddresses());
+		System.out.println("\n--------- listBooks ----------\n");
+		System.out.println(BookDao.listBooks());
+		System.out.println("\n--------- listBooksAuthorNameOnly ----------\n");
+		System.out.println(BookDao.listBooksAuthorNameOnly());
 	}
 
 	@Table(name = "phone")
