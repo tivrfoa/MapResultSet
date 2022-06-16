@@ -55,8 +55,26 @@ public class PersonDao {
             """;
     
     @Query
-    private static final String listPersonAddresses = """
+    private static final String listPersonAddresses_with_no_address_id = """
             select p.id, p.name, a.street
+            from person as p join person_address as pa on
+              p.id = pa.person_id join address as a on
+              a.id = pa.address_id
+            """;
+            
+    public static List<Person> listPersonAddressesWithNoAddressId() {
+        try {
+            var list = MapResultSet.listPersonAddresses(executeQuery(listPersonAddresses_with_no_address_id));
+            return list.groupedByPerson();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+    
+    @Query
+    private static final String listPersonAddresses = """
+            select p.id, p.name, a.id, a.street
             from person as p join person_address as pa on
               p.id = pa.person_id join address as a on
               a.id = pa.address_id

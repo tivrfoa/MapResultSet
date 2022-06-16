@@ -59,7 +59,7 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			processLastRound(annotations, roundEnvironment);
-			System.out.println("\n---------- Query Grouped By Methods -----------\n" + queryGroupedByMethodsMap);
+			// System.out.println("\n---------- Query Grouped By Methods -----------\n" + queryGroupedByMethodsMap);
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -148,7 +148,7 @@ public class MappingProcessor extends AbstractProcessor {
 			// System.out.println(p);
 
 			for (ColumnRecord columnRecord : p.getColumns()) {
-				System.out.println("---> Handling column: " + columnRecord);
+				// System.out.println("---> Handling column: " + columnRecord);
 				boolean isTemporaryTable = false;
 				if (columnRecord.table() != null) {
 					isTemporaryTable = p.getTables().get(columnRecord.table()).isTemporaryTable();
@@ -190,7 +190,7 @@ public class MappingProcessor extends AbstractProcessor {
 						     	"so no value from this table can be in the 'SELECT' clause.\n" +
 								"You might want to annotate it with: @Table (name = \"" + table + "\")");
 					}
-					System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassNameStr);
+					// System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassNameStr);
 					var fullClassName = new FullClassName(fullClassNameStr);
 					if (queryImports.add(fullClassNameStr)) {
 						queryImportsStr += "import " + fullClassName.name() + ";\n";
@@ -541,12 +541,22 @@ public class MappingProcessor extends AbstractProcessor {
 		String ownerClass = fcn.getClassName();
 		// TODO can't group by if there's no @Id for this class ...
 		// also one of the columns in the query must be the id
-		System.out.println("-------------- PRIMARY KEYS ---------------");
+		
 		List<Field> keyFields = primaryKeys.get(fcn);
 		if (keyFields == null) {
 			System.err.println("WARNING!!! " + ownerClass + " does not have a field annotated with @Id");
 			System.err.println("WARNING!!! Can't create groupedBy method without knowing the @Id");
 			return "";
+		}
+		// System.out.println("-------------- PRIMARY KEYS ---------------");
+		// System.out.println(keyFields);
+		var queryFields = queryStructures.get(fcn).fields;
+		for (var keyField : keyFields) {
+			if (!queryFields.containsKey(new ColumnName(keyField.name()))) {
+				System.out.println("WARNING!!! Can't create groupedBy for class " + ownerClass +
+						" because query does not contain key: " + keyField.name());
+				return "";
+			}
 		}
 		String params = "";
 		String getKeys = "";
@@ -586,7 +596,7 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		return """
-			
+
 				private static record %sId(%s) {}
 				public List<%s> groupedBy%s() {
 					Map<%sId, %s> map = new HashMap<>();

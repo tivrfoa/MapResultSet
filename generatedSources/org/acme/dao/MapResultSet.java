@@ -155,6 +155,26 @@ public class MapResultSet {
 	}
 
 
+	public static ListPersonAddresses_with_no_address_idRecords listPersonAddresses_with_no_address_id(ResultSet rs) throws SQLException {
+		ListPersonAddresses_with_no_address_idRecords records = new ListPersonAddresses_with_no_address_idRecords();
+
+		while (rs.next()) {
+			Person obj1 = new Person();
+			obj1.setName(rs.getString("p.name"));
+			obj1.setId(rs.getInt("p.id"));
+			records.getListPerson().add(obj1);
+
+			Address obj2 = new Address();
+			obj2.setStreet(rs.getString("a.street"));
+			records.getListAddress().add(obj2);
+
+		}
+
+		return records;
+
+	}
+
+
 	public static ListPersonAddressesRecords listPersonAddresses(ResultSet rs) throws SQLException {
 		ListPersonAddressesRecords records = new ListPersonAddressesRecords();
 
@@ -166,6 +186,7 @@ public class MapResultSet {
 
 			Address obj2 = new Address();
 			obj2.setStreet(rs.getString("a.street"));
+			obj2.setId(rs.getInt("a.id"));
 			records.getListAddress().add(obj2);
 
 		}

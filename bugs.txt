@@ -4,3 +4,4 @@
 || 
 || need to check if the query contains the primary keys in order to
    create the groupedByMethod
+   || check if column has a different name from the field
