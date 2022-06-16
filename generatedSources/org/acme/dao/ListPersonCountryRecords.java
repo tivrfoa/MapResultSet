@@ -40,10 +40,20 @@ public class ListPersonCountryRecords {
 			var key = new CountryId(key0);
 			var obj = map.get(key);
 			if (obj == null) {
-				map.put(key, curr);
-				obj = curr;
+				// copying record and initilializing lists
+								int id = curr.id();
+				float density = curr.density();
+				java.lang.String name = curr.name();
+				double squareMeters = curr.squareMeters();
+				int phoneCode = curr.phoneCode();
+				long someBigNumber = curr.someBigNumber();
+				java.math.BigInteger evenBigger = curr.evenBigger();
+				java.util.List<org.acme.domain.Person> listPerson = new ArrayList<>();
+
+						obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson);
+
+				map.put(key, obj);
 				join.add(obj);
-				
 			}
 			obj.listPerson().add(getListPerson().get(i));
 

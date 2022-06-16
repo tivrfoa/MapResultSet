@@ -30,11 +30,17 @@ public class TestProcessor {
 	// List<Phone> phones = MapResultSet.listPhones(rs);
 
 	public static void main(String[] args) {
+		System.out.println("\n--------- listNotebooks ----------\n");
 		System.out.println(NotebookDao.listNotebooks());
+		System.out.println("\n--------- sumValuesGroupedByCompany ----------\n");
 		System.out.println(NotebookDao.sumValuesGroupedByCompany());
+		System.out.println("\n--------- listPersonCountry ----------\n");
 		System.out.println(PersonDao.listPersonCountry());
+		System.out.println("\n--------- listPersonPhones ----------\n");
 		System.out.println(PersonDao.listPersonPhones());
+		System.out.println("\n--------- listPersonPhonesAndCountry ----------\n");
 		System.out.println(PersonDao.listPersonPhonesAndCountry());
+		System.out.println("\n--------- listPersonAddresses ----------\n");
 		System.out.println(PersonDao.listPersonAddresses());
 	}
 

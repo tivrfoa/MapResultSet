@@ -97,6 +97,8 @@ public class PersonDao {
         try {
             var list = MapResultSet.listPersonCountry(executeQuery(listPersonCountry));
             System.out.println(list.getListCountry());
+            System.out.println("\n----------- groupedByCountry ---------\n");
+            System.out.println(list.groupedByCountry());
             return list.getListPerson();
         } catch (Exception ex) {
             ex.printStackTrace();

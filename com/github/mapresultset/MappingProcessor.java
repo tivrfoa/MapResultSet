@@ -326,15 +326,14 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private String getRecordConstructor(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields, int objCounter) {
-		RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
-
-		List<String> fieldsInQuery = new ArrayList<>();
+		final RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
+		final var mappedClassFields = classMappedColumns.get(fullClassName);
+		final List<String> fieldsInQuery = new ArrayList<>();
 		String fieldsInitialization = "";
 		for (var fieldEntry : fields.entrySet()) {
 			String fieldName = fieldEntry.getKey().name();
 			String columnAlias = fieldEntry.getValue().columnAlias();
 			Field field = fieldEntry.getValue().field();
-			var mappedClassFields = classMappedColumns.get(fullClassName);
 			if (mappedClassFields != null) {
 				if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
 					fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
@@ -361,6 +360,34 @@ public class MappingProcessor extends AbstractProcessor {
 		%s
 					%s obj%s = new %s(%s);
 		""".formatted(fieldsInitialization, recordName, objCounter, recordName, constructorParameters);
+	}
+
+	private String copyRecordObjectInitializingLists(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields) {
+		final RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
+		String fieldsInitialization = "";
+		
+		String constructorParameters = "";
+		for (int i = 0; i < recordComponents.fields.size(); i++) {
+			String fieldName = recordComponents.fields.get(i);
+			String fieldType = recordComponents.types.get(i);
+			if (fieldType.contains("java.util.List")) {
+				fieldsInitialization += """
+								%s %s = new ArrayList<>();
+				""".formatted(fieldType, fieldName, fieldName);
+			} else {
+				fieldsInitialization += """
+								%s %s = curr.%s();
+				""".formatted(fieldType, fieldName, fieldName);
+			}
+			
+			constructorParameters += fieldName;
+			if (i + 1 < recordComponents.fields.size()) constructorParameters += ", ";
+		}
+		
+		return """
+		%s
+						obj = new %s(%s);
+		""".formatted(fieldsInitialization, recordName, constructorParameters);
 	}
 
 	private String getDefaultValueForType(String fieldType) {
@@ -485,9 +512,7 @@ public class MappingProcessor extends AbstractProcessor {
 				}
 				FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
 				var partnerObj = queryStructures.get(partnerClass);
-				System.out.println("partnerObj = " + partnerObj);
 				if (partnerObj == null) continue;
-				System.out.println("partner.type() = " + rel.type());
 				List<String> groupedByMethods = queryGroupedByMethodsMap.get(queryClassName);
 				if (groupedByMethods == null) {
 					groupedByMethods = new ArrayList<>();
@@ -627,44 +652,81 @@ public class MappingProcessor extends AbstractProcessor {
 						obj.get%s().add(getList%s().get(i));
 						""".formatted(PartnerFieldName, partnerClass.getClassName());
 			} else {
+				// TODO need to copy all the values and initialize the lists ...
+				createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields);
 				addToPartners += """
 						obj.%s().add(getList%s().get(i));
 						""".formatted(rel.partnerFieldName().name(), partnerClass.getClassName());
 			}
 		}
 
-		return """
+		if (queryClassStructure.type == Type.CLASS) {
+			return """
 
-				private static record %sId(%s) {}
-				public List<%s> groupedBy%s() {
-					Map<%sId, %s> map = new HashMap<>();
-					List<%s> join = new ArrayList<>();
-					int len = getList%s().size();
-					for (int i = 0; i < len; i++) {
-						var curr = getList%s().get(i);
-						%s
-						var key = %s;
-						var obj = map.get(key);
-						if (obj == null) {
-							map.put(key, curr);
-							obj = curr;
-							join.add(obj);
+					private static record %sId(%s) {}
+					public List<%s> groupedBy%s() {
+						Map<%sId, %s> map = new HashMap<>();
+						List<%s> join = new ArrayList<>();
+						int len = getList%s().size();
+						for (int i = 0; i < len; i++) {
+							var curr = getList%s().get(i);
+							%s
+							var key = %s;
+							var obj = map.get(key);
+							if (obj == null) {
+								map.put(key, curr);
+								obj = curr;
+								join.add(obj);
+								%s
+							}
 							%s
 						}
-						%s
+						return join;
 					}
-					return join;
-				}
-			""".formatted(ownerClass, params,
-				ownerClass, ownerClass,
-				ownerClass, ownerClass,
-				ownerClass,
-				ownerClass,
-				ownerClass,
-				getKeys,
-				newKeyRecord,
-				createPartners,
-				addToPartners);
+				""".formatted(ownerClass, params,
+					ownerClass, ownerClass,
+					ownerClass, ownerClass,
+					ownerClass,
+					ownerClass,
+					ownerClass,
+					getKeys,
+					newKeyRecord,
+					createPartners,
+					addToPartners);
+		} else {
+			return """
+
+					private static record %sId(%s) {}
+					public List<%s> groupedBy%s() {
+						Map<%sId, %s> map = new HashMap<>();
+						List<%s> join = new ArrayList<>();
+						int len = getList%s().size();
+						for (int i = 0; i < len; i++) {
+							var curr = getList%s().get(i);
+							%s
+							var key = %s;
+							var obj = map.get(key);
+							if (obj == null) {
+								// copying record and initilializing lists
+								%s
+								map.put(key, obj);
+								join.add(obj);
+							}
+							%s
+						}
+						return join;
+					}
+				""".formatted(ownerClass, params,
+					ownerClass, ownerClass,
+					ownerClass, ownerClass,
+					ownerClass,
+					ownerClass,
+					ownerClass,
+					getKeys,
+					newKeyRecord,
+					createPartners,
+					addToPartners);
+		}
 	}
 
 	private String createMapResultSetClassForQuery(String packageName,
