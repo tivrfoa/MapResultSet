@@ -1,2 +1,2 @@
-javac -d classes/ com/github/mapresultset/ParseQuery.java && java -ea -cp classes/ com.github.mapresultset.ParseQuery
+javac -d classes/ src/main/java/com/github/tivrfoa/mapresultset/ParseQuery.java && java -ea -cp classes/ com.github.tivrfoa.mapresultset.ParseQuery
 
