@@ -239,8 +239,8 @@ public class MappingProcessor extends AbstractProcessor {
 			queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
 			queryClassesToCreate.put(queryClassName, queryClassToCreate);
 
-			System.out.println("-------- Query Structures ------------");
-			System.out.println(queryStructures);
+			// System.out.println("-------- Query Structures ------------");
+			// System.out.println(queryStructures);
 
 			if (!generatedColumns.isEmpty()) {
 				createGeneratedColumnsClass(packageName, generatedColumnsClassName, generatedColumns);
@@ -848,12 +848,12 @@ public class MappingProcessor extends AbstractProcessor {
 			System.out.println("Annotated Elements: " + annotatedElements);
 			
 			for (var e : annotatedElements) {
-				String elementName = e.toString();
-				System.out.println("Element: " + elementName + " and it's type is " + e.getKind());
+				final String elementName = e.toString();
+				// System.out.println("Element: " + elementName + " and it's type is " + e.getKind());
 
-				Element enclosingElement = e.getEnclosingElement();
-				System.out.println("element enclosingElement: " + enclosingElement);
-				System.out.println("element enclosedElements: " + e.getEnclosedElements());
+				// Element enclosingElement = e.getEnclosingElement();
+				// System.out.println("element enclosingElement: " + enclosingElement);
+				// System.out.println("element enclosedElements: " + e.getEnclosedElements());
 				/*for (var enclosed : e.getEnclosedElements()) {
 					System.out.println(enclosed + " kind is: " + enclosed.getKind());
 				}*/
