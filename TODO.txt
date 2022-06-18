@@ -1,18 +1,14 @@
 # TODO
 
+|| Allow to map a generated column to a field in an existing class.
 
-|| Handle createWith and addWith for OneToMany and ManyToMany
-
-|| Test composite primary key
-
-|| Test array column. Does Mysql support it?
-
+|| Handle smallint and byte
 
 |x| Parse query to get columns and tables;
 |x| Generate the classes that receive ResultSet and return the objects;
-|| Change generated source location?
 |x| Handle table name;
 |x| Handle Java Record
+|x| Test composite primary key
 || Make it a Maven project;
 || Use spotless to format code;
 || Use JUnit
@@ -22,4 +18,8 @@
 || Make it available on Maven;
 
 
-
+|| Test array column. Does Mysql support it?
+|| Handle createWith and addWith for OneToMany and ManyToMany
+|| Change generated source location?
+|| It doesn't need the ListRecord... wrapper class if the
+   query is fetching from a single table.

@@ -325,6 +325,33 @@ public class MappingProcessor extends AbstractProcessor {
 		writeBuilderFile(packageName, generatedColumnsClassName, generatedColumnsClassToCreate.content);
 	}
 
+	private String getClassConstructor(FullClassName fullClassName, String className,
+			Map<ColumnName, ColumnField> fields, int objCounter) {
+		String methodBody = "";
+		String createObject = """
+					%s obj%s = new %s();
+		""".formatted(className, objCounter, className);
+		methodBody += createObject;
+		String setFields = "";
+		for (var fieldEntry : fields.entrySet()) {
+			String fieldName = fieldEntry.getKey().name();
+			String columnAlias = fieldEntry.getValue().columnAlias();
+			Field field = fieldEntry.getValue().field();
+			var mappedClassFields = classMappedColumns.get(fullClassName);
+			if (mappedClassFields != null) {
+				if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
+					fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
+				}
+			}
+
+			String fieldSetMethod = getFieldSetMethod(fieldName, field);
+			setFields += getResultSetFieldBasedOnType(field.type(), columnAlias, objCounter, fieldSetMethod);
+		}
+		methodBody += setFields;
+
+		return methodBody;
+	}
+
 	private String getRecordConstructor(FullClassName fullClassName, String recordName, Map<ColumnName, ColumnField> fields, int objCounter) {
 		final RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
 		final var mappedClassFields = classMappedColumns.get(fullClassName);
@@ -426,26 +453,7 @@ public class MappingProcessor extends AbstractProcessor {
 			if (queryStructure.type == Type.RECORD) {
 				methodBody += getRecordConstructor(fullClassName, className, queryStructure.fields, objCounter);
 			} else {
-				String createObject = """
-							%s obj%s = new %s();
-				""".formatted(className, objCounter, className);
-				methodBody += createObject;
-				String setFields = "";
-				for (var fieldEntry : queryStructure.fields.entrySet()) {
-					String fieldName = fieldEntry.getKey().name();
-					String columnAlias = fieldEntry.getValue().columnAlias();
-					Field field = fieldEntry.getValue().field();
-					var mappedClassFields = classMappedColumns.get(fullClassName);
-					if (mappedClassFields != null) {
-						if (mappedClassFields.get(new ColumnName(fieldName)) != null) {
-							fieldName = mappedClassFields.get(new ColumnName(fieldName)).name();
-						}
-					}
-
-					String fieldSetMethod = getFieldSetMethod(fieldName, field);
-					setFields += getResultSetFieldBasedOnType(field.type(), columnAlias, objCounter, fieldSetMethod);
-				}
-				methodBody += setFields;
+				methodBody += getClassConstructor(fullClassName, className, queryStructure.fields, objCounter);
 			}
 
 			if (className.endsWith(GENERATED_COLUMNS)) {
@@ -461,24 +469,7 @@ public class MappingProcessor extends AbstractProcessor {
 			}
 		}
 
-		// ===== Check relationships - ManyToOne and OneToOne
-		for (var obj : objects.entrySet()) {
-			var owner = relationships.get(obj.getKey());
-			if (owner == null) continue;
-			String ownerObj = obj.getValue();
-			for (var partner : owner) {
-				var partnerObj = objects.get(partner.partner());
-				if (partnerObj == null) continue;
-				switch (partner.type()) {
-					case OneToOne, ManyToOne:
-						String set = "set" + uppercaseFirstLetter(partner.partnerFieldName().name());
-						methodBody += """
-									%s.%s(%s);
-						""".formatted(ownerObj, set, partnerObj);
-						break;
-				}	
-			}
-		}
+		methodBody += getSetCallInOneRelationship(objects, relationships);
 
 		methodBody += """
 				}
@@ -523,6 +514,37 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 
 		return ret;
+	}
+
+	/**
+	 * Check relationships - ManyToOne and OneToOne
+	 *
+	 * @param objects
+	 * @param relationships
+	 * @return
+	 */
+	private static String getSetCallInOneRelationship(Map<FullClassName, String> objects,
+			Map<FullClassName, List<Relationship>> relationships) {
+		String methodBody = "";
+		for (var obj : objects.entrySet()) {
+			var owner = relationships.get(obj.getKey());
+			if (owner == null) continue;
+			String ownerObj = obj.getValue();
+			for (var partner : owner) {
+				var partnerObj = objects.get(partner.partner());
+				if (partnerObj == null) continue;
+				switch (partner.type()) {
+					case OneToOne, ManyToOne:
+						String set = "set" + uppercaseFirstLetter(partner.partnerFieldName().name());
+						methodBody += """
+									%s.%s(%s);
+						""".formatted(ownerObj, set, partnerObj);
+						break;
+				}
+			}
+		}
+
+		return methodBody;
 	}
 
 	private String getResultSetFieldBasedOnType(String type, String columnAlias, int objCounter,
