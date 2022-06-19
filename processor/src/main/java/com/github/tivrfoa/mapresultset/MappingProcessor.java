@@ -25,10 +25,10 @@ import javax.tools.JavaFileObject;
 
 import com.github.tivrfoa.mapresultset.JavaStructure.Type;
 
-@SupportedAnnotationTypes({"com.github.mapresultset.api.Column", "com.github.mapresultset.api.Table",
-		"com.github.mapresultset.api.Query", "com.github.mapresultset.api.Id",
-		"com.github.mapresultset.api.OneToOne", "com.github.mapresultset.api.OneToMany",
-		"com.github.mapresultset.api.ManyToOne", "com.github.mapresultset.api.ManyToMany"})
+@SupportedAnnotationTypes({"com.github.tivrfoa.mapresultset.api.Column", "com.github.tivrfoa.mapresultset.api.Table",
+		"com.github.tivrfoa.mapresultset.api.Query", "com.github.tivrfoa.mapresultset.api.Id",
+		"com.github.tivrfoa.mapresultset.api.OneToOne", "com.github.tivrfoa.mapresultset.api.OneToMany",
+		"com.github.tivrfoa.mapresultset.api.ManyToOne", "com.github.tivrfoa.mapresultset.api.ManyToMany"})
 public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
@@ -859,28 +859,28 @@ public class MappingProcessor extends AbstractProcessor {
 				}*/
 
 				switch (annotation.toString()) {
-					case "com.github.mapresultset.api.Column":
+					case "com.github.tivrfoa.mapresultset.api.Column":
 						processColumn(elementName, e);
 					break;
-					case "com.github.mapresultset.api.Table":
+					case "com.github.tivrfoa.mapresultset.api.Table":
 						processTable(elementName, e);
 						break;
-					case "com.github.mapresultset.api.Query":
+					case "com.github.tivrfoa.mapresultset.api.Query":
 						processQuery(elementName, e);
 						break;
-					case "com.github.mapresultset.api.OneToOne":
+					case "com.github.tivrfoa.mapresultset.api.OneToOne":
 						addRelationship(elementName, e, Relationship.Type.OneToOne);
 						break;
-					case "com.github.mapresultset.api.OneToMany":
+					case "com.github.tivrfoa.mapresultset.api.OneToMany":
 						addRelationship(elementName, e, Relationship.Type.OneToMany);
 						break;
-					case "com.github.mapresultset.api.ManyToOne":
+					case "com.github.tivrfoa.mapresultset.api.ManyToOne":
 						addRelationship(elementName, e, Relationship.Type.ManyToOne);
 						break;
-					case "com.github.mapresultset.api.ManyToMany":
+					case "com.github.tivrfoa.mapresultset.api.ManyToMany":
 						addRelationship(elementName, e, Relationship.Type.ManyToMany);
 						break;
-					case "com.github.mapresultset.api.Id":
+					case "com.github.tivrfoa.mapresultset.api.Id":
 						processId(elementName, e);
 						break;
 				}
