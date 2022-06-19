@@ -18,3 +18,7 @@ rm -fR classes/* &&
     
   echo '--- Running TestProcessor' &&
   java -cp classes/:lib/mysql-connector-java-8.0.29.jar -ea com.github.tivrfoa.mapresultset.TestProcessor
+
+rm mapsources.txt
+rm sources.txt
+

@@ -6,24 +6,17 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch ParseQuery",
+            "request": "launch",
+            "mainClass": "com.github.tivrfoa.mapresultset.ParseQuery",
+            "projectName": "mapresultset-processor",
+            "vmArgs": "-ea"
+        },
+        {
+            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
-        },
-        {
-            "type": "java",
-            "name": "Launch OneToMany",
-            "request": "launch",
-            "mainClass": "OneToMany",
-            "projectName": "MapResultSet_a9a3711"
-        },
-        {
-            "type": "java",
-            "name": "Launch ParseQuery",
-            "request": "launch",
-            "mainClass": "com.github.mapresultset.ParseQuery",
-            "projectName": "MapResultSet_a9a3711",
-            "vmArgs": "-ea"
         },
         {
             "type": "java",
