@@ -15,9 +15,10 @@ public class TestProcessor {
 		from phone join company as c on
 		  phone.company_id = c.id
 		""";
+
 	// TODO create a test making sure that the lines
 	//   below throw exception
-	// String sql = "select id from phone";
+	//
 	// final String sql = null;
 	// final String listPhones = "select id, phone.id from phone";
 	/*final String listPhones = """

@@ -1,7 +1,5 @@
 # TODO
 
-|| Allow to map a generated column to a field in an existing class.
-
 || Handle smallint and byte
 
 |x| Parse query to get columns and tables;
@@ -9,14 +7,17 @@
 |x| Handle table name;
 |x| Handle Java Record
 |x| Test composite primary key
-|| Make it a Maven project;
+|x| Make it a Maven project;
+
+|| Use Testcontainers with MySQL, PostgreSQL, Oracle
+
 || Use spotless to format code;
 || Use JUnit
-|| Use Testcontainers with MySQL, PostgreSQL, Oracle
-|| Create a maven plugin;
 || Handle Java modules;
 || Make it available on Maven;
 
+
+|| Allow to map a generated column to a field in an existing class.
 
 || Test array column. Does Mysql support it?
 || Handle createWith and addWith for OneToMany and ManyToMany
