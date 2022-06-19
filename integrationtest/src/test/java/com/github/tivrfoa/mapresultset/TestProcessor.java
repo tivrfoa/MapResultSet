@@ -30,6 +30,10 @@ public class TestProcessor {
 	// TODO it needs to create a method like:
 	// List<Phone> phones = MapResultSet.listPhones(rs);
 
+	public void testMain() {
+		main(null);
+	}
+
 	public static void main(String[] args) {
 		System.out.println("\n--------- listNotebooks ----------\n");
 		System.out.println(NotebookDao.listNotebooks());
