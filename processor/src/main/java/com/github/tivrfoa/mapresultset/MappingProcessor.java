@@ -33,12 +33,12 @@ public class MappingProcessor extends AbstractProcessor {
 
 	private static final String GENERATED_COLUMNS = "GeneratedColumns";
 
-	private List<Element> tables = new ArrayList<>();
-	private List<Element> queries = new ArrayList<>();
-	private Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
-	private Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
-	private Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
-	private Map<FullClassName, List<Field>> primaryKeys = new HashMap<>();
+	public List<Element> tables = new ArrayList<>();
+	public List<Element> queries = new ArrayList<>();
+	public Map<FullClassName, Map<ColumnName, FieldName>> classMappedColumns = new HashMap<>();
+	public Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
+	public Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
+	public Map<FullClassName, List<Field>> primaryKeys = new HashMap<>();
 	/**
 	 * key: query class name
 	 * value: list of grouped by methods
@@ -148,7 +148,6 @@ public class MappingProcessor extends AbstractProcessor {
 			// System.out.println(p);
 
 			for (ColumnRecord columnRecord : p.getColumns()) {
-				// System.out.println("---> Handling column: " + columnRecord);
 				boolean isTemporaryTable = false;
 				if (columnRecord.table() != null) {
 					isTemporaryTable = p.getTables().get(columnRecord.table()).isTemporaryTable();

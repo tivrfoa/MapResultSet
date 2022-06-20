@@ -30,7 +30,7 @@ public class MappingProcessorTest {
 
         try {
             Reflect.compile(
-                "org.joor.test.FailAnnotationProcessing",
+                "does.this.path.Matter",
                 """
                 package com.github.tivrfoa.mapresultset;
 
@@ -57,7 +57,7 @@ public class MappingProcessorTest {
 
         try {
             Reflect.compile(
-                "org.joor.test.FailAnnotationProcessing",
+                "com.github.tivrfoa.mapresultset.QueryNull",
                 """
                 package com.github.tivrfoa.mapresultset;
 
@@ -78,37 +78,43 @@ public class MappingProcessorTest {
         }
     }
 
-    /**
-     * FIXME this query should not fail
-     * 
-     */
-    /*@Test
-    public void testQueryFromOneTableAndColumnWithoutAlias() {
+    @Test
+    public void testQueryFromOneTableAndColumnWithoutAlias() throws IOException {
         MappingProcessor p = new MappingProcessor();
+
+        URL url = getClass().getResource("/Phone.java");
+        final String phoneClass = Files.readString(new File(url.getPath()).toPath());
+
+        final String source =  """
+            package com.github.tivrfoa.mapresultset;
+
+            import com.github.tivrfoa.mapresultset.api.Query;
+            import com.github.tivrfoa.mapresultset.api.Table;
+
+            %s
+
+            class QueryPhoneId {
+                @Query
+                final String listPhones = "select id, phone.id from Phone as phone";
+            }
+            """.formatted(phoneClass);
 
         try {
             Reflect.compile(
-                "org.joor.test.FailAnnotationProcessing",
-                """
-                package com.github.tivrfoa.mapresultset;
-
-                import com.github.tivrfoa.mapresultset.api.Query;
-
-                class QueryPhoneId {
-                    @Query
-                    final String listPhones = "select id, phone.id from Phone as phone";
-                }
-                """,
+                "com.github.tivrfoa.mapresultset.QueryPhoneId",
+                source,
                 new CompileOptions().processors(p)
             ).create().get();
-            throw new RuntimeException("Failed to throw exception on a non-final query.");
+            assertEquals(1, p.tables.size());
+            assertEquals(1, p.javaStructures.size());
+            for (var es : p.javaStructures.entrySet()) {
+                assertEquals(new FullClassName("com.github.tivrfoa.mapresultset.Phone"), es.getKey());
+            }
         }
-        catch (ReflectException expected) {
-            expected.printStackTrace();
-           assertEquals("java.lang.RuntimeException: Variable annotated with @Query must be final and not null",
-                expected.getCause().getMessage());
+        catch (ReflectException ex) {
+            throw ex;
         }
-    }*/
+    }
 
     @Test
     public void testQueryMoreThanOneTableAndNoAliasInColumn() throws IOException {
@@ -119,7 +125,7 @@ public class MappingProcessorTest {
 
         try {
             Reflect.compile(
-                "org.joor.test.FailAnnotationProcessing",
+                "com.github.tivrfoa.mapresultset.QueryPhone",
                 """
                 package com.github.tivrfoa.mapresultset;
 
