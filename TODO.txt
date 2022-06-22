@@ -9,12 +9,20 @@
 |x| Test composite primary key
 |x| Make it a Maven project;
 
+|+| Write unit tests
+|| Write integration tests
+
 || Use Testcontainers with MySQL, PostgreSQL, Oracle
 
 || Use spotless to format code;
-|| Use JUnit
 || Handle Java modules;
+
+|| Write a Micronaut example
+|| Write a Quarkus example
+
 || Make it available on Maven;
+
+|| Write a SpringBoot example
 
 
 || Allow to map a generated column to a field in an existing class.

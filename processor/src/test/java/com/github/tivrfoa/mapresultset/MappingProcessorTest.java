@@ -188,4 +188,32 @@ public class MappingProcessorTest {
                 expected.getCause().getMessage());
         }
     }
+
+    @Test
+    public void testTableNotMappedToAClass() throws IOException {
+        MappingProcessor p = new MappingProcessor();
+
+        try {
+            Reflect.compile(
+                "com.github.tivrfoa.mapresultset.TableNotMapped",
+                """
+                package com.github.tivrfoa.mapresultset;
+
+                import com.github.tivrfoa.mapresultset.api.Query;
+
+                class TableNotMapped {
+                    @Query
+                    final String listPhones = "select ops from not_mapped";
+                }
+                """,
+                new CompileOptions().processors(p)
+            ).create().get();
+            throw new RuntimeException("Failed to throw exception.");
+        }
+        catch (ReflectException expected) {
+           assertEquals("java.lang.RuntimeException: Table 'not_mapped' is not mapped to a class, so no value from this table can be in the 'SELECT' clause.\n" +
+                "You might want to annotate it with: @Table (name = \"not_mapped\")",
+                expected.getCause().getMessage());
+        }
+    }
 }

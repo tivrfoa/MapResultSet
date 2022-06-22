@@ -184,8 +184,10 @@ public class MappingProcessor extends AbstractProcessor {
 					}
 					String fullClassNameStr = tableMap.get(table);
 					if (fullClassNameStr == null) {
-						table = p.getTables().get(columnRecord.table()).tableName();
-						throw new RuntimeException("Table '" + table + "' is not mapped to class, " +
+						if (columnRecord.table() != null) {
+							table = p.getTables().get(columnRecord.table()).tableName();
+						}
+						throw new RuntimeException("Table '" + table + "' is not mapped to a class, " +
 						     	"so no value from this table can be in the 'SELECT' clause.\n" +
 								"You might want to annotate it with: @Table (name = \"" + table + "\")");
 					}
