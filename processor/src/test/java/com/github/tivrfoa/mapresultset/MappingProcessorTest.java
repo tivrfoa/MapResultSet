@@ -110,6 +110,8 @@ public class MappingProcessorTest {
             for (var es : p.javaStructures.entrySet()) {
                 assertEquals(new FullClassName("com.github.tivrfoa.mapresultset.Phone"), es.getKey());
             }
+            assertEquals(1, p.tableMap.size());
+            assertEquals("com.github.tivrfoa.mapresultset.Phone", p.tableMap.get("Phone"));
         }
         catch (ReflectException ex) {
             throw ex;

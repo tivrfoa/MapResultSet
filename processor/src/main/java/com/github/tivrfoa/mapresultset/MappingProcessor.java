@@ -39,6 +39,9 @@ public class MappingProcessor extends AbstractProcessor {
 	public Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
 	public Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
 	public Map<FullClassName, List<Field>> primaryKeys = new HashMap<>();
+
+	/** Map: Table Name -> Full Class Name (including package) */
+	public Map<String, String> tableMap = new HashMap<>();
 	/**
 	 * key: query class name
 	 * value: list of grouped by methods
@@ -79,9 +82,6 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println("\n---------- Primary Keys ---------\n" + primaryKeys);
 		System.out.println("\n---------- Relationships ---------\n" + relationships);
 
-
-		// Map: Table Name -> Full Class Name (including package)
-		Map<String, String> tableMap = new HashMap<>();
 		for (var te : tables) {
 			final String packageAndClass = te.toString();
 			String tableName = getAnnotationParameter(te, "name()");
