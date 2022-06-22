@@ -9,8 +9,8 @@
 |x| Test composite primary key
 |x| Make it a Maven project;
 
-|+| Write unit tests
-|| Write integration tests
+|| Write more unit tests
+|| Write more integration tests
 
 || Use Testcontainers with MySQL, PostgreSQL, Oracle
 
@@ -19,6 +19,8 @@
 
 || Write a Micronaut example
 || Write a Quarkus example
+
+|| Add License
 
 || Make it available on Maven;
 

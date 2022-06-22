@@ -23,7 +23,7 @@
         <dependency>
             <groupId>com.github.tivrfoa</groupId>
             <artifactId>mapresultset</artifactId>
-            <version>0.1.0</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
