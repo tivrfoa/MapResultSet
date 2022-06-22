@@ -119,6 +119,40 @@ public class MappingProcessorTest {
     }
 
     @Test
+    public void testTwoClassesMappedToTheSameTable() throws IOException {
+        MappingProcessor p = new MappingProcessor();
+
+        URL url = getClass().getResource("/TwoClassesMappedToTheSameTable.java");
+        final String classes = Files.readString(new File(url.getPath()).toPath());
+
+        final String source =  """
+            package two.classes;
+
+            import com.github.tivrfoa.mapresultset.api.Query;
+            import com.github.tivrfoa.mapresultset.api.Table;
+
+            %s
+
+            class ClassesWithSameTableName {
+                @Query
+                final String listPhones = "select id from Phone as phone";
+            }
+            """.formatted(classes);
+        System.out.println(source);
+        try {
+            Reflect.compile(
+                "two.classes.ClassesWithSameTableName",
+                source,
+                new CompileOptions().processors(p)
+            ).create().get();
+        }
+        catch (ReflectException expected) {
+            assertEquals("java.lang.RuntimeException: It can't map two.classes.AnotherPhone to phone, because class 'two.classes.Phone' is already mapped to that table.",
+                expected.getCause().getMessage());
+        }
+    }
+
+    @Test
     public void testQueryMoreThanOneTableAndNoAliasInColumn() throws IOException {
         MappingProcessor p = new MappingProcessor();
 
