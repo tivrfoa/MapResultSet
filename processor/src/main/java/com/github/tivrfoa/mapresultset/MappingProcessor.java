@@ -215,7 +215,11 @@ public class MappingProcessor extends AbstractProcessor {
 					var fieldName = new FieldName(columnRecord.name());
 					var classFieldType = structure.fields.get(fieldName);
 					if (classFieldType == null) {
-						fieldName = classMappedColumns.get(fullClassName).get(new ColumnName(columnRecord.name()));
+						var cmc = classMappedColumns.get(fullClassName);
+						if (cmc == null) {
+							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
+						}
+						fieldName = cmc.get(new ColumnName(columnRecord.name()));
 						if (fieldName == null)
 							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
 						classFieldType = structure.fields.get(fieldName);

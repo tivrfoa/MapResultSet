@@ -216,4 +216,69 @@ public class MappingProcessorTest {
                 expected.getCause().getMessage());
         }
     }
+
+    @Test
+    public void testClassWithoutFields() throws IOException {
+        MappingProcessor p = new MappingProcessor();
+
+        try {
+            Reflect.compile(
+                "com.github.tivrfoa.mapresultset.ClassWithoutFields",
+                """
+                package com.github.tivrfoa.mapresultset;
+
+                import com.github.tivrfoa.mapresultset.api.Query;
+                import com.github.tivrfoa.mapresultset.api.Table;
+
+                @Table
+                class T1 {}
+
+                class ClassWithoutFields {
+                    @Query
+                    final String list = "select ops from T1";
+                }
+                """,
+                new CompileOptions().processors(p)
+            ).create().get();
+            throw new RuntimeException("Failed to throw exception.");
+        }
+        catch (ReflectException expected) {
+            expected.printStackTrace();
+           assertEquals("java.lang.RuntimeException: Class com.github.tivrfoa.mapresultset.T1 does not have field named: ops",
+                expected.getCause().getMessage());
+        }
+    }
+
+    @Test
+    public void testFieldNotInClass() throws IOException {
+        MappingProcessor p = new MappingProcessor();
+
+        try {
+            Reflect.compile(
+                "com.github.tivrfoa.mapresultset.FieldNotInClass",
+                """
+                package com.github.tivrfoa.mapresultset;
+
+                import com.github.tivrfoa.mapresultset.api.Column;
+                import com.github.tivrfoa.mapresultset.api.Query;
+                import com.github.tivrfoa.mapresultset.api.Table;
+
+                @Table
+                class T1 { int id; @Column(name = "hey") int money; }
+
+                class FieldNotInClass {
+                    @Query
+                    final String list = "select ops from T1";
+                }
+                """,
+                new CompileOptions().processors(p)
+            ).create().get();
+            throw new RuntimeException("Failed to throw exception.");
+        }
+        catch (ReflectException expected) {
+            expected.printStackTrace();
+           assertEquals("java.lang.RuntimeException: Class com.github.tivrfoa.mapresultset.T1 does not have field named: ops",
+                expected.getCause().getMessage());
+        }
+    }
 }
