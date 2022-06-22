@@ -138,7 +138,7 @@ public class MappingProcessorTest {
                 final String listPhones = "select id from Phone as phone";
             }
             """.formatted(classes);
-        System.out.println(source);
+
         try {
             Reflect.compile(
                 "two.classes.ClassesWithSameTableName",
@@ -243,7 +243,6 @@ public class MappingProcessorTest {
             throw new RuntimeException("Failed to throw exception.");
         }
         catch (ReflectException expected) {
-            expected.printStackTrace();
            assertEquals("java.lang.RuntimeException: Class com.github.tivrfoa.mapresultset.T1 does not have field named: ops",
                 expected.getCause().getMessage());
         }
@@ -276,9 +275,49 @@ public class MappingProcessorTest {
             throw new RuntimeException("Failed to throw exception.");
         }
         catch (ReflectException expected) {
-            expected.printStackTrace();
            assertEquals("java.lang.RuntimeException: Class com.github.tivrfoa.mapresultset.T1 does not have field named: ops",
                 expected.getCause().getMessage());
+        }
+    }
+
+    @Test
+    public void testMappedColumn() throws IOException {
+        MappingProcessor p = new MappingProcessor();
+
+        final String source = """
+            package com.github.tivrfoa.mapresultset;
+
+            import com.github.tivrfoa.mapresultset.api.Column;
+            import com.github.tivrfoa.mapresultset.api.Query;
+            import com.github.tivrfoa.mapresultset.api.Table;
+
+            @Table (name = "t1")
+            class T1 { int id; @Column(name = "hey") int money; }
+
+            class MappedColumn {
+                @Query
+                final String list = "select id, hey from t1 as wharever";
+            }
+            """;
+            System.out.println(source);
+
+        try {
+            Reflect.compile(
+                "com.github.tivrfoa.mapresultset.MappedColumn",
+                source,
+                new CompileOptions().processors(p)
+            ).create().get();
+            
+            assertEquals(1, p.tables.size());
+            assertEquals(1, p.javaStructures.size());
+            for (var es : p.javaStructures.entrySet()) {
+                assertEquals(new FullClassName("com.github.tivrfoa.mapresultset.T1"), es.getKey());
+            }
+            assertEquals(1, p.tableMap.size());
+            assertEquals("com.github.tivrfoa.mapresultset.T1", p.tableMap.get("t1"));
+        }
+        catch (ReflectException ex) {
+            throw ex;
         }
     }
 }
