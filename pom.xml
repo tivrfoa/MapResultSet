@@ -10,6 +10,7 @@
     <name>MapResultSet Aggregator</name>
 
     <modules>
+		<module>parent</module>
         <module>api</module>
         <module>processor</module>
         <module>integrationtest</module>

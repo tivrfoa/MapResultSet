@@ -4,3 +4,5 @@ target/
 classes/
 lib/
 sources.txt
+.flattened-pom.xml
+
