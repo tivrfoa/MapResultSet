@@ -7,9 +7,13 @@ public enum ResultSetType {
     CHAR,
     DATE,
     DOUBLE,
+    DOUBLE_OBJ,
     FLOAT,
+    FLOAT_OBJ,
     INT,
+    INTEGER,
     LONG,
+    LONG_OBJ,
     OBJECT,
     SHORT,
     STRING,
@@ -26,9 +30,13 @@ public enum ResultSetType {
             case "boolean" -> BOOLEAN;
             case "char" -> CHAR;
             case "double" -> DOUBLE;
+            case "java.lang.double" -> DOUBLE_OBJ;
             case "float" -> FLOAT;
+            case "java.lang.float" -> FLOAT_OBJ;
             case "int" -> INT;
+            case "java.lang.Integer" -> INTEGER;
             case "long" -> LONG;
+            case "java.lang.Long" -> LONG_OBJ;
             case "Object" -> OBJECT;
             case "String", "java.lang.String" -> STRING;
             case "java.sql.Time" -> TIME;
@@ -43,10 +51,10 @@ public enum ResultSetType {
             // case BIG_INTEGER -> needs special handling, bc there's no getBigInteger
             case BOOLEAN -> "getBoolean";
             case DATE -> "getDate";
-            case DOUBLE -> "getDouble";
-            case FLOAT -> "getFloat";
-            case INT -> "getInt";
-            case LONG -> "getLong";
+            case DOUBLE, DOUBLE_OBJ -> "getDouble";
+            case FLOAT, FLOAT_OBJ -> "getFloat";
+            case INT, INTEGER -> "getInt";
+            case LONG, LONG_OBJ -> "getLong";
             case OBJECT -> "getObject";
             case STRING -> "getString";
             case TIME -> "getTime";
