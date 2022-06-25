@@ -928,6 +928,8 @@ public class MappingProcessor extends AbstractProcessor {
 		Map<FieldName, FieldType> mapField = new HashMap<>();
 		for (VariableElement field : fields) {
 			String fieldType = field.asType().toString();
+			var tmp = fieldType.split(" ");
+			fieldType = tmp[tmp.length - 1];
 			mapField.put(new FieldName(field.toString()), new FieldType(fieldType));
 		}
 		System.out.println("mapField = " + mapField);
