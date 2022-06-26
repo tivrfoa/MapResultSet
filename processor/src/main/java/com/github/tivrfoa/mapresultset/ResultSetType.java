@@ -4,6 +4,7 @@ public enum ResultSetType {
     BIG_DECIMAL,
     BIG_INTEGER,
     BOOLEAN,
+    BYTE,
     CHAR,
     DATE,
     DOUBLE,
@@ -28,6 +29,7 @@ public enum ResultSetType {
             case "java.math.BigInteger" -> BIG_INTEGER;
             case "java.sql.Date" -> DATE;
             case "boolean" -> BOOLEAN;
+            case "byte" -> BYTE;
             case "char" -> CHAR;
             case "double" -> DOUBLE;
             case "java.lang.double" -> DOUBLE_OBJ;
@@ -38,6 +40,7 @@ public enum ResultSetType {
             case "long" -> LONG;
             case "java.lang.Long" -> LONG_OBJ;
             case "Object" -> OBJECT;
+            case "short" -> SHORT;
             case "String", "java.lang.String" -> STRING;
             case "java.sql.Time" -> TIME;
             case "java.sql.Timestamp" -> TIMESTAMP;
@@ -49,6 +52,7 @@ public enum ResultSetType {
         return switch (this) {
             case BIG_DECIMAL -> "getBigDecimal";
             // case BIG_INTEGER -> needs special handling, bc there's no getBigInteger
+            case BYTE -> "getByte";
             case BOOLEAN -> "getBoolean";
             case DATE -> "getDate";
             case DOUBLE, DOUBLE_OBJ -> "getDouble";
@@ -56,6 +60,7 @@ public enum ResultSetType {
             case INT, INTEGER -> "getInt";
             case LONG, LONG_OBJ -> "getLong";
             case OBJECT -> "getObject";
+            case SHORT -> "getShort";
             case STRING -> "getString";
             case TIME -> "getTime";
             case TIMESTAMP -> "getTimestamp";
