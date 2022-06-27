@@ -32,8 +32,9 @@ your query more readable too. xD
 1. Join must be done using JOIN, not in WHERE clause;
 2. Values returned from SELECT that are not a simple column name must
    have an alias and be preceded with `AS`, eg: select 1 as one; select age + 18 as something;
-3. Columns in `select` must be preceded by the table name if the `from` clause contains
+3. Columns in `select` must be preceded by the table name (or alias) if the `from` clause contains
 more than one table;
+4. Table alias must be preceded by `AS`
 
 Current *known* limitations (ps: please open an issue if you find others =))
  - it doesn't handle 'USING' in joins. MySQL only?
