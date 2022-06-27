@@ -62,7 +62,6 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			processLastRound(annotations, roundEnvironment);
-			// System.out.println("\n---------- Query Grouped By Methods -----------\n" + queryGroupedByMethodsMap);
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -82,26 +81,7 @@ public class MappingProcessor extends AbstractProcessor {
 		System.out.println("\n---------- Primary Keys ---------\n" + primaryKeys);
 		System.out.println("\n---------- Relationships ---------\n" + relationships);
 
-		for (var te : tables) {
-			final String packageAndClass = te.toString();
-			String tableName = getAnnotationParameter(te, "name()");
-			if (tableName != null) {
-				if (tableMap.get(tableName) != null) {
-					throw new RuntimeException("It can't map " + packageAndClass + " to " + tableName +
-							", because class '" + tableMap.get(tableName) +
-							"' is already mapped to that table.");
-				}
-			} else {
-				int ld = packageAndClass.lastIndexOf(".");
-				if (ld == -1) {
-					tableName = packageAndClass;
-				} else {
-					tableName = packageAndClass.substring(ld + 1);
-				}
-			}
-			
-			tableMap.put(tableName, packageAndClass);
-		}
+		mapTableNameToClass();
 
 		// System.out.println("------ map: Table -> Class -------");
 		// System.out.println(tableMap);
@@ -277,6 +257,29 @@ public class MappingProcessor extends AbstractProcessor {
 				classToCreate.content = classToCreate.content.replace("//##end##\n", methods);
 			}
 			writeBuilderFile(classToCreate);
+		}
+	}
+
+	private void mapTableNameToClass() {
+		for (var te : tables) {
+			final String packageAndClass = te.toString();
+			String tableName = getAnnotationParameter(te, "name()");
+			if (tableName != null) {
+				if (tableMap.get(tableName) != null) {
+					throw new RuntimeException("It can't map " + packageAndClass + " to " + tableName +
+							", because class '" + tableMap.get(tableName) +
+							"' is already mapped to that table.");
+				}
+			} else {
+				int ld = packageAndClass.lastIndexOf(".");
+				if (ld == -1) {
+					tableName = packageAndClass;
+				} else {
+					tableName = packageAndClass.substring(ld + 1);
+				}
+			}
+			
+			tableMap.put(tableName, packageAndClass);
 		}
 	}
 
