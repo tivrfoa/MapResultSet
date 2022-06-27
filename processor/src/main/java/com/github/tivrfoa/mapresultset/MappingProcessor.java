@@ -73,13 +73,13 @@ public class MappingProcessor extends AbstractProcessor {
 		/*
 			Last round ... we already collected all tables and queries
 		*/
-		System.out.println(">>>>>>>>>>>> Last round! Fight! <<<<<<<<<<<<");
-		System.out.println("tables.: " + tables);
-		System.out.println("queries: " + queries);
-		System.out.println("classMappedColumns: " + classMappedColumns);
-		System.out.println("Java Structures: " + javaStructures);
-		System.out.println("\n---------- Primary Keys ---------\n" + primaryKeys);
-		System.out.println("\n---------- Relationships ---------\n" + relationships);
+//		System.out.println(">>>>>>>>>>>> Last round! Fight! <<<<<<<<<<<<");
+//		System.out.println("tables.: " + tables);
+//		System.out.println("queries: " + queries);
+//		System.out.println("classMappedColumns: " + classMappedColumns);
+//		System.out.println("Java Structures: " + javaStructures);
+//		System.out.println("\n---------- Primary Keys ---------\n" + primaryKeys);
+//		System.out.println("\n---------- Relationships ---------\n" + relationships);
 
 		mapTableNameToClass();
 
@@ -94,6 +94,23 @@ public class MappingProcessor extends AbstractProcessor {
 		
 		// Parse all queries
 		for (var queryElement : queries) {
+			final String query = (String) ((VariableElement) queryElement).getConstantValue();
+			System.out.println("-->> Parsing query: " + query);
+			var parsedQuery = new ParseQuery(query);
+			parsedQuery.parse();
+//			System.out.println("p.getTables() = " + parsedQuery.getTables());
+//			System.out.println(parsedQuery);
+			boolean hasGeneratedColumn = parsedQuery.getColumns()
+					.stream()
+					.anyMatch(c -> c.isGeneratedValue());
+//			System.out.println("hasGeneratedColumn: " + hasGeneratedColumn);
+			
+			// TODO it's querying from just one table. No need for a wrapper class.
+			/*if (parsedQuery.getTables().size() == 1 && !hasGeneratedColumn &&
+					!parsedQuery.getTables().get(0).isTemporaryTable()) {
+				
+			}*/
+			
 			final String queryName = queryElement.toString();
 			List<String> generatedColumns = new ArrayList<>();
 			Map<FullClassName, QueryClassStructure> queryStructures = new HashMap<>();
@@ -120,17 +137,11 @@ public class MappingProcessor extends AbstractProcessor {
 						
 					""".formatted(packageName, queryClassName);
 			var queryClassToCreate = new ClassToCreate(packageName, queryClassName, classContent);
-			String query = (String) ((VariableElement) queryElement).getConstantValue();
-			System.out.println("-->> Parsing query: " + query);
-			var p = new ParseQuery(query);
-			p.parse();
-			// System.out.println("p.getTables() = " + p.getTables());
-			// System.out.println(p);
 
-			for (ColumnRecord columnRecord : p.getColumns()) {
+			for (ColumnRecord columnRecord : parsedQuery.getColumns()) {
 				boolean isTemporaryTable = false;
 				if (columnRecord.table() != null) {
-					isTemporaryTable = p.getTables().get(columnRecord.table()).isTemporaryTable();
+					isTemporaryTable = parsedQuery.getTables().get(columnRecord.table()).isTemporaryTable();
 				}
 				if (columnRecord.isGeneratedValue() || isTemporaryTable) {
 					// Add to generated columns
@@ -150,27 +161,8 @@ public class MappingProcessor extends AbstractProcessor {
 					// TODO let user specify a type
 					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
 				} else {
-					String table = columnRecord.table();
-					if (table == null) {
-						// if it's not a generated column and table is null
-						// then it means the from clause must have a single table
-						if (p.getTables().size() != 1) {
-							throw new RuntimeException("Columns must be preceded by the table name " +
-									"when there are more than one table in the 'from' clause.");
-						}
-						for (var es : p.getTables().entrySet()) table = es.getValue().tableName();
-					} else {
-						table = p.getTables().get(table).tableName();
-					}
-					String fullClassNameStr = tableMap.get(table);
-					if (fullClassNameStr == null) {
-						if (columnRecord.table() != null) {
-							table = p.getTables().get(columnRecord.table()).tableName();
-						}
-						throw new RuntimeException("Table '" + table + "' is not mapped to a class, " +
-						     	"so no value from this table can be in the 'SELECT' clause.\n" +
-								"You might want to annotate it with: @Table (name = \"" + table + "\")");
-					}
+					String fullClassNameStr = getFullClassNameFromTable(columnRecord.table(), parsedQuery);
+
 					// System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassNameStr);
 					var fullClassName = new FullClassName(fullClassNameStr);
 					if (queryImports.add(fullClassNameStr)) {
@@ -184,30 +176,8 @@ public class MappingProcessor extends AbstractProcessor {
 							""".formatted(classTableName, classTableName, classTableName, classTableName, classTableName);
 						queryClassToCreate.content += content;
 					}
-					var structure = javaStructures.get(fullClassName);
-					var structureType = structure.type;
-					var m = queryStructures.get(fullClassName);
-					if (m == null) {
-						m = new QueryClassStructure(fullClassName, structureType);
-						queryStructures.put(fullClassName, m);
-					}
 					
-					var fieldName = new FieldName(columnRecord.name());
-					var classFieldType = structure.fields.get(fieldName);
-					if (classFieldType == null) {
-						var cmc = classMappedColumns.get(fullClassName);
-						if (cmc == null) {
-							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
-						}
-						fieldName = cmc.get(new ColumnName(columnRecord.name()));
-						if (fieldName == null)
-							throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
-						classFieldType = structure.fields.get(fieldName);
-					}
-					String alias = columnRecord.alias();
-					if (alias == null) alias = columnRecord.name();
-					if (columnRecord.table() != null) alias = columnRecord.table() + "." + alias;
-					m.fields.put(new ColumnName(columnRecord.name()), new ColumnField(alias, new Field(fieldName.name(), classFieldType.name())));
+					addQueryFields(queryStructures, fullClassName, fullClassNameStr, columnRecord);
 				}
 			}
 
@@ -258,6 +228,57 @@ public class MappingProcessor extends AbstractProcessor {
 			}
 			writeBuilderFile(classToCreate);
 		}
+	}
+	
+	private String getFullClassNameFromTable(String table, ParseQuery parsedQuery) {
+		if (table == null) {
+			// if it's not a generated column and table is null
+			// then it means the from clause must have a single table
+			if (parsedQuery.getTables().size() != 1) {
+				throw new RuntimeException("Columns must be preceded by the table name " +
+						"when there are more than one table in the 'from' clause.");
+			}
+			for (var es : parsedQuery.getTables().entrySet()) table = es.getValue().tableName();
+		} else {
+			table = parsedQuery.getTables().get(table).tableName();
+		}
+		final String fullClassNameStr = tableMap.get(table);
+		if (fullClassNameStr == null) {
+			if (table != null) {
+				table = parsedQuery.getTables().get(table).tableName();
+			}
+			throw new RuntimeException("Table '" + table + "' is not mapped to a class, " +
+			     	"so no value from this table can be in the 'SELECT' clause.\n" +
+					"You might want to annotate it with: @Table (name = \"" + table + "\")");
+		}
+		return fullClassNameStr;
+	}
+
+	private void addQueryFields(Map<FullClassName, QueryClassStructure> queryStructures, FullClassName fullClassName, String fullClassNameStr, ColumnRecord columnRecord) {
+		var structure = javaStructures.get(fullClassName);
+		var structureType = structure.type;
+		var queryClassStructure = queryStructures.get(fullClassName);
+		if (queryClassStructure == null) {
+			queryClassStructure = new QueryClassStructure(fullClassName, structureType);
+			queryStructures.put(fullClassName, queryClassStructure);
+		}
+		
+		var fieldName = new FieldName(columnRecord.name());
+		var classFieldType = structure.fields.get(fieldName);
+		if (classFieldType == null) {
+			var cmc = classMappedColumns.get(fullClassName);
+			if (cmc == null) {
+				throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
+			}
+			fieldName = cmc.get(new ColumnName(columnRecord.name()));
+			if (fieldName == null)
+				throw new RuntimeException("Class " + fullClassNameStr + " does not have field named: " + columnRecord.name());
+			classFieldType = structure.fields.get(fieldName);
+		}
+		String alias = columnRecord.alias();
+		if (alias == null) alias = columnRecord.name();
+		if (columnRecord.table() != null) alias = columnRecord.table() + "." + alias;
+		queryClassStructure.fields.put(new ColumnName(columnRecord.name()), new ColumnField(alias, new Field(fieldName.name(), classFieldType.name())));
 	}
 
 	private void mapTableNameToClass() {
@@ -430,7 +451,7 @@ public class MappingProcessor extends AbstractProcessor {
 		return switch (fieldType) {
 			case "boolean" -> "false";
 			case "char" -> "' '";
-			case "int" -> "0";
+			case "byte", "int", "short" -> "0";
 			case "float" -> "0.0f";
 			case "double" -> "0.0";
 			case "long" -> "0L";
