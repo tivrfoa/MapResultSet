@@ -34,7 +34,6 @@ your query more readable too. xD
    have an alias and be preceded with `AS`, eg: select 1 as one; select age + 18 as something;
 3. Columns in `select` must be preceded by the table name if the `from` clause contains
 more than one table;
-4. The clauses must be in this order: select, from, [where], [group by], [having], [order by]
 
 Current *known* limitations (ps: please open an issue if you find others =))
  - it doesn't handle 'USING' in joins. MySQL only?
