@@ -44,13 +44,23 @@ Current *known* limitations (ps: please open an issue if you find others =))
 
 ### Package
 
-Generated classes will be in the same package that contains the @Query.
+Generated classes will be in the same package that contains the `@Query`.
 
 ### Class Name
 
-There will be one Generated class per @Query.
-It will be the name of the query with the first letter in uppercase,
-followed by Records.
+There will be one MapResultSet class created per package that contains a `@Query`.
+Each `@Query` also creates a class with the name of the query with the first letter in uppercase,
+followed by Records, eg: the query below will create a class called ListPeopleRecords.
+
+```java
+@Query
+final String listPeople;
+```
+
+**ps:** if the query contains only one table and there's no temporary columns,
+then this class is not created and MapResultSet returns a list of the only class
+in the query.
+
 
 ## Databases Java Connectors
 
