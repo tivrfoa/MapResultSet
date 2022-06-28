@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.acme.domain.Person;
 import org.acme.domain.Notebook;
+import java.util.List;
 import org.acme.domain.Company;
 import org.acme.domain.Book;
 import org.acme.domain.Bookstore;
@@ -11,6 +12,7 @@ import org.acme.domain.State;
 import org.acme.domain.Country;
 import org.acme.domain.Phone;
 import org.acme.domain.Address;
+import java.util.ArrayList;
 
 
 public class MapResultSet {
@@ -241,6 +243,22 @@ public class MapResultSet {
 		}
 
 		return records;
+
+	}
+
+
+	public static List<Notebook> listNotebooksName(ResultSet rs) throws SQLException {
+		List<Notebook> list = new ArrayList<>();
+
+		while (rs.next()) {
+			Notebook obj0 = new Notebook();
+			obj0.setName(rs.getString("name"));
+			obj0.setId(rs.getInt("id"));
+			list.add(obj0);
+
+		}
+
+		return list;
 
 	}
 

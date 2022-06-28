@@ -100,115 +100,128 @@ public class MappingProcessor extends AbstractProcessor {
 			parsedQuery.parse();
 //			System.out.println("p.getTables() = " + parsedQuery.getTables());
 //			System.out.println(parsedQuery);
-			boolean hasGeneratedColumn = parsedQuery.getColumns()
-					.stream()
-					.anyMatch(c -> c.isGeneratedValue());
-//			System.out.println("hasGeneratedColumn: " + hasGeneratedColumn);
-			
-			// TODO it's querying from just one table. No need for a wrapper class.
-			/*if (parsedQuery.getTables().size() == 1 && !hasGeneratedColumn &&
-					!parsedQuery.getTables().get(0).isTemporaryTable()) {
-				
-			}*/
 			
 			final String queryName = queryElement.toString();
-			List<String> generatedColumns = new ArrayList<>();
-			Map<FullClassName, QueryClassStructure> queryStructures = new HashMap<>();
-			Set<String> queryImports = new HashSet<>();
+			final List<String> generatedColumns = new ArrayList<>();
+			final Map<FullClassName, QueryClassStructure> queryStructures = new HashMap<>();
+			final Set<String> queryImports = new HashSet<>();
 			String queryImportsStr = "";
 			final String packageName = getPackageName(queryElement);
-			final String queryClassName = getQueryClassName(queryName);
-			final String generatedColumnsClassName = uppercaseFirstLetter(queryName) + GENERATED_COLUMNS;
-			final FullClassName generatedColumnsFullClassName = new FullClassName(generatedColumnsClassName);
-			String classContent = """
-					package %s;
-
-					import java.util.ArrayList;
-					import java.util.List;
-					// TODO the two imports below should be added conditionally
-					// when there's a groupBy method
-					import java.util.Map;
-					import java.util.HashMap;
-
-					#import#
-
-					public class %s {
-
-						
-					""".formatted(packageName, queryClassName);
-			var queryClassToCreate = new ClassToCreate(packageName, queryClassName, classContent);
-
-			for (ColumnRecord columnRecord : parsedQuery.getColumns()) {
-				boolean isTemporaryTable = false;
-				if (columnRecord.table() != null) {
-					isTemporaryTable = parsedQuery.getTables().get(columnRecord.table()).isTemporaryTable();
-				}
-				if (columnRecord.isGeneratedValue() || isTemporaryTable) {
-					// Add to generated columns
-					String alias = columnRecord.alias();
-					if (alias == null) {
-						if (!isTemporaryTable) {
-							throw new RuntimeException("Invalid state");
-						}
-						alias = columnRecord.table();
-					}
-					generatedColumns.add(alias);
-					var m = queryStructures.get(generatedColumnsFullClassName);
-					if (m == null) {
-						m = new QueryClassStructure(generatedColumnsFullClassName, JavaStructure.Type.CLASS);
-						queryStructures.put(generatedColumnsFullClassName, m);
-					}
-					// TODO let user specify a type
-					m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
-				} else {
+			
+			// If it's querying from just one table, then there's no need for a wrapper class
+			if (isQueryingFromJustOneTable(parsedQuery)) {
+				queryImports.add("java.util.ArrayList");
+				queryImports.add("java.util.List");
+				FullClassName fullClassName = null;
+				for (ColumnRecord columnRecord : parsedQuery.getColumns()) {
 					String fullClassNameStr = getFullClassNameFromTable(columnRecord.table(), parsedQuery);
-
-					// System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassNameStr);
-					var fullClassName = new FullClassName(fullClassNameStr);
-					if (queryImports.add(fullClassNameStr)) {
-						queryImportsStr += "import " + fullClassName.name() + ";\n";
-						String classTableName = splitPackageClass(fullClassNameStr)[1];
-						String content = """
-								private List<%s> list%s = new ArrayList<>();
-								public List<%s> getList%s() {
-									return list%s;
-								}
-							""".formatted(classTableName, classTableName, classTableName, classTableName, classTableName);
-						queryClassToCreate.content += content;
-					}
-					
+					fullClassName = new FullClassName(fullClassNameStr);
+					queryImports.add(fullClassNameStr);
 					addQueryFields(queryStructures, fullClassName, fullClassNameStr, columnRecord);
 				}
-			}
-
-			if (!generatedColumns.isEmpty()) {
-				queryClassToCreate.content += """
-						private List<%s> generatedColumns = new ArrayList<>();
-						public List<%s> getGeneratedColumns() {
-							return generatedColumns;
+				var queryStructure = queryStructures.entrySet().iterator().next().getValue();
+				var queryMethodsAndImports = packageMethods.get(packageName);
+				if (queryMethodsAndImports == null) {
+					queryMethodsAndImports = new QueryMethodsAndImports();
+					packageMethods.put(packageName, queryMethodsAndImports);
+				}
+				queryMethodsAndImports.imports.addAll(queryImports);
+				queryMethodsAndImports.methods += createQueryMethodForSingleClass(fullClassName, queryStructure, queryName);
+			} else {
+				final String queryClassName = getQueryClassName(queryName);
+				final String generatedColumnsClassName = uppercaseFirstLetter(queryName) + GENERATED_COLUMNS;
+				final FullClassName generatedColumnsFullClassName = new FullClassName(generatedColumnsClassName);
+				
+				String classContent = """
+						package %s;
+	
+						import java.util.ArrayList;
+						import java.util.List;
+						// TODO the two imports below should be added conditionally
+						// when there's a groupBy method
+						import java.util.Map;
+						import java.util.HashMap;
+	
+						#import#
+	
+						public class %s {
+	
+							
+						""".formatted(packageName, queryClassName);
+				var queryClassToCreate = new ClassToCreate(packageName, queryClassName, classContent);
+	
+				for (ColumnRecord columnRecord : parsedQuery.getColumns()) {
+					boolean isTemporaryTable = false;
+					if (columnRecord.table() != null) {
+						isTemporaryTable = parsedQuery.getTables().get(columnRecord.table()).isTemporaryTable();
+					}
+					if (columnRecord.isGeneratedValue() || isTemporaryTable) {
+						// Add to generated columns
+						String alias = columnRecord.alias();
+						if (alias == null) {
+							if (!isTemporaryTable) {
+								throw new RuntimeException("Invalid state");
+							}
+							alias = columnRecord.table();
 						}
-					""".formatted(generatedColumnsClassName, generatedColumnsClassName);
+						generatedColumns.add(alias);
+						var m = queryStructures.get(generatedColumnsFullClassName);
+						if (m == null) {
+							m = new QueryClassStructure(generatedColumnsFullClassName, JavaStructure.Type.CLASS);
+							queryStructures.put(generatedColumnsFullClassName, m);
+						}
+						// TODO let user specify a type
+						m.fields.put(new ColumnName(alias), new ColumnField(alias, new Field("", "Object")));
+					} else {
+						String fullClassNameStr = getFullClassNameFromTable(columnRecord.table(), parsedQuery);
+	
+						// System.out.println("table = " + table + ", tableMap.get(table) = " + fullClassNameStr);
+						var fullClassName = new FullClassName(fullClassNameStr);
+						if (queryImports.add(fullClassNameStr)) {
+							queryImportsStr += "import " + fullClassName.name() + ";\n";
+							String classTableName = splitPackageClass(fullClassNameStr)[1];
+							String content = """
+									private List<%s> list%s = new ArrayList<>();
+									public List<%s> getList%s() {
+										return list%s;
+									}
+								""".formatted(classTableName, classTableName, classTableName, classTableName, classTableName);
+							queryClassToCreate.content += content;
+						}
+						
+						addQueryFields(queryStructures, fullClassName, fullClassNameStr, columnRecord);
+					}
+				}
+	
+				if (!generatedColumns.isEmpty()) {
+					queryClassToCreate.content += """
+							private List<%s> generatedColumns = new ArrayList<>();
+							public List<%s> getGeneratedColumns() {
+								return generatedColumns;
+							}
+						""".formatted(generatedColumnsClassName, generatedColumnsClassName);
+				}
+	
+				queryClassToCreate.content += "\n\t//##end##\n}";
+				queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
+				queryClassesToCreate.put(queryClassName, queryClassToCreate);
+	
+				// System.out.println("-------- Query Structures ------------");
+				// System.out.println(queryStructures);
+	
+				if (!generatedColumns.isEmpty()) {
+					createGeneratedColumnsClass(packageName, generatedColumnsClassName, generatedColumns);
+				}
+				
+				var queryMethodsAndImports = packageMethods.get(packageName);
+				if (queryMethodsAndImports == null) {
+					queryMethodsAndImports = new QueryMethodsAndImports();
+					packageMethods.put(packageName, queryMethodsAndImports);
+				}
+				
+				queryMethodsAndImports.imports.addAll(queryImports);
+				queryMethodsAndImports.methods += createQueryMethod(queryName, queryClassName, queryStructures);
 			}
-
-			queryClassToCreate.content += "\n\t//##end##\n}";
-			queryClassToCreate.content = queryClassToCreate.content.replaceAll("#import#", queryImportsStr);
-			queryClassesToCreate.put(queryClassName, queryClassToCreate);
-
-			// System.out.println("-------- Query Structures ------------");
-			// System.out.println(queryStructures);
-
-			if (!generatedColumns.isEmpty()) {
-				createGeneratedColumnsClass(packageName, generatedColumnsClassName, generatedColumns);
-			}
-
-			var queryMethodsAndImports = packageMethods.get(packageName);
-			if (queryMethodsAndImports == null) {
-				queryMethodsAndImports = new QueryMethodsAndImports();
-				packageMethods.put(packageName, queryMethodsAndImports);
-			}
-			
-			queryMethodsAndImports.imports.addAll(queryImports);
-			queryMethodsAndImports.methods += createQueryMethod(queryName, queryClassName, queryStructures);
 		}
 		
 		// Create a MapResultClass for each package that contains a @Query
@@ -230,6 +243,18 @@ public class MappingProcessor extends AbstractProcessor {
 		}
 	}
 	
+	private boolean isQueryingFromJustOneTable(ParseQuery parsedQuery) {
+		boolean hasGeneratedColumn = parsedQuery.getColumns()
+				.stream()
+				.anyMatch(c -> c.isGeneratedValue());
+		if (parsedQuery.getTables().size() == 1 && !hasGeneratedColumn) {
+			if (!parsedQuery.getTables().entrySet().iterator().next().getValue().isTemporaryTable()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private String getFullClassNameFromTable(String table, ParseQuery parsedQuery) {
 		if (table == null) {
 			// if it's not a generated column and table is null
@@ -459,6 +484,51 @@ public class MappingProcessor extends AbstractProcessor {
 		};
 	}
 
+	private String createQueryMethodForSingleClass(FullClassName fullClassName,
+			QueryClassStructure queryStructure, String queryName) {
+		System.out.println("------------------ createQueryMethodForSingleClass ---------------");
+		System.out.println(fullClassName);
+		final int objCounter = 0;
+		String className = fullClassName.name();
+		if (className.contains("."))
+			className = splitPackageClass(className)[1];
+		final String ClassName = uppercaseFirstLetter(className);
+
+		String methodBody = """
+		List<%s> list = new ArrayList<>();
+
+				while (rs.next()) {
+		""".formatted(className);
+			
+		if (queryStructure.type == Type.RECORD) {
+			methodBody += getRecordConstructor(fullClassName, className, queryStructure.fields, objCounter);
+		} else {
+			methodBody += getClassConstructor(fullClassName, className, queryStructure.fields, objCounter);
+		}
+
+		methodBody += """
+					list.add(obj%s);
+
+		""".formatted(objCounter);
+
+		methodBody += """
+				}
+
+				return list;
+		""";
+	
+		String ret = """
+
+					public static List<%s> %s(ResultSet rs) throws SQLException {
+						%s
+					}
+
+				""".formatted(className, queryName, methodBody);
+
+		System.out.println(ret);
+		return ret;
+	}
+	
 	private String createQueryMethod(String queryName, String queryClassName,
 			Map<FullClassName, QueryClassStructure> queryStructures) {
 
@@ -514,8 +584,19 @@ public class MappingProcessor extends AbstractProcessor {
 
 				""".formatted(queryClassName, queryName, methodBody);
 		
-		// If there's a OneToMany or ManyToMany relationship, then create
-		// a groupedBy method, eg: groupedByPerson
+		addGroupByMethods(queryStructures, queryClassName);
+
+		return ret;
+	}
+	
+	/**
+	 * If there's a OneToMany or ManyToMany relationship, then create
+	 * a groupedBy method, eg: groupedByPerson
+	 * 
+	 * @param queryStructures
+	 * @param queryClassName
+	 */
+	private void addGroupByMethods(Map<FullClassName, QueryClassStructure> queryStructures, String queryClassName) {
 		for (var queryStructure : queryStructures.entrySet()) {
 			FullClassName fcn = queryStructure.getKey();
 			var ownerRelationships = relationships.get(fcn);
@@ -541,8 +622,6 @@ public class MappingProcessor extends AbstractProcessor {
 				break;
 			}
 		}
-
-		return ret;
 	}
 
 	/**
