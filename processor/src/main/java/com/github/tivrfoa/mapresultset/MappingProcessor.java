@@ -62,6 +62,8 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			processLastRound(annotations, roundEnvironment);
+
+			System.out.println("------------------------ MapResultSet annotation processing completed successfully. ------------------------");
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}
@@ -860,8 +862,8 @@ public class MappingProcessor extends AbstractProcessor {
 				}
 				FullClassName partnerClass = getClassInGenericDeclaration(rel.partner());
 				QueryClassStructure partnerObj = queryStructures.get(partnerClass);
-				System.out.println("######### checking relationship: " + rel);
-				System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
+				// System.out.println("######### checking relationship: " + rel);
+				// System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
 				if (partnerObj == null) continue;
 				if (queryClassStructure.type == Type.CLASS) {
 					final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
@@ -947,14 +949,13 @@ public class MappingProcessor extends AbstractProcessor {
 
 	private void processAnnotations(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		for ( TypeElement annotation : annotations ) {
-			System.out.println("///////////////////////////////////////////////////////////////////////");
-			System.out.println("====== Processing Annotation: " + annotation + " ========");
-			System.out.println("///////////////////////////////////////////////////////////////////////");
+			// System.out.println("///////////////////////////////////////////////////////////////////////");
+			// System.out.println("====== Processing Annotation: " + annotation + " ========");
+			// System.out.println("///////////////////////////////////////////////////////////////////////");
 
 			Set<? extends Element> annotatedElements
 					= roundEnvironment.getElementsAnnotatedWith(annotation);
-			System.out.println("Annotated Elements: " + annotatedElements);
-			
+
 			for (var e : annotatedElements) {
 				final String elementName = e.toString();
 				// System.out.println("Element: " + elementName + " and it's type is " + e.getKind());
@@ -1035,7 +1036,6 @@ public class MappingProcessor extends AbstractProcessor {
 			fieldType = tmp[tmp.length - 1];
 			mapField.put(new FieldName(field.toString()), new FieldType(fieldType));
 		}
-		System.out.println("mapField = " + mapField);
 		JavaStructure.Type type = JavaStructure.getType(e.getKind().toString());
 		RecordComponent recordComponents = new RecordComponent();
 		if (type == JavaStructure.Type.RECORD) {
@@ -1065,7 +1065,6 @@ public class MappingProcessor extends AbstractProcessor {
 	private void processColumn(String elementName, Element e) {
 		var fieldName = new FieldName(e.toString());
 		var columnName = new ColumnName(getAnnotationParameter(e, "name()"));
-		System.out.println("column: " + fieldName + ", value = " + columnName);
 
 		var structureStr = e.getEnclosingElement().toString();
 		var structure = new FullClassName(structureStr);

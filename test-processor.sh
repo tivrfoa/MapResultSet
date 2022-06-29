@@ -10,10 +10,20 @@ rm -fR classes/* &&
   echo '--------------' && cat mapsources.txt && echo '---------------' &&
   javac -d classes/ @mapsources.txt &&
 
-  find integrationtest/src/test/java/org/ -name "*.java" > sources.txt &&
-  echo '--- Compiling Integration Test:' &&
+  echo '--- Processing Annotations:' &&
+  find integrationtest/src/main/java/org/ -name "*.java" > sources.txt &&
   echo '--------------' && cat sources.txt && echo '---------------' &&
-  javac -cp classes/ -processor com.github.tivrfoa.mapresultset.MappingProcessor -s generatedSources \
+## -proc:only does not work. It tries to compile anyways :(
+  javac -verbose  -cp classes/ -proc:only -implicit:none  -processor com.github.tivrfoa.mapresultset.MappingProcessor \
+    -s generatedSources @sources.txt
+
+## Previous step fails because "-proc:only" is not respected.
+## https://stackoverflow.com/questions/72795137/first-mvn-compile-fails-to-find-generated-sources
+  echo '--- Compiling Integration Test:' &&
+  find generatedSources -name "*.java" > sources.txt &&
+  find integrationtest/src/main/java/org/ -name "*.java" >> sources.txt &&
+  echo '--------------' && cat sources.txt && echo '---------------' &&
+  javac -cp classes/ \
     -d classes/ @sources.txt integrationtest/src/test/java/com/github/tivrfoa/mapresultset/TestProcessor.java &&
     
   echo '--- Running TestProcessor' &&

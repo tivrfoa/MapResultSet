@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch TestProcessor",
+            "request": "launch",
+            "mainClass": "com.github.tivrfoa.mapresultset.TestProcessor",
+            "projectName": "mapresultset-integrationtest"
+        },
+        {
+            "type": "java",
             "name": "Launch ParseQuery",
             "request": "launch",
             "mainClass": "com.github.tivrfoa.mapresultset.ParseQuery",

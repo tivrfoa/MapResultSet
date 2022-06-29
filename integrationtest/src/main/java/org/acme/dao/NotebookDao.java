@@ -36,11 +36,11 @@ public class NotebookDao {
             group by c.id, c.name
             """;
     
-    public static List<Notebook> listNotebooks() {
+    public static ListNotebooksRecords listNotebooks() {
         try {
-            var list = MapResultSet.listNotebooks(executeQuery(listNotebooks));
-            System.out.println(list.getGeneratedColumns().get(0).getFour());
-            return list.getListNotebook();
+            return MapResultSet.listNotebooks(executeQuery(listNotebooks));
+            // System.out.println(list.getGeneratedColumns().get(0).getFour());
+            // return list.getListNotebook();
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

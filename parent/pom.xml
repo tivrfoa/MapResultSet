@@ -13,7 +13,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <org.apache.maven.plugins.enforcer.version>3.0.0-M3</org.apache.maven.plugins.enforcer.version>
         <org.apache.maven.plugins.surefire.version>3.0.0-M5</org.apache.maven.plugins.surefire.version>
         <org.apache.maven.plugins.javadoc.version>3.1.0</org.apache.maven.plugins.javadoc.version>
         <org.junit.jupiter.version>5.8.0-M1</org.junit.jupiter.version>
@@ -82,18 +81,6 @@
                     <configuration>
                         <deployAtEnd>true</deployAtEnd>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>${org.apache.maven.plugins.enforcer.version}</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>de.andrena.tools.nopackagecycles</groupId>
-                            <artifactId>no-package-cycles-enforcer-rule</artifactId>
-                            <version>1.0.9</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
@@ -243,47 +230,6 @@
         </pluginManagement>
 
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <!-- Overriding version specified in execution in OSS super POM -->
-                <version>${org.apache.maven.plugins.enforcer.version}</version>
-                <executions>
-                    <execution>
-                        <id>enforce-rules</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>[1.8,)</version>
-                                </requireJavaVersion>
-                                <DependencyConvergence />
-                                <requirePluginVersions />
-                                <requireMavenVersion>
-                                    <version>[3.0.3,)</version>
-                                </requireMavenVersion>
-                            </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>enforce-no-package-cycles</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <phase>test-compile</phase>
-                        <configuration>
-                            <rules>
-                                <NoPackageCyclesRule implementation="de.andrena.tools.nopackagecycles.NoPackageCyclesRule">
-                                    <includeTests>false</includeTests>
-                                </NoPackageCyclesRule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
