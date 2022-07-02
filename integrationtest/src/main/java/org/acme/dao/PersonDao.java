@@ -32,6 +32,7 @@ public class PersonDao {
             from person as p join country as c on
               p.country_id = c.id join state as s on
               s.country_id = c.id
+            order by c.id, s.name
             """;
 
     @Query
@@ -95,13 +96,9 @@ public class PersonDao {
         }
     }
 
-    public static List<Person> listPersonCountry() {
+    public static ListPersonCountryRecords listPersonCountry() {
         try {
-            var list = MapResultSet.listPersonCountry(executeQuery(listPersonCountry));
-            System.out.println(list.getListCountry());
-            System.out.println("\n----------- groupedByCountry ---------\n");
-            System.out.println(list.groupedByCountry());
-            return list.getListPerson();
+            return MapResultSet.listPersonCountry(executeQuery(listPersonCountry));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

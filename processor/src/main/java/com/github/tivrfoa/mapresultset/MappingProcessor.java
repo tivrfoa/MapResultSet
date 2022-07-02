@@ -99,7 +99,6 @@ public class MappingProcessor extends AbstractProcessor {
 		// Parse all queries
 		for (var queryElement : queries) {
 			final String query = (String) ((VariableElement) queryElement).getConstantValue();
-			System.out.println("-->> Parsing query: " + query);
 			var parsedQuery = new ParseQuery(query);
 			parsedQuery.parse();
 //			System.out.println("p.getTables() = " + parsedQuery.getTables());
@@ -490,13 +489,10 @@ public class MappingProcessor extends AbstractProcessor {
 
 	private String createQueryMethodForSingleClass(FullClassName fullClassName,
 			QueryClassStructure queryStructure, String queryName) {
-		System.out.println("------------------ createQueryMethodForSingleClass ---------------");
-		System.out.println(fullClassName);
 		final int objCounter = 0;
 		String className = fullClassName.name();
 		if (className.contains("."))
 			className = splitPackageClass(className)[1];
-		final String ClassName = uppercaseFirstLetter(className);
 
 		String methodBody = """
 		List<%s> list = new ArrayList<>();
@@ -529,7 +525,6 @@ public class MappingProcessor extends AbstractProcessor {
 
 				""".formatted(className, queryName, methodBody);
 
-		System.out.println(ret);
 		return ret;
 	}
 	
@@ -605,7 +600,6 @@ public class MappingProcessor extends AbstractProcessor {
 			FullClassName fcn = queryStructure.getKey();
 			var ownerRelationships = relationships.get(fcn);
 			if (ownerRelationships == null) {
-				System.out.println(fcn + " does not have any relationship mapped in its class.");
 				continue;
 			}
 
@@ -728,27 +722,8 @@ public class MappingProcessor extends AbstractProcessor {
 			System.err.println("WARNING!!! Can't create groupedBy method without knowing the @Id");
 			return "";
 		}
-		// System.out.println("-------------- PRIMARY KEYS ---------------");
-		// System.out.println(keyFields);
-		var queryFields = queryClassStructure.fields;
-		for (var keyField : keyFields) {
-			var columnName = new ColumnName(keyField.name());
-			var mappedColumns = classMappedColumns.get(fcn);
-			if (mappedColumns != null) {
-				FieldName fieldName = new FieldName(keyField.name());
-				for (var es : mappedColumns.entrySet()) {
-					if (es.getValue().equals(fieldName)) {
-						columnName = es.getKey();
-						break;
-					}
-				}
-			}
-			if (!queryFields.containsKey(columnName)) {
-				System.out.println("WARNING!!! Can't create groupedBy for class " + ownerClass +
-						" because query does not contain key: " + keyField.name());
-				return "";
-			}
-		}
+		
+		if (!queryContainsKey(fcn, ownerClass, queryClassStructure.fields, keyFields)) return "";
 
 		var newKeyRecord = new NewKeyRecord(ownerClass, queryClassStructure, keyFields);
 		var collectionCreateAndAddMethods = new CollectionCreateAndAddMethods(fcn, ownerClass,
@@ -821,6 +796,31 @@ public class MappingProcessor extends AbstractProcessor {
 					collectionCreateAndAddMethods.createPartners,
 					collectionCreateAndAddMethods.addToPartners);
 		}
+	}
+
+	private boolean queryContainsKey(FullClassName fcn, String ownerClass, Map<ColumnName, ColumnField> queryFields, List<Field> keyFields) {
+		// System.out.println("-------------- PRIMARY KEYS ---------------");
+		// System.out.println(keyFields);
+
+		for (var keyField : keyFields) {
+			var columnName = new ColumnName(keyField.name());
+			var mappedColumns = classMappedColumns.get(fcn);
+			if (mappedColumns != null) {
+				FieldName fieldName = new FieldName(keyField.name());
+				for (var es : mappedColumns.entrySet()) {
+					if (es.getValue().equals(fieldName)) {
+						columnName = es.getKey();
+						break;
+					}
+				}
+			}
+			if (!queryFields.containsKey(columnName)) {
+				System.out.println("WARNING!!! Can't create groupedBy for class " + ownerClass +
+						" because query does not contain key: " + keyField.name());
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static class NewKeyRecord {
@@ -1058,7 +1058,7 @@ public class MappingProcessor extends AbstractProcessor {
 	 * @return
 	 */
 	private List<String> getTypesFromConstructor(String str) {
-		System.out.println("Parsing constructor: " + str);
+		// System.out.println("Parsing constructor: " + str);
 		int parentheses = str.indexOf("(");
 		str = str.substring(parentheses + 1, str.length() - 1);
 		return Arrays.asList(str.split(","));

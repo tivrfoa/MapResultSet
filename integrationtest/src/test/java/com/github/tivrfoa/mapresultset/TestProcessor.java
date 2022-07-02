@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.util.List;
 
@@ -11,6 +12,8 @@ import org.acme.dao.BookDao;
 import org.acme.dao.ListBooksAndBookstoresRecords;
 import org.acme.dao.ListNotebooksGeneratedColumns;
 import org.acme.dao.ListNotebooksRecords;
+import org.acme.dao.ListPersonCountryGeneratedColumns;
+import org.acme.dao.ListPersonCountryRecords;
 import org.acme.dao.NotebookDao;
 import org.acme.dao.PersonDao;
 import org.acme.dao.SumValuesGroupedByCompanyGeneratedColumns;
@@ -18,7 +21,10 @@ import org.acme.dao.SumValuesGroupedByCompanyRecords;
 import org.acme.domain.Book;
 import org.acme.domain.Bookstore;
 import org.acme.domain.Company;
+import org.acme.domain.Country;
 import org.acme.domain.Notebook;
+import org.acme.domain.Person;
+import org.acme.domain.State;
 import org.junit.jupiter.api.Test;
 
 public class TestProcessor {
@@ -104,6 +110,45 @@ public class TestProcessor {
 		assertEquals(new BigDecimal("3000.00"), generatedColumns.get(1).getSum());
 	}
 
+	@Test
+	public void testListPersonCountry() {
+		ListPersonCountryRecords records = PersonDao.listPersonCountry();
+
+		List<State> listState = records.getListState();
+		List<Person> listPerson = records.getListPerson();
+		List<Country> listCountry = records.getListCountry();
+		List<ListPersonCountryGeneratedColumns> generatedColumns = records.getGeneratedColumns();
+
+		assertEquals(4, generatedColumns.size());
+		assertEquals("+84", generatedColumns.get(2).getPlus_sign_phone_code());
+
+
+		List<Country> groupedByCountry = records.groupedByCountry();
+		assertEquals(3, groupedByCountry.size());
+
+		assertEquals("Brazil", groupedByCountry.get(0).name());
+		assertEquals(11111111111112L, groupedByCountry.get(0).someBigNumber());
+
+		// FIXME there should be just one person
+		//   This is only fixable if person's id is in the query
+		assertEquals(2, groupedByCountry.get(0).listPerson().size());
+		assertEquals("Marcos", groupedByCountry.get(0).listPerson().get(0).getName());
+		assertEquals("Marcos", groupedByCountry.get(0).listPerson().get(1).getName());
+
+		assertEquals(2, groupedByCountry.get(0).states().size());
+		assertEquals("Acre", groupedByCountry.get(0).states().get(0).getName());
+		assertEquals("Minas Gerais", groupedByCountry.get(0).states().get(1).getName());
+
+		assertEquals(1, groupedByCountry.get(1).listPerson().size());
+		assertEquals("Vietnam", groupedByCountry.get(1).name());
+		assertEquals(new BigInteger("1111111111111311111111111113"), groupedByCountry.get(1).evenBigger());
+
+		assertEquals(1, groupedByCountry.get(2).listPerson().size());
+		assertEquals("Germany", groupedByCountry.get(2).name());
+		assertEquals(49, groupedByCountry.get(2).phoneCode());
+		assertEquals("Prost", groupedByCountry.get(2).states().get(0).getName());
+	}
+
 	public static void main(String[] args) {
 		TestProcessor test = new TestProcessor();
 
@@ -111,9 +156,8 @@ public class TestProcessor {
 		test.testListBooksOnly();
 		test.testListNotebooksWithGeneratedColumns();
 		test.testSumValuesGroupedByCompany();
+		test.testListPersonCountry();
 
-		System.out.println("\n--------- listPersonCountry ----------\n");
-		System.out.println(PersonDao.listPersonCountry());
 		System.out.println("\n--------- listPersonPhones ----------\n");
 		System.out.println(PersonDao.listPersonPhones());
 		System.out.println("\n--------- listPersonPhonesAndCountry ----------\n");
