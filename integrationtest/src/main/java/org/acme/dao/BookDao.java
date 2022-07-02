@@ -19,12 +19,12 @@ public class BookDao {
               b.name        = bbs.book_name join
               bookstore as bs on
               bs.id = bbs.bookstore_id
+            order by b.author_name
             """;
     
-    public static List<Book> listBooks() {
+    public static ListBooksRecords listBooks() {
         try {
-            var list = MapResultSet.listBooks(executeQuery(listBooks));
-            return list.groupedByBook();
+            return MapResultSet.listBooks(executeQuery(listBooks));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

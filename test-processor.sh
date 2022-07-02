@@ -23,11 +23,12 @@ rm -fR classes/* &&
   find generatedSources -name "*.java" > sources.txt &&
   find integrationtest/src/main/java/org/ -name "*.java" >> sources.txt &&
   echo '--------------' && cat sources.txt && echo '---------------' &&
-  javac -cp classes/ \
+  javac -cp classes/:lib/junit-jupiter-api-5.6.2.jar:lib/apiguardian-api-1.1.0.jar \
     -d classes/ @sources.txt integrationtest/src/test/java/com/github/tivrfoa/mapresultset/TestProcessor.java &&
     
   echo '--- Running TestProcessor' &&
-  java -cp classes/:lib/mysql-connector-java-8.0.29.jar -ea com.github.tivrfoa.mapresultset.TestProcessor
+  java -cp classes/:lib/mysql-connector-java-8.0.29.jar:lib/junit-jupiter-5.6.2.jar:lib/junit-jupiter-api-5.6.2.jar:lib/opentest4j-1.2.0.jar \
+    -ea com.github.tivrfoa.mapresultset.TestProcessor
 
 rm mapsources.txt
 rm sources.txt
