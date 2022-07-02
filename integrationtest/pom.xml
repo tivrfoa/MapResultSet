@@ -103,15 +103,15 @@
 			            <goals>
 			                <goal>compile</goal>
 			            </goals>
-			            <!-- <configuration>
+			            <configuration>
 			                <compilerArgs>
 			                    <arg>-proc:none</arg>
 			                </compilerArgs>
-			            </configuration> -->
+			            </configuration>
 			        </execution>
 			    </executions>
             </plugin>
-           <!--  <plugin>
+            <plugin>
 			    <groupId>org.codehaus.mojo</groupId>
 			    <artifactId>build-helper-maven-plugin</artifactId>
 			    <version>3.3.0</version>
@@ -129,9 +129,9 @@
 			            </configuration>
 			        </execution>
 			    </executions>
-			</plugin> -->
+			</plugin>
         </plugins>
-        <!-- <pluginManagement>
+        <pluginManagement>
         	<plugins>
 	       		<plugin>
 		            <groupId>org.eclipse.m2e</groupId>
@@ -166,6 +166,6 @@
 		            </configuration>
 		        </plugin>
 	        </plugins>
-        </pluginManagement> -->
+        </pluginManagement>
     </build>
 </project>
