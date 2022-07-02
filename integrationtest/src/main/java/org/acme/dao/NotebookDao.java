@@ -3,11 +3,8 @@ package org.acme.dao;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.List;
 
 import com.github.tivrfoa.mapresultset.api.Query;
-
-import org.acme.domain.Company;
 
 public class NotebookDao {
 	
@@ -17,6 +14,7 @@ public class NotebookDao {
                    is_available, is_ssd as isSSD, has_wifi, cpu_speed as clock,
                    production_cost
             from notebook
+            order by id
             """;
 
     @Query
@@ -36,21 +34,16 @@ public class NotebookDao {
     public static ListNotebooksRecords listNotebooks() {
         try {
             return MapResultSet.listNotebooks(executeQuery(listNotebooks));
-            // System.out.println(list.getGeneratedColumns().get(0).getFour());
-            // return list.getListNotebook();
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
         }
     }
     
-    public static List<Company> sumValuesGroupedByCompany() {
+    public static SumValuesGroupedByCompanyRecords sumValuesGroupedByCompany() {
         try {
             var rs = executeQuery(sumValuesGroupedByCompany);
-            var list = MapResultSet.sumValuesGroupedByCompany(rs);
-            for (var v : list.getGeneratedColumns())
-                System.out.println(v.getSum());
-            return list.getListCompany();
+            return MapResultSet.sumValuesGroupedByCompany(rs);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
