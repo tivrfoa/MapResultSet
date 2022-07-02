@@ -11,7 +11,7 @@ import org.acme.domain.Book;
 import org.acme.domain.Bookstore;
 
 
-public class ListBooksRecords {
+public class ListBooksAndBookstoresRecords {
 
 
 	private List<Book> listBook = new ArrayList<>();

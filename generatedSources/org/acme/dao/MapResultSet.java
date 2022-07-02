@@ -283,8 +283,8 @@ public class MapResultSet {
 	}
 
 
-	public static ListBooksRecords listBooks(ResultSet rs) throws SQLException {
-		ListBooksRecords records = new ListBooksRecords();
+	public static ListBooksAndBookstoresRecords listBooksAndBookstores(ResultSet rs) throws SQLException {
+		ListBooksAndBookstoresRecords records = new ListBooksAndBookstoresRecords();
 
 		while (rs.next()) {
 			Book obj1 = new Book();
@@ -303,21 +303,18 @@ public class MapResultSet {
 	}
 
 
-	public static ListBooksAuthorNameOnlyRecords listBooksAuthorNameOnly(ResultSet rs) throws SQLException {
-		ListBooksAuthorNameOnlyRecords records = new ListBooksAuthorNameOnlyRecords();
+	public static List<Book> listBooksOnly(ResultSet rs) throws SQLException {
+		List<Book> list = new ArrayList<>();
 
 		while (rs.next()) {
-			Book obj1 = new Book();
-			obj1.setAuthorName(rs.getString("b.author_name"));
-			records.getListBook().add(obj1);
-
-			Bookstore obj2 = new Bookstore();
-			obj2.setName(rs.getString("bs.name"));
-			records.getListBookstore().add(obj2);
+			Book obj0 = new Book();
+			obj0.setAuthorName(rs.getString("b.author_name"));
+			obj0.setName(rs.getString("b.name"));
+			list.add(obj0);
 
 		}
 
-		return records;
+		return list;
 
 	}
 

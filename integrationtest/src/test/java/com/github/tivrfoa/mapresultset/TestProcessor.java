@@ -1,11 +1,12 @@
 package com.github.tivrfoa.mapresultset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
 
 import org.acme.dao.BookDao;
-import org.acme.dao.ListBooksRecords;
+import org.acme.dao.ListBooksAndBookstoresRecords;
 import org.acme.dao.ListNotebooksRecords;
 import org.acme.dao.NotebookDao;
 import org.acme.dao.PersonDao;
@@ -16,13 +17,8 @@ import org.junit.jupiter.api.Test;
 public class TestProcessor {
 
 	@Test
-	public void testMain() {
-		main(null);
-	}
-
-	@Test
 	public void testBookBookstoreQuery() {
-		ListBooksRecords records = BookDao.listBooks();
+		ListBooksAndBookstoresRecords records = BookDao.listBooksAndBookstores();
 
 		List<Book> books = records.groupedByBook();
 		assertEquals(2, books.size());
@@ -45,7 +41,23 @@ public class TestProcessor {
 		assertEquals("Bookstore 3", bookstores.get(2).getName());
 	}
 
+	@Test
+	public void testListBooksOnly() {
+		List<Book> books = BookDao.listBooksOnly();
+
+		assertEquals(2, books.size());
+		assertEquals(books.get(0).getAuthorName(), "Dan Brown");
+		assertEquals(books.get(0).getName(), "Angels & Demons");
+		assertEquals(books.get(1).getAuthorName(), "George R.R. Martin");
+		assertEquals(books.get(1).getName(), "A Game of Thrones");
+
+		assertNull(books.get(0).getBookstores());
+		assertNull(books.get(1).getBookstores());
+	}
+
 	public static void main(String[] args) {
+		TestProcessor test = new TestProcessor();
+
 		System.out.println("\n--------- listNotebooks ----------\n");
 		ListNotebooksRecords listNotebooks = NotebookDao.listNotebooks();
 		System.out.println(listNotebooks);
@@ -60,10 +72,8 @@ public class TestProcessor {
 		System.out.println("\n--------- listPersonAddresses ----------\n");
 		System.out.println(PersonDao.listPersonAddresses());
 
-		new TestProcessor().testBookBookstoreQuery();
-
-		System.out.println("\n--------- listBooksAuthorNameOnly ----------\n");
-		System.out.println(BookDao.listBooksAuthorNameOnly());
+		test.testBookBookstoreQuery();
+		test.testListBooksOnly();
 	}
 }
 

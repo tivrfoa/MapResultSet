@@ -1,8 +1,6 @@
 package org.acme.dao;
 
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
@@ -10,7 +8,6 @@ import java.util.List;
 import com.github.tivrfoa.mapresultset.api.Query;
 
 import org.acme.domain.Company;
-import org.acme.domain.Notebook;
 
 public class NotebookDao {
 	
