@@ -10,6 +10,7 @@ import org.acme.dao.ListNotebooksRecords;
 import org.acme.dao.NotebookDao;
 import org.acme.dao.PersonDao;
 import org.acme.domain.Book;
+import org.acme.domain.Bookstore;
 import org.junit.jupiter.api.Test;
 
 public class TestProcessor {
@@ -21,13 +22,27 @@ public class TestProcessor {
 
 	@Test
 	public void testBookBookstoreQuery() {
-		ListBooksRecords listBooks = BookDao.listBooks();
-		List<Book> books = listBooks.groupedByBook();
+		ListBooksRecords records = BookDao.listBooks();
+
+		List<Book> books = records.groupedByBook();
 		assertEquals(2, books.size());
 		assertEquals(books.get(0).getAuthorName(), "Dan Brown");
 		assertEquals(books.get(0).getName(), "Angels & Demons");
 		assertEquals(books.get(1).getAuthorName(), "George R.R. Martin");
 		assertEquals(books.get(1).getName(), "A Game of Thrones");
+
+		assertEquals(3, books.get(0).getBookstores().size());
+		assertEquals(2, books.get(1).getBookstores().size());
+
+		List<Bookstore> bookstores = books.get(0).getBookstores();
+		assertEquals("Bookstore 1", bookstores.get(0).getName());
+		assertEquals("Bookstore 2", bookstores.get(1).getName());
+		assertEquals("Bookstore 3", bookstores.get(2).getName());
+		
+		bookstores = records.getListBookstore();
+		assertEquals("Bookstore 1", bookstores.get(0).getName());
+		assertEquals("Bookstore 2", bookstores.get(1).getName());
+		assertEquals("Bookstore 3", bookstores.get(2).getName());
 	}
 
 	public static void main(String[] args) {
