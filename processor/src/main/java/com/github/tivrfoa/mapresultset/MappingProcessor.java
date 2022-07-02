@@ -63,7 +63,9 @@ public class MappingProcessor extends AbstractProcessor {
 		if ( roundEnvironment.processingOver() ) {
 			processLastRound(annotations, roundEnvironment);
 
+			System.out.println("------------------------------------------------------------------------------------------------------------");
 			System.out.println("------------------------ MapResultSet annotation processing completed successfully. ------------------------");
+			System.out.println("------------------------------------------------------------------------------------------------------------");
 		} else {
 			processAnnotations(annotations, roundEnvironment);
 		}

@@ -14,7 +14,7 @@ rm -fR classes/* &&
   find integrationtest/src/main/java/org/ -name "*.java" > sources.txt &&
   echo '--------------' && cat sources.txt && echo '---------------' &&
 ## -proc:only does not work. It tries to compile anyways :(
-  javac -verbose  -cp classes/ -proc:only -implicit:none  -processor com.github.tivrfoa.mapresultset.MappingProcessor \
+  javac -verbose  -cp classes/ -Xlint:processing -proc:only -implicit:none  -processor com.github.tivrfoa.mapresultset.MappingProcessor \
     -s generatedSources @sources.txt
 
 ## Previous step fails because "-proc:only" is not respected.
