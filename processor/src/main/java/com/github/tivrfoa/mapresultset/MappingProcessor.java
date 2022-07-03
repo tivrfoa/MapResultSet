@@ -867,6 +867,9 @@ public class MappingProcessor extends AbstractProcessor {
 				// System.out.println("######### checking relationship: " + rel);
 				// System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
 				if (partnerObj == null) continue;
+
+				// TODO here I need to check if there's a method to create and another
+				//   to add. If there's one, then there *must* be the other too.
 				if (queryClassStructure.type == Type.CLASS) {
 					final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
 					createPartners += """

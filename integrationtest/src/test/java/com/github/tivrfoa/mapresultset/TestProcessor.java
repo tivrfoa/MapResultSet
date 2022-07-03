@@ -135,6 +135,8 @@ public class TestProcessor {
 		//   This is only fixable if person's id is in the query
 		//   I'm not sure if this should be "fixed", like:
 		//     - would these types of results happen often?
+	    //         I think it's like the 80/20 rule: it would cause performance penalty
+		//         (mapping check) for all cases, when 80% of the queries probably don't need this.
 		//     - shouldn't the user declare the type as a HashSet instead of
 		//       a list in those cases?
 		assertEquals(2, groupedByCountry.get(0).listPerson().size());
