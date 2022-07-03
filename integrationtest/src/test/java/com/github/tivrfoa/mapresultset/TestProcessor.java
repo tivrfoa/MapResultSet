@@ -131,17 +131,11 @@ public class TestProcessor {
 		assertEquals("Brazil", groupedByCountry.get(0).name());
 		assertEquals(11111111111112L, groupedByCountry.get(0).someBigNumber());
 
-		// FIXME there should be just one person
-		//   This is only fixable if person's id is in the query
-		//   I'm not sure if this should be "fixed", like:
-		//     - would these types of results happen often?
-	    //         I think it's like the 80/20 rule: it would cause performance penalty
-		//         (mapping check) for all cases, when 80% of the queries probably don't need this.
-		//     - shouldn't the user declare the type as a HashSet instead of
-		//       a list in those cases?
-		assertEquals(2, groupedByCountry.get(0).listPerson().size());
-		assertEquals("Marcos", groupedByCountry.get(0).listPerson().get(0).getName());
-		assertEquals("Marcos", groupedByCountry.get(0).listPerson().get(1).getName());
+		var brazilPeople = groupedByCountry.get(0).listPerson();
+		assertEquals(1, brazilPeople.size());
+		for (Person s : brazilPeople) {
+			assertEquals("Marcos", s.getName());
+		}
 
 		assertEquals(2, groupedByCountry.get(0).states().size());
 		assertEquals("Acre", groupedByCountry.get(0).states().get(0).getName());

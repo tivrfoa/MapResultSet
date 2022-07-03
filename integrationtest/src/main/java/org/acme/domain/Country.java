@@ -1,8 +1,10 @@
 package org.acme.domain;
 
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import com.github.tivrfoa.mapresultset.api.Column;
 import com.github.tivrfoa.mapresultset.api.Id;
@@ -16,12 +18,16 @@ public record Country(@Id int id, float density, String name,
         long someBigNumber, BigInteger evenBigger,
         // It doesn't make sense for Country to have a list of Person ...
         // It's just for testing.
-        @OneToMany (createWith = "newLinkedList()", addWith = "add") List<Person> listPerson,
+        @OneToMany (createWith = "newHashSet()", addWith = "add") Set<Person> listPerson,
         
         // Just for tests. This is actually a OneToMany
-        @ManyToMany List<State> states) {
+        @ManyToMany (createWith = "newLinkedList()", addWith = "add") List<State> states) {
     
-        public static List<Person> newLinkedList() {
-                return new LinkedList<Person>();
+        public static List<State> newLinkedList() {
+                return new LinkedList<State>();
+        }
+    
+        public static Set<Person> newHashSet() {
+                return new HashSet<Person>();
         }
 }

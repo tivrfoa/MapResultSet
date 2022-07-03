@@ -53,8 +53,8 @@ public class ListPersonCountryRecords {
 				int phoneCode = curr.phoneCode();
 				long someBigNumber = curr.someBigNumber();
 				java.math.BigInteger evenBigger = curr.evenBigger();
-				java.util.List<org.acme.domain.Person> listPerson = Country.newLinkedList();
-				java.util.List<org.acme.domain.State> states = new ArrayList<>();
+				java.util.Set<org.acme.domain.Person> listPerson = Country.newHashSet();
+				java.util.List<org.acme.domain.State> states = Country.newLinkedList();
 
 				obj = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
 

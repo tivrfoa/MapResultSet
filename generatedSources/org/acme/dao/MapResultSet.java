@@ -37,7 +37,7 @@ public class MapResultSet {
 			double squareMeters = 0.0;
 			long someBigNumber = 0L;
 			java.math.BigInteger evenBigger = null;
-			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.Set<org.acme.domain.Person> listPerson = null;
 			java.util.List<org.acme.domain.State> states = null;
 
 			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
@@ -78,7 +78,7 @@ public class MapResultSet {
 			int phoneCode = rs.getInt("c.PhoneCode");
 			float density = 0.0f;
 			double squareMeters = 0.0;
-			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.Set<org.acme.domain.Person> listPerson = null;
 			java.util.List<org.acme.domain.State> states = null;
 
 			Country obj4 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
@@ -107,7 +107,7 @@ public class MapResultSet {
 			double squareMeters = 0.0;
 			long someBigNumber = 0L;
 			java.math.BigInteger evenBigger = null;
-			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.Set<org.acme.domain.Person> listPerson = null;
 			java.util.List<org.acme.domain.State> states = null;
 
 			Country obj2 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
@@ -163,7 +163,7 @@ public class MapResultSet {
 			int phoneCode = 0;
 			long someBigNumber = 0L;
 			java.math.BigInteger evenBigger = null;
-			java.util.List<org.acme.domain.Person> listPerson = null;
+			java.util.Set<org.acme.domain.Person> listPerson = null;
 			java.util.List<org.acme.domain.State> states = null;
 
 			Country obj3 = new Country(id, density, name, squareMeters, phoneCode, someBigNumber, evenBigger, listPerson, states);
