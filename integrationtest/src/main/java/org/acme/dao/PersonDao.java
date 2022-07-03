@@ -47,6 +47,7 @@ public class PersonDao {
             select p.id, p.name, phone.number
             from person as p join Phone as phone on
               p.id = phone.person_id
+            order by p.id, phone.number
             """;
     
     @Query
@@ -57,6 +58,7 @@ public class PersonDao {
               p.id = phone.person_id join
                  country as c on
               p.country_id = c.id
+            order by p.id, phone.number
             """;
     
     @Query
@@ -83,13 +85,12 @@ public class PersonDao {
             from person as p join person_address as pa on
               p.id = pa.person_id join address as a on
               a.id = pa.address_id
+            order by p.id, a.id
             """;
             
-    public static List<Person> listPersonAddresses() {
+    public static ListPersonAddressesRecords listPersonAddresses() {
         try {
-            var list = MapResultSet.listPersonAddresses(executeQuery(listPersonAddresses));
-            System.out.println(list.groupedByAddress());
-            return list.groupedByPerson();
+            return MapResultSet.listPersonAddresses(executeQuery(listPersonAddresses));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
@@ -105,22 +106,18 @@ public class PersonDao {
         }
     }
     
-    public static List<Person> listPersonPhones() {
+    public static ListPersonPhonesRecords listPersonPhones() {
         try {
-            var list = MapResultSet.listPersonPhones(executeQuery(listPersonPhones));
-            System.out.println(list.getListPhone());
-            System.out.println(list.groupedByPerson());
-            return list.getListPerson();
+            return MapResultSet.listPersonPhones(executeQuery(listPersonPhones));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
         }
     }
     
-    public static List<Person> listPersonPhonesAndCountry() {
+    public static ListPersonPhonesAndCountryRecords listPersonPhonesAndCountry() {
         try {
-            return MapResultSet.listPersonPhonesAndCountry(executeQuery(listPersonPhonesAndCountry))
-                    .groupedByPerson();
+            return MapResultSet.listPersonPhonesAndCountry(executeQuery(listPersonPhonesAndCountry));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());

@@ -6,25 +6,30 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.acme.dao.BookDao;
 import org.acme.dao.ListBooksAndBookstoresRecords;
 import org.acme.dao.ListNotebooksGeneratedColumns;
 import org.acme.dao.ListNotebooksRecords;
+import org.acme.dao.ListPersonAddressesRecords;
 import org.acme.dao.ListPersonCountryGeneratedColumns;
 import org.acme.dao.ListPersonCountryRecords;
+import org.acme.dao.ListPersonPhonesAndCountryRecords;
+import org.acme.dao.ListPersonPhonesRecords;
 import org.acme.dao.NotebookDao;
 import org.acme.dao.PersonDao;
 import org.acme.dao.SumValuesGroupedByCompanyGeneratedColumns;
 import org.acme.dao.SumValuesGroupedByCompanyRecords;
+import org.acme.domain.Address;
 import org.acme.domain.Book;
 import org.acme.domain.Bookstore;
 import org.acme.domain.Company;
 import org.acme.domain.Country;
 import org.acme.domain.Notebook;
 import org.acme.domain.Person;
-import org.acme.domain.State;
 import org.junit.jupiter.api.Test;
 
 public class TestProcessor {
@@ -114,9 +119,6 @@ public class TestProcessor {
 	public void testListPersonCountry() {
 		ListPersonCountryRecords records = PersonDao.listPersonCountry();
 
-		List<State> listState = records.getListState();
-		List<Person> listPerson = records.getListPerson();
-		List<Country> listCountry = records.getListCountry();
 		List<ListPersonCountryGeneratedColumns> generatedColumns = records.getGeneratedColumns();
 
 		assertEquals(4, generatedColumns.size());
@@ -131,6 +133,10 @@ public class TestProcessor {
 
 		// FIXME there should be just one person
 		//   This is only fixable if person's id is in the query
+		//   I'm not sure if this should be "fixed", like:
+		//     - would these types of results happen often?
+		//     - shouldn't the user declare the type as a HashSet instead of
+		//       a list in those cases?
 		assertEquals(2, groupedByCountry.get(0).listPerson().size());
 		assertEquals("Marcos", groupedByCountry.get(0).listPerson().get(0).getName());
 		assertEquals("Marcos", groupedByCountry.get(0).listPerson().get(1).getName());
@@ -149,6 +155,75 @@ public class TestProcessor {
 		assertEquals("Prost", groupedByCountry.get(2).states().get(0).getName());
 	}
 
+	@Test
+	public void testListPersonPhones() {
+		ListPersonPhonesRecords records = PersonDao.listPersonPhones();
+
+		assertEquals(4, records.getListPerson().size());
+
+		List<Person> groupedByPerson = records.groupedByPerson();
+		assertEquals(3, groupedByPerson.size());
+
+		var leandro =  groupedByPerson.get(0);
+		assertEquals("Leandro", leandro.getName());
+		assertEquals(2, leandro.getPhones().size());
+		assertEquals(1111, leandro.getPhones().get(0).getNumber());
+		assertEquals(1112, leandro.getPhones().get(1).getNumber());
+
+		assertEquals("Guilherme", groupedByPerson.get(1).getName());
+		assertEquals(1, groupedByPerson.get(1).getPhones().size());
+		assertEquals(2222, groupedByPerson.get(1).getPhones().get(0).getNumber());
+
+		assertEquals("Marcos", groupedByPerson.get(2).getName());
+		assertEquals(1, groupedByPerson.get(2).getPhones().size());
+		assertEquals(3333, groupedByPerson.get(2).getPhones().get(0).getNumber());
+	}
+
+	@Test
+	public void testListPersonPhonesAndCountry() {
+		ListPersonPhonesAndCountryRecords records = PersonDao.listPersonPhonesAndCountry();
+
+		assertEquals(4, records.getListPerson().size());
+
+		List<Person> groupedByPerson = records.groupedByPerson();
+		assertEquals(3, groupedByPerson.size());
+
+		assertEquals(Timestamp.valueOf("2022-06-16 10:29:20"), groupedByPerson.get(0).getBornTimestamp());
+		assertEquals(Time.valueOf("10:29:23"), groupedByPerson.get(0).getWakeUpTime());
+
+		assertEquals(Timestamp.valueOf("1989-07-03 08:09:10"), groupedByPerson.get(1).getBornTimestamp());
+		assertEquals(Time.valueOf("10:29:21"), groupedByPerson.get(1).getWakeUpTime());
+
+		assertEquals("Brazil", groupedByPerson.get(2).getCountry().name());
+	}
+
+	/**
+	 * Testing 2 groupedBy: person and addresses
+	 */
+	@Test
+	public void testListPersonAddresses() {
+		ListPersonAddressesRecords records = PersonDao.listPersonAddresses();
+
+		List<Person> groupedByPerson = records.groupedByPerson();
+		assertEquals(3, groupedByPerson.size());
+		
+		assertEquals(3, groupedByPerson.get(0).getAddresses().size());
+		assertEquals(1, groupedByPerson.get(1).getAddresses().size());
+		assertEquals(2, groupedByPerson.get(2).getAddresses().size());
+
+		assertEquals("Halong Bay", groupedByPerson.get(0).getAddresses().get(0).getStreet());
+		assertEquals("Sapa", groupedByPerson.get(0).getAddresses().get(1).getStreet());
+		assertEquals("Kyoto", groupedByPerson.get(0).getAddresses().get(2).getStreet());
+
+		List<Address> groupedByAddress = records.groupedByAddress();
+		assertEquals(5, groupedByAddress.size());
+
+		var kyoto = groupedByAddress.get(2);
+		assertEquals(2, kyoto.getListPerson().size());
+		assertEquals("Leandro", kyoto.getListPerson().get(0).getName());
+		assertEquals("Marcos", kyoto.getListPerson().get(1).getName());
+	}
+
 	public static void main(String[] args) {
 		TestProcessor test = new TestProcessor();
 
@@ -157,15 +232,12 @@ public class TestProcessor {
 		test.testListNotebooksWithGeneratedColumns();
 		test.testSumValuesGroupedByCompany();
 		test.testListPersonCountry();
+		test.testListPersonPhones();
+		test.testListPersonAddresses();
 
-		System.out.println("\n--------- listPersonPhones ----------\n");
-		System.out.println(PersonDao.listPersonPhones());
-		System.out.println("\n--------- listPersonPhonesAndCountry ----------\n");
-		System.out.println(PersonDao.listPersonPhonesAndCountry());
-		System.out.println("\n--------- listPersonAddresses ----------\n");
-		System.out.println(PersonDao.listPersonAddresses());
-
-		
+		System.out.println("-----------------------------------------------------------------------------------------");
+		System.out.println("------------------------ Integration tests finished successfully. -----------------------");
+		System.out.println("-----------------------------------------------------------------------------------------");
 	}
 }
 

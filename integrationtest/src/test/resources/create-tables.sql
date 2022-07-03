@@ -105,7 +105,9 @@ create table address (
 insert into address values
 (1, 'Halong Bay'),
 (2, 'Xie Xie'),
-(3, 'Arigato');
+(3, 'Arigato'),
+(4, 'Sapa'),
+(5, 'Kyoto');
 
 create table person_address (
     person_id int,
@@ -116,8 +118,11 @@ create table person_address (
 
 insert into person_address values
 (1, 1),
+(1, 4),
+(1, 5),
 (2, 2),
-(3, 3);
+(3, 3),
+(3, 5);
 
 -- bad table. It's just to test composite primary key ...
 create table book (
