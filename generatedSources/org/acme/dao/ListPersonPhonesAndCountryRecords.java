@@ -42,7 +42,7 @@ public class ListPersonPhonesAndCountryRecords {
 			var obj = map.get(key);
 			if (obj == null) {
 				obj = curr;
-				obj.setPhones(new ArrayList<>());
+				obj.setPhones(Person.newLL());
 
 				map.put(key, obj);
 				join.add(obj);

@@ -16,7 +16,7 @@ public record Country(@Id int id, float density, String name,
         long someBigNumber, BigInteger evenBigger,
         // It doesn't make sense for Country to have a list of Person ...
         // It's just for testing.
-        @OneToMany (createWith = "newLinkedList", addWith = "add") List<Person> listPerson,
+        @OneToMany (createWith = "newLinkedList()", addWith = "add") List<Person> listPerson,
         
         // Just for tests. This is actually a OneToMany
         @ManyToMany List<State> states) {

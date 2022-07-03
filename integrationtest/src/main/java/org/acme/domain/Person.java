@@ -2,6 +2,7 @@ package org.acme.domain;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.github.tivrfoa.mapresultset.api.Column;
@@ -20,12 +21,16 @@ public class Person {
 	private Timestamp bornTimestamp;
 	@Column (name = "wakeup_time")
 	private Time wakeUpTime;
-	@OneToMany
+	@OneToMany (createWith = "newLL()", addWith = "add")
 	private List<Phone> phones;
 	@ManyToOne
 	private Country country;
 	@ManyToMany
 	private List<Address> addresses;
+
+	public static LinkedList<Phone> newLL() {
+		return new LinkedList<>();
+	}
 
 	public int getId() {
 		return id;

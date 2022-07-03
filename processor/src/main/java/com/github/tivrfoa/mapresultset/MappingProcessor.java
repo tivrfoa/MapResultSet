@@ -39,6 +39,7 @@ public class MappingProcessor extends AbstractProcessor {
 	public Map<FullClassName, JavaStructure> javaStructures = new HashMap<>();
 	public Map<FullClassName, List<Relationship>> relationships = new HashMap<>();
 	public Map<FullClassName, List<Field>> primaryKeys = new HashMap<>();
+	public Map<FullClassName, Map<FieldName, CreateAndAddMethods>> classMappedCollectionCreation = new HashMap<>();
 
 	/** Map: Table Name -> Full Class Name (including package) */
 	public Map<String, String> tableMap = new HashMap<>();
@@ -447,7 +448,8 @@ public class MappingProcessor extends AbstractProcessor {
 	}
 
 	private static String copyRecordObjectInitializingLists(FullClassName fullClassName, String recordName,
-			Map<ColumnName, ColumnField> fields, Map<FullClassName, JavaStructure> javaStructures) {
+			Map<ColumnName, ColumnField> fields, Map<FullClassName, JavaStructure> javaStructures,
+			Map<FullClassName, Map<FieldName, CreateAndAddMethods>> classMappedCollectionCreation) {
 		final RecordComponent recordComponents = javaStructures.get(fullClassName).recordComponents;
 		String fieldsInitialization = "";
 		
@@ -455,14 +457,26 @@ public class MappingProcessor extends AbstractProcessor {
 		for (int i = 0; i < recordComponents.fields.size(); i++) {
 			String fieldName = recordComponents.fields.get(i);
 			String fieldType = recordComponents.types.get(i);
-			if (fieldType.contains("java.util.List")) {
+
+			var classCreateAndAddMethods = classMappedCollectionCreation.get(fullClassName);
+			CreateAndAddMethods fieldCreateAndAddMethod = null;
+			if (classCreateAndAddMethods != null)
+				fieldCreateAndAddMethod = classCreateAndAddMethods.get(new FieldName(fieldName));
+
+			if (fieldCreateAndAddMethod != null) {
 				fieldsInitialization += """
-								%s %s = new ArrayList<>();
-				""".formatted(fieldType, fieldName, fieldName);
+								%s %s = %s.%s;
+				""".formatted(fieldType, fieldName, recordName, fieldCreateAndAddMethod.createWith());
 			} else {
-				fieldsInitialization += """
-								%s %s = curr.%s();
-				""".formatted(fieldType, fieldName, fieldName);
+				if (fieldType.contains("java.util.List")) {
+					fieldsInitialization += """
+									%s %s = new ArrayList<>();
+					""".formatted(fieldType, fieldName);
+				} else {
+					fieldsInitialization += """
+									%s %s = curr.%s();
+					""".formatted(fieldType, fieldName, fieldName);
+				}
 			}
 			
 			constructorParameters += fieldName;
@@ -727,7 +741,8 @@ public class MappingProcessor extends AbstractProcessor {
 
 		var newKeyRecord = new NewKeyRecord(ownerClass, queryClassStructure, keyFields);
 		var collectionCreateAndAddMethods = new CollectionCreateAndAddMethods(fcn, ownerClass,
-				ownerRelationships, queryClassStructure, queryStructures, javaStructures);
+				ownerRelationships, queryClassStructure, queryStructures, javaStructures,
+				classMappedCollectionCreation);
 
 		if (queryClassStructure.type == Type.CLASS) {
 			return """
@@ -857,7 +872,8 @@ public class MappingProcessor extends AbstractProcessor {
 
 		public CollectionCreateAndAddMethods(FullClassName fcn, String ownerClass,
 				List<Relationship> ownerRelationships, QueryClassStructure queryClassStructure,
-				Map<FullClassName, QueryClassStructure> queryStructures, Map<FullClassName, JavaStructure> javaStructures) {
+				Map<FullClassName, QueryClassStructure> queryStructures, Map<FullClassName, JavaStructure> javaStructures,
+				Map<FullClassName, Map<FieldName, CreateAndAddMethods>> classMappedCollectionCreation) {
 			for (var rel : ownerRelationships) {
 				if (rel.type() != Relationship.Type.OneToMany && rel.type() != Relationship.Type.ManyToMany) {
 					continue;
@@ -868,24 +884,44 @@ public class MappingProcessor extends AbstractProcessor {
 				// System.out.println("rel partner: " + rel.partner() + ", partnerClass = " + partnerClass);
 				if (partnerObj == null) continue;
 
-				// TODO here I need to check if there's a method to create and another
-				//   to add. If there's one, then there *must* be the other too.
+				// Checks if there's a method to create and another to add
+				var classCreateAndAddMethods = classMappedCollectionCreation.get(fcn);
+				CreateAndAddMethods fieldCreateAndAddMethod = null;
+				if (classCreateAndAddMethods != null)
+					fieldCreateAndAddMethod = classCreateAndAddMethods.get(rel.partnerFieldName());
+
 				if (queryClassStructure.type == Type.CLASS) {
 					final String PartnerFieldName = uppercaseFirstLetter(rel.partnerFieldName().name());
-					createPartners += """
-							obj.set%s(new ArrayList<>());
-							""".formatted(PartnerFieldName);
-					addToPartners += """
-							obj.get%s().add(getList%s().get(i));
-							""".formatted(PartnerFieldName, partnerClass.getClassName());
+					if (fieldCreateAndAddMethod == null) {
+						createPartners += """
+								obj.set%s(new ArrayList<>());
+								""".formatted(PartnerFieldName);
+						addToPartners += """
+								obj.get%s().add(getList%s().get(i));
+								""".formatted(PartnerFieldName, partnerClass.getClassName());
+					} else {
+						createPartners += """
+								obj.set%s(%s.%s);
+								""".formatted(PartnerFieldName, ownerClass, fieldCreateAndAddMethod.createWith());
+						addToPartners += """
+								obj.get%s().%s(getList%s().get(i));
+								""".formatted(PartnerFieldName, fieldCreateAndAddMethod.addWith(), partnerClass.getClassName());
+					}
 				} else {
-					addToPartners += """
+					if (fieldCreateAndAddMethod == null) {
+						addToPartners += """
 							obj.%s().add(getList%s().get(i));
 							""".formatted(rel.partnerFieldName().name(), partnerClass.getClassName());
+					} else {
+						addToPartners += """
+							obj.%s().%s(getList%s().get(i));
+							""".formatted(rel.partnerFieldName().name(), fieldCreateAndAddMethod.addWith(), partnerClass.getClassName());
+					}
 				}
 			}
 			if (queryClassStructure.type == Type.RECORD) {
-				createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields, javaStructures);
+				createPartners += copyRecordObjectInitializingLists(fcn, ownerClass, queryClassStructure.fields,
+						javaStructures, classMappedCollectionCreation);
 			}
 		}
 	}
@@ -987,12 +1023,14 @@ public class MappingProcessor extends AbstractProcessor {
 						break;
 					case "com.github.tivrfoa.mapresultset.api.OneToMany":
 						addRelationship(elementName, e, Relationship.Type.OneToMany);
+						addCreationAndAddMethods(elementName, e);
 						break;
 					case "com.github.tivrfoa.mapresultset.api.ManyToOne":
 						addRelationship(elementName, e, Relationship.Type.ManyToOne);
 						break;
 					case "com.github.tivrfoa.mapresultset.api.ManyToMany":
 						addRelationship(elementName, e, Relationship.Type.ManyToMany);
+						addCreationAndAddMethods(elementName, e);
 						break;
 					case "com.github.tivrfoa.mapresultset.api.Id":
 						processId(elementName, e);
@@ -1000,6 +1038,28 @@ public class MappingProcessor extends AbstractProcessor {
 				}
 			}
 		}
+	}
+
+	private void addCreationAndAddMethods(String elementName, Element e) {
+		String createWithMethod = getAnnotationParameter(e, "createWith()");
+		String addWithMethod    = getAnnotationParameter(e, "addWith()");
+
+		if (createWithMethod == null && addWithMethod == null) return;
+
+		if (createWithMethod == null || addWithMethod == null)
+			throw new RuntimeException("createWith must be used when addWith is used and vice-versa.");
+
+		createWithMethod = createWithMethod.substring(1, createWithMethod.length() - 1);
+		addWithMethod = addWithMethod.substring(1, addWithMethod.length() - 1);
+		var fieldName = new FieldName(e.toString());
+		var structureStr = e.getEnclosingElement().toString();
+		var structure = new FullClassName(structureStr);
+		var map = classMappedCollectionCreation.get(structure);
+		if (map == null) {
+			map = new HashMap<>();
+			classMappedCollectionCreation.put(structure, map);
+		}
+		map.put(fieldName, new CreateAndAddMethods(createWithMethod, addWithMethod));
 	}
 
 	private void processId(String elementName, Element e) {
