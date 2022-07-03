@@ -1,7 +1,10 @@
 # TODO
 
+|| Write a Micronaut example
+|| Write a Quarkus example
+|| Write a SpringBoot example
 
-|| Use TestContainers to Github Actions
+|| Make it available on Maven;
 
 |x| Parse query to get columns and tables;
 |x| Generate the classes that receive ResultSet and return the objects;
@@ -9,37 +12,23 @@
 |x| Handle Java Record
 |x| Test composite primary key
 |x| Make it a Maven project;
+|x| Add License
+|x| Don't create a record wrapper class if it's returning just one class
+|x| Handle createWith and addWith for OneToMany and ManyToMany
 
 || Write more unit tests
 || Write more integration tests
 
 || Use Testcontainers with MySQL, PostgreSQL, Oracle
+|| Use TestContainers to Github Actions
+|| Blog about TestContainers
 
 || Use spotless to format code;
-|| Handle Java modules;
-
-|| Write a Micronaut example
-|| Write a Quarkus example
-
-|x| Add License
-
-|| Make it available on Maven;
-
-|| Write a SpringBoot example
-
+|| Handle Java modules ???
 
 || Allow to map a generated column to a field in an existing class.
 
 || Test array column. Does Mysql support it?
-|| Handle createWith and addWith for OneToMany and ManyToMany
-|| Change generated source location?
-|| It doesn't need the ListRecord... wrapper class if the
-   query is fetching from a single table.
 
-|x| short and byte support
-|x| fix tests in micronaut app
-|x| include many relationship in mc app
-|| blog about TestContainers
 || debug mc to see the stacktrace
 || compare debugging in Eclipse vs VSCode
-|| don't create a record wrapper class if it's returning just one class
