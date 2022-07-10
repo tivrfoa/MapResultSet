@@ -71,9 +71,11 @@ in the query.
 
 ## Using different collections in your relationships
 
-By default MapResultSet assume you are using a `List` and it creates it with `ArrayList`,
-but you can use any collections you want, as long as you say which method to use to create
+By default MapResultSet assumes you are using a `List` and it creates it with `ArrayList`,
+but you can use any collection you want, as long as you tell which method to use to create
 the collection, and which method should be used to add elements to it.
+
+The create methods must be `static` and not accept any parameters.
 
 Example using HashSet and LinkedList:
 
