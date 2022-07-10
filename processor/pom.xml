@@ -8,7 +8,7 @@
   <parent>
         <groupId>io.github.tivrfoa</groupId>
         <artifactId>mapresultset-parent</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -68,6 +68,17 @@
                         <arg>-proc:none</arg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.sonatype.plugins</groupId>
+              <artifactId>nexus-staging-maven-plugin</artifactId>
+              <version>1.6.12</version>
+              <extensions>true</extensions>
+              <configuration>
+                <serverId>ossrh</serverId>
+                <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                <autoReleaseAfterClose>true</autoReleaseAfterClose>
+              </configuration>
             </plugin>
         </plugins>
     </build>

@@ -9,5 +9,5 @@ sources.txt
 .settings/
 .classpath
 .factorypath
-maven-output.txt
+maven-output*
 
