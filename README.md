@@ -5,6 +5,11 @@ The goal is to automate the manual process of setting the object's properties fr
 MapResultSet is not a query validator, so make sure your
 query actually works before you use it in your Java project.
 
+
+## Example of Generated Sources
+
+https://github.com/tivrfoa/MapResultSet/tree/main/generatedSources/org/acme/dao
+
 ## Annotations
 
 The two required annotations for using MapResultSet are `Table` and `Query`.
@@ -62,10 +67,6 @@ final String listPeople;
 **ps:** if the query contains only one table and there's no temporary columns,
 then this class is not created and MapResultSet returns a list of the only class
 in the query.
-
-## Exemple of Generated Sources
-
-https://github.com/tivrfoa/MapResultSet/tree/main/generatedSources/org/acme/dao
 
 
 ## Using different collections in your relationships
