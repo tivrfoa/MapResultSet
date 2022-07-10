@@ -194,6 +194,6 @@ https://github.com/tivrfoa/MapResultSet/blob/main/integrationtest/src/main/java/
 
 [Integration Test](https://github.com/tivrfoa/MapResultSet/tree/main/integrationtest)
 
-[Micronaut] (https://github.com/tivrfoa/micronaut-data-access-tests/blob/main/micronaut-data-jdbc-repository-maven-java/src/main/java/com/example/GenreDao.java#L18)
+[Micronaut](https://github.com/tivrfoa/micronaut-data-access-tests/blob/main/micronaut-data-jdbc-repository-maven-java/src/main/java/com/example/GenreDao.java#L18)
 
 [Spring Boot](https://github.com/tivrfoa/spring-jdbc-with-MapResultSet/blob/main/src/main/java/com/example/demo/RelationalDataAccessApplication.java)
