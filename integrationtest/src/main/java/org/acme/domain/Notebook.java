@@ -3,8 +3,8 @@ package org.acme.domain;
 import java.math.BigDecimal;
 import java.sql.Date;
 
-import com.github.tivrfoa.mapresultset.api.Column;
-import com.github.tivrfoa.mapresultset.api.Table;
+import io.github.tivrfoa.mapresultset.api.Column;
+import io.github.tivrfoa.mapresultset.api.Table;
 
 @Table(name = "notebook")
 public class Notebook {

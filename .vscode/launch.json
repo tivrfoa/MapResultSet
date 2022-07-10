@@ -8,14 +8,14 @@
             "type": "java",
             "name": "Launch TestProcessor",
             "request": "launch",
-            "mainClass": "com.github.tivrfoa.mapresultset.TestProcessor",
+            "mainClass": "io.github.tivrfoa.mapresultset.TestProcessor",
             "projectName": "mapresultset-integrationtest"
         },
         {
             "type": "java",
             "name": "Launch ParseQuery",
             "request": "launch",
-            "mainClass": "com.github.tivrfoa.mapresultset.ParseQuery",
+            "mainClass": "io.github.tivrfoa.mapresultset.ParseQuery",
             "projectName": "mapresultset-processor",
             "vmArgs": "-ea"
         },

@@ -1,6 +1,6 @@
 package org.acme.domain;
 
-import com.github.tivrfoa.mapresultset.api.Table;
+import io.github.tivrfoa.mapresultset.api.Table;
 
 @Table(name = "state")
 public class State {

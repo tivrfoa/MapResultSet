@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import com.github.tivrfoa.mapresultset.api.Query;
+import io.github.tivrfoa.mapresultset.api.Query;
 
 public class NotebookDao {
 	

@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.acme.domain.Book;
 
-import com.github.tivrfoa.mapresultset.api.Query;
+import io.github.tivrfoa.mapresultset.api.Query;
 
 public class BookDao {
 

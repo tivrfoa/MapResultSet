@@ -111,12 +111,12 @@ Add these to `dependencies`:
 
 ```xml
         <dependency>
-            <groupId>com.github.tivrfoa</groupId>
+            <groupId>io.github.tivrfoa</groupId>
             <artifactId>mapresultset</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>
-            <groupId>com.github.tivrfoa</groupId>
+            <groupId>io.github.tivrfoa</groupId>
             <artifactId>mapresultset-processor</artifactId>
             <version>0.1.0</version>
         </dependency>
@@ -142,7 +142,7 @@ And these to `plugins`:
                     <arg>-proc:only</arg>
                     <arg>-implicit:none</arg>
                     <arg>-processor</arg>
-                    <arg>com.github.tivrfoa.mapresultset.MappingProcessor</arg>
+                    <arg>io.github.tivrfoa.mapresultset.MappingProcessor</arg>
                 </compilerArgs>
             </configuration>
             </execution>

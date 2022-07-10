@@ -61,8 +61,8 @@ public class ListPersonCountryRecords {
 				map.put(key, obj);
 				join.add(obj);
 			}
-			obj.listPerson().add(getListPerson().get(i));
-obj.states().add(getListState().get(i));
+			obj.states().add(getListState().get(i));
+obj.listPerson().add(getListPerson().get(i));
 
 		}
 		return join;

@@ -6,11 +6,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import com.github.tivrfoa.mapresultset.api.Column;
-import com.github.tivrfoa.mapresultset.api.Id;
-import com.github.tivrfoa.mapresultset.api.ManyToMany;
-import com.github.tivrfoa.mapresultset.api.OneToMany;
-import com.github.tivrfoa.mapresultset.api.Table;
+import io.github.tivrfoa.mapresultset.api.Column;
+import io.github.tivrfoa.mapresultset.api.Id;
+import io.github.tivrfoa.mapresultset.api.ManyToMany;
+import io.github.tivrfoa.mapresultset.api.OneToMany;
+import io.github.tivrfoa.mapresultset.api.Table;
 
 @Table (name = "country")
 public record Country(@Id int id, float density, String name,
