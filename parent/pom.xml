@@ -29,16 +29,16 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://github.com/tivrfoa/mapresultset.git</connection>
-        <developerConnection>scm:git:git@github.com:tivrfoa/mapresultset.git</developerConnection>
-        <url>https://github.com/tivrfoa/mapresultset/</url>
+        <connection>scm:git:git://github.com/tivrfoa/MapResultSet.git</connection>
+        <developerConnection>scm:git:git@github.com:tivrfoa/MapResultSet.git</developerConnection>
+        <url>https://github.com/tivrfoa/MapResultSet/</url>
         <tag>HEAD</tag>
     </scm>
 
 
     <issueManagement>
         <system>GitHub Issues</system>
-        <url>https://github.com/tivrfoa/mapresultset/issues</url>
+        <url>https://github.com/tivrfoa/MapResultSet/issues</url>
     </issueManagement>
 
     <dependencyManagement>
