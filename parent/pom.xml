@@ -35,6 +35,15 @@
         <tag>HEAD</tag>
     </scm>
 
+    <developers>
+        <developer>
+            <id>tivrfoa</id>
+            <name>Leandro dos Santos Coutinho</name>
+            <email>lescoutinhovr@gmail.com</email>
+            <url>https://tivrfoa.github.io/</url>
+        </developer>
+    </developers>
+
 
     <issueManagement>
         <system>GitHub Issues</system>
