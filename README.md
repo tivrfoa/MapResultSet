@@ -164,3 +164,26 @@ And these to `plugins`:
 
 Every time you use one of the MapResultSet annotations, you should run `mvn clean compile`
 in order for the changes to become available for you.
+
+
+Then you can just call `MapResultSet.queryName(resultSet)`, eg:
+
+https://github.com/tivrfoa/MapResultSet/blob/main/integrationtest/src/main/java/org/acme/dao/BookDao.java#L41
+
+```java
+    @Query
+    private static final String listBooksOnly = """
+            select b.author_name, b.name
+            from book as b
+            order by b.author_name
+            """;
+    
+    public static List<Book> listBooksOnly() {
+        try {
+            ResultSet resultSet = executeQuery(listBooksOnly);
+            return MapResultSet.listBooksOnly(resultSet);
+        } catch (SQLException ex) {
+            // ...
+        }
+    }
+```
