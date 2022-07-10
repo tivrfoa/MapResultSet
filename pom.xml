@@ -20,9 +20,9 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git://github.com/mapstruct/mapstruct.git</connection>
-        <developerConnection>scm:git:git@github.com:mapstruct/mapstruct.git</developerConnection>
-        <url>https://github.com/mapstruct/mapstruct/</url>
+        <connection>scm:git:git://github.com/tivrfoa/mapresultset.git</connection>
+        <developerConnection>scm:git:git@github.com:tivrfoa/mapresultset.git</developerConnection>
+        <url>https://github.com/tivrfoa/mapresultset/</url>
         <tag>HEAD</tag>
     </scm>
 
