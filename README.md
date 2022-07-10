@@ -5,12 +5,19 @@ The goal is to automate the manual process of setting the object's properties fr
 MapResultSet is not a query validator, so make sure your
 query actually works before you use it in your Java project.
 
-**TODO**
-  - show a picture comparing side-by-side
-
 ## Annotations
 
-MapResultSet uses two annotations: `Table` and `Query`
+The two required annotations for using MapResultSet are `Table` and `Query`.
+
+The `@Column` annotation is required if the column name is different from the field name.
+
+There are also the following annotations to map relationships:
+
+1. Id ([necessary to group the relationships](https://github.com/tivrfoa/MapResultSet/blob/main/generatedSources/org/acme/dao/ListPersonCountryRecords.java#L36))
+2. OneToOne
+3. OneToMany
+4. ManyToOne
+5. ManyToMany
 
 The variable annotated with `@Query` must be final, eg:
 ```java
@@ -18,10 +25,8 @@ The variable annotated with `@Query` must be final, eg:
 final String listPeople;
 ```
 
-And due to [Java Annotation Processor limitation](https://stackoverflow.com/questions/3285652/how-can-i-create-an-annotation-processor-that-processes-a-local-variable), the queries must not
-be local variables.
+And due to [Java Annotation Processor limitation](https://stackoverflow.com/questions/3285652/how-can-i-create-an-annotation-processor-that-processes-a-local-variable), the queries must not be local variables.
 
-**TODO** explain how to use these annotations
 
 ## MapResultSet Query Restrictions
 
@@ -35,9 +40,6 @@ your query more readable too. xD
 3. Columns in `select` must be preceded by the table name (or alias) if the `from` clause contains
 more than one table;
 4. Table alias must be preceded by `AS`
-
-Current *known* limitations (ps: please open an issue if you find others =))
- - it doesn't handle 'USING' in joins. MySQL only?
 
 
 ## Generated Classes Structure
@@ -61,59 +63,103 @@ final String listPeople;
 then this class is not created and MapResultSet returns a list of the only class
 in the query.
 
+## Exemple of Generated Sources
 
-## Databases Java Connectors
-
-
-### MySQL
-
-https://dev.mysql.com/downloads/connector/j/
+https://github.com/tivrfoa/MapResultSet/tree/main/generatedSources/org/acme/dao
 
 
-Sakila sample database: https://dev.mysql.com/doc/sakila/en/sakila-installation.html
+## Using different collections in your relationships
 
+By default MapResultSet assume you are using a `List` and it creates it with `ArrayList`,
+but you can use any collections you want, as long as you say which method to use to create
+the collection, and which method should be used to add elements to it.
 
-#### Installing MySQL on Ubuntu
+Example using HashSet and LinkedList:
 
-```sh
-sudo apt update
-sudo apt install mysql-server
-sudo systemctl start mysql.service
-sudo systemctl status mysql.service
+```java
+@Table (name = "country")
+public record Country(@Id int id, float density, String name,
+        double squareMeters, @Column (name = "phone_code") int phoneCode,
+        long someBigNumber, BigInteger evenBigger,
+        // It doesn't make sense for Country to have a list of Person ...
+        // It's just for testing.
+        @OneToMany (createWith = "newHashSet()", addWith = "add") Set<Person> listPerson,
+        
+        // Just for tests. This is actually a OneToMany
+        @ManyToMany (createWith = "newLinkedList()", addWith = "add") List<State> states) {
+    
+        public static List<State> newLinkedList() {
+                return new LinkedList<State>();
+        }
+    
+        public static Set<Person> newHashSet() {
+                return new HashSet<Person>();
+        }
+}
 ```
 
-#### Creating user and granting access to database
+https://github.com/tivrfoa/MapResultSet/blob/main/generatedSources/org/acme/dao/ListPersonCountryRecords.java#L56
 
-```sh
-sudo mysql
-Welcome to the MySQL monitor.  Commands end with ; or \g.
-# ...
+## Using in your project
 
-mysql> CREATE USER 'lesco'@'localhost' IDENTIFIED BY '123';
-Query OK, 0 rows affected (0,02 sec)
+### pom.xml
 
-mysql> create database d1;
-Query OK, 1 row affected (0,02 sec)
+Add these to `dependencies`:
 
-mysql> grant all on d1.* to 'lesco'@'localhost';
-Query OK, 0 rows affected (0,02 sec)
-
-mysql> ^DBye
-lesco@$ mysql -p
-
-mysql> use d1
-Database changed
+```xml
+        <dependency>
+            <groupId>com.github.tivrfoa</groupId>
+            <artifactId>mapresultset</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tivrfoa</groupId>
+            <artifactId>mapresultset-processor</artifactId>
+            <version>0.1.0</version>
+        </dependency>
 ```
 
-#### Creating table and records
+And these to `plugins`:
 
-```sql
-create table Person (
-	id int primary key,
-	name varchar(30)
-);
-
-insert into Person values
-(1, 'Bob'),
-(2, 'Any');
+```xml
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.10.1</version>
+        <executions>
+            <execution>
+            <id>process-annotations</id>
+            <phase>generate-sources</phase>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+            <configuration>
+                <failOnError>false</failOnError>
+                <compilerArgs>
+                    <arg>-proc:only</arg>
+                    <arg>-implicit:none</arg>
+                    <arg>-processor</arg>
+                    <arg>com.github.tivrfoa.mapresultset.MappingProcessor</arg>
+                </compilerArgs>
+            </configuration>
+            </execution>
+            <execution>
+                <id>default-compile</id>
+                <phase>compile</phase>
+                <goals>
+                    <goal>compile</goal>
+                </goals>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-proc:none</arg>
+                    </compilerArgs>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
 ```
+
+### mvn clean compile
+
+Every time you use one of the MapResultSet annotations, you should run `mvn clean compile`
+in order for the changes to become available for you.

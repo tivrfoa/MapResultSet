@@ -19,4 +19,11 @@
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
+    <scm>
+        <connection>scm:git:git://github.com/mapstruct/mapstruct.git</connection>
+        <developerConnection>scm:git:git@github.com:mapstruct/mapstruct.git</developerConnection>
+        <url>https://github.com/mapstruct/mapstruct/</url>
+        <tag>HEAD</tag>
+    </scm>
+
 </project>
