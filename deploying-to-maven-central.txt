@@ -1,0 +1,9 @@
+
+It seems it worked with this command:
+
+```
+mvn clean deploy -Prelease > maven-output6.txt
+```
+
+https://s01.oss.sonatype.org/#nexus-search;quick~io.github.tivrfoa
+
