@@ -27,7 +27,7 @@ public class MapResultSet {
 			records.getListPerson().add(obj1);
 
 			ListPersonCountryPhoneCodeSubQueryGeneratedColumns obj2 = new ListPersonCountryPhoneCodeSubQueryGeneratedColumns();
-			obj2.setTable_plus_phone_code(rs.getObject("table_plus_phone_code"));
+			obj2.setPlus_sign_phone_code(rs.getObject("plus_sign_phone_code"));
 			records.getGeneratedColumns().add(obj2);
 
 			java.lang.String name = rs.getString("c.name");

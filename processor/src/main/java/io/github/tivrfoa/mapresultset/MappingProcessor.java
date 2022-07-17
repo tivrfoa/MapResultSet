@@ -102,8 +102,8 @@ public class MappingProcessor extends AbstractProcessor {
 			final String query = (String) ((VariableElement) queryElement).getConstantValue();
 			var parsedQuery = new ParseQuery(query);
 			parsedQuery.parse();
-//			System.out.println("p.getTables() = " + parsedQuery.getTables());
-//			System.out.println(parsedQuery);
+			// System.out.println("p.getTables() = " + parsedQuery.getTables());
+			// System.out.println(parsedQuery);
 			
 			final String queryName = queryElement.toString();
 			final List<String> generatedColumns = new ArrayList<>();
@@ -166,7 +166,7 @@ public class MappingProcessor extends AbstractProcessor {
 							if (!isTemporaryTable) {
 								throw new RuntimeException("Invalid state");
 							}
-							alias = columnRecord.table();
+							alias = columnRecord.name();
 						}
 						generatedColumns.add(alias);
 						var m = queryStructures.get(generatedColumnsFullClassName);

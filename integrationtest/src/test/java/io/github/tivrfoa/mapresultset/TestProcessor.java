@@ -16,6 +16,7 @@ import org.acme.dao.ListNotebooksGeneratedColumns;
 import org.acme.dao.ListNotebooksRecords;
 import org.acme.dao.ListPersonAddressesRecords;
 import org.acme.dao.ListPersonCountryGeneratedColumns;
+import org.acme.dao.ListPersonCountryPhoneCodeSubQueryRecords;
 import org.acme.dao.ListPersonCountryRecords;
 import org.acme.dao.ListPersonPhonesAndCountryRecords;
 import org.acme.dao.ListPersonPhonesRecords;
@@ -220,6 +221,17 @@ public class TestProcessor {
 		assertEquals("Marcos", kyoto.getListPerson().get(1).getName());
 	}
 
+	@Test
+	public void testListPersonCountryPhoneCodeSubQuery() {
+		ListPersonCountryPhoneCodeSubQueryRecords records =
+				PersonDao.listPersonCountryPhoneCodeSubQuery();
+		List<Country> groupedByCountry = records.groupedByCountry();
+
+		assertEquals(3, groupedByCountry.size());
+		assertEquals("Brazil", groupedByCountry.get(0).name());
+		assertEquals("Marcos", groupedByCountry.get(0).listPerson().iterator().next().getName());
+	}
+
 	public static void main(String[] args) {
 		TestProcessor test = new TestProcessor();
 
@@ -230,6 +242,7 @@ public class TestProcessor {
 		test.testListPersonCountry();
 		test.testListPersonPhones();
 		test.testListPersonAddresses();
+		test.testListPersonCountryPhoneCodeSubQuery();
 
 		System.out.println("-----------------------------------------------------------------------------------------");
 		System.out.println("------------------------ Integration tests finished successfully. -----------------------");

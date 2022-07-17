@@ -21,6 +21,7 @@ public class PersonDao {
                   from country
               ) as table_plus_phone_code on
               table_plus_phone_code.id = c.id
+            order by c.id
             """;
 
     @Query
@@ -118,6 +119,15 @@ public class PersonDao {
     public static ListPersonPhonesAndCountryRecords listPersonPhonesAndCountry() {
         try {
             return MapResultSet.listPersonPhonesAndCountry(executeQuery(listPersonPhonesAndCountry));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+    
+    public static ListPersonCountryPhoneCodeSubQueryRecords listPersonCountryPhoneCodeSubQuery() {
+        try {
+            return MapResultSet.listPersonCountryPhoneCodeSubQuery(executeQuery(listPersonCountryPhoneCodeSubQuery));
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
