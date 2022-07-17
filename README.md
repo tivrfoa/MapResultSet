@@ -1,7 +1,9 @@
 # MapResultSet
 
 It uses Java annotation processor for mapping a ResultSet to the object's
-fields at **compile time**. There's no runtime performance overhead!
+fields at **compile time**. There's no runtime performance overhead like in
+some libraries, that need to use reflection to find out the fields' names and
+types.
 
 You can always check the generated code. Please, open an issue if you think
 the generated code could be improved.
