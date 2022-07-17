@@ -1,10 +1,10 @@
 # MapResultSet
 
-The goal is to automate the manual process of setting the object's properties from a ResultSet.
+It uses Java annotation processor for mapping a ResultSet to the object's
+fields at **compile time**. There's no runtime performance overhead!
 
-MapResultSet is not a query validator, so make sure your
-query actually works before you use it in your Java project.
-
+You can always check the generated code. Please, open an issue if you think
+the generated code could be improved.
 
 ## Example of Generated Sources
 
@@ -46,6 +46,8 @@ your query more readable too. xD
 more than one table;
 4. Table alias must be preceded by `AS`
 
+*Please*, open an issue if you have a query that meets these requirements, but
+fails to work.
 
 ## Generated Classes Structure
 
